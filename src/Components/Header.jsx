@@ -1,0 +1,39 @@
+import React from "react";
+import { Telescope, CirclePlus } from 'lucide-react';
+import { CircleUserRound } from 'lucide-react';
+import { Link } from "react-router-dom";
+
+const Header = () => {
+
+
+    return (
+        <header className={`fixed top-0 left-0 right-0 bg-blue-400 text-black `}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                    <Link to="/" className="flex items-center space-x-2 group">
+                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                            <Telescope className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-xl font-light tracking-wide text-white group-hover:text-white/90">
+                            Skypher
+                        </span>
+                    </Link>
+
+                    <nav className="flex items-center space-x-8">
+                        <Link to="/submit" className="text-white/90 hover:text-white transition-colors font-medium flex gap-1 items-center justify-center">
+                            <CirclePlus />Submit
+                        </Link>
+                        <Link to="/UserRegister" className="text-white/90 hover:text-white transition-colors font-medium">
+                            Get Started
+                        </Link>
+                        <button className="p-2 rounded-full hover:bg-white/20 transition-colors">
+                            <CircleUserRound className="w-6 h-6 text-white" />
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+    );
+};
+
+export default Header;
