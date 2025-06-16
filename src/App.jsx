@@ -5,6 +5,9 @@ import LandingPage from './Pages/LandingPage';
 import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import UserRegister from './Pages/UserRegister';
 import DashBoard from './Pages/DashBoard.jsx';
+import TermsOfService from './Pages/TermsOfService';
+import PrivacyPolicy from './Pages/PrivacyPolicy';
+import AdminDashboard from './Pages/AdminDashboard';
 
 function App() {
   return (
@@ -17,6 +20,9 @@ function App() {
             <Route path="/UserRegister" element={<UserRegister />} />
             <Route path="/" element={<DashBoard />} />
             <Route path="/landing" element={<LandingPage />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* Add more routes here */}
           </Routes>
         </main>

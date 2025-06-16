@@ -1,10 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Telescope, CirclePlus } from 'lucide-react';
 import { CircleUserRound } from 'lucide-react';
 import { Link } from "react-router-dom";
+import { supabase } from '../supabaseClient';
 
 const Header = () => {
+    const [user, setUser] = useState(null);
 
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        checkUser();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, []);
 
     return (
         <header className={`fixed top-0 left-0 right-0 bg-blue-400 text-black `}>
@@ -23,12 +40,22 @@ const Header = () => {
                         <Link to="/submit" className="text-white/90 hover:text-white transition-colors font-medium flex gap-1 items-center justify-center">
                             <CirclePlus />Submit
                         </Link>
+
                         <Link to="/UserRegister" className="text-white/90 hover:text-white transition-colors font-medium">
                             Get Started
                         </Link>
-                        <button className="p-2 rounded-full hover:bg-white/20 transition-colors">
-                            <CircleUserRound className="w-6 h-6 text-white" />
-                        </button>
+
+                        {user?.email === 'vivekmanikonda113@gmail.com' && (
+                            <Link to="/admin" className="text-white/90 hover:text-white transition-colors font-medium">
+                                Admin
+                            </Link>
+                        )}
+
+                        <Link to="/admin" className="text-white/90 hover:text-white transition-colors font-medium">
+                            <button className="p-2 rounded-full hover:bg-white/20 transition-colors">
+                                <CircleUserRound className="w-6 h-6 text-white" />
+                            </button>
+                        </Link>
                     </nav>
                 </div>
             </div>

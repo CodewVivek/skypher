@@ -1,18 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, X } from 'lucide-react';
-import { FilePond, registerPlugin } from 'react-filepond';
-import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
-import 'filepond/dist/filepond.min.css';
-import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
+import { Plus, X, Upload } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
-
-
-registerPlugin(FilePondPluginImagePreview);
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
-
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
     const [isClearable, setIsClearable] = useState(true);
     const [isSearchable, setIsSearchable] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -49,7 +45,6 @@ const Register = () => {
     ];
     const [files, setFiles] = useState([]);
 
-
     //LINK INPUT
     const [links, setLinks] = useState(['']);
     const addLink = () => setLinks([...links, '']);
@@ -61,8 +56,6 @@ const Register = () => {
     const removeLink = (index) => {
         setLinks(links.filter((_, i) => i !== index));
     };
-
-
 
     //TEAM MEMBERS 
     const [teamEmails, setTeamEmails] = useState([]);
@@ -77,8 +70,6 @@ const Register = () => {
     const removeTeamMember = (email) => {
         setTeamEmails(teamEmails.filter((e) => e !== email));
     };
-
-
 
     //FORM DATA
     const [formData, setFormData] = useState({
@@ -99,11 +90,46 @@ const Register = () => {
         });
     };
 
+    const onDrop = useCallback((acceptedFiles) => {
+        setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
+    }, []);
 
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        accept: {
+            'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+            'application/pdf': ['.pdf']
+        },
+        maxSize: 5242880, // 5MB
+        maxFiles: 5
+    });
 
+    const removeFile = (index) => {
+        setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+    };
+
+    useEffect(() => {
+        // Check if user is authenticated
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                toast.error('Please sign in to submit a project');
+                navigate('/UserRegister');
+                return;
+            }
+            setUser(user);
+        };
+        checkUser();
+    }, [navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!user) {
+            toast.error('Please sign in to submit a project');
+            navigate('/UserRegister');
+            return;
+        }
 
         // Validate required fields
         if (!formData.name || !formData.websiteUrl || !formData.description || !selectedCategory) {
@@ -113,24 +139,28 @@ const Register = () => {
 
         // Prepare the data
         const submissionData = {
-            ...formData,
-            category: selectedCategory?.value,
-            teamMembers: teamEmails,
+            name: formData.name,
+            website_url: formData.websiteUrl,
+            description: formData.description,
+            tagline: formData.tagline,
+            category_type: selectedCategory?.value,
+            team_emails: teamEmails,
             links: links.filter(link => link.trim() !== ''),
-            files: files.map(file => file.file),
-            createdAt: new Date().toISOString()
+            is_founder: formData.isFounder,
+            created_at: new Date().toISOString(),
+            user_id: user.id // Add the user's ID to the submission
         };
 
         try {
             // Upload files to Supabase storage if there are any
             let fileUrls = [];
             if (files.length > 0) {
-                const uploadPromises = files.map(async (file) => {
+                const uploadPromises = files.map(async (file, index) => {
                     const uniqueTimestamp = Date.now() + index;
-                    const filePath = `${uniqueTimestamp}-${file.file.name}`;
+                    const filePath = `${uniqueTimestamp}-${file.name}`;
                     const { data, error } = await supabase.storage
                         .from('startup-media')
-                        .upload(filePath, file.file);
+                        .upload(filePath, file);
 
                     if (error) throw error;
                     const { data: urlData } = supabase.storage.from('startup-media').getPublicUrl(filePath);
@@ -141,7 +171,7 @@ const Register = () => {
             }
 
             // Add file URLs to submission data
-            submissionData.fileUrls = fileUrls;
+            submissionData.media_urls = fileUrls;
 
             // Insert data into Supabase
             const { data, error } = await supabase
@@ -151,7 +181,8 @@ const Register = () => {
             if (error) throw error;
 
             toast.success('Startup registered successfully!');
-            // Reset form or redirect
+
+            // Reset form
             setFormData({
                 name: '',
                 websiteUrl: '',
@@ -165,9 +196,12 @@ const Register = () => {
             setFiles([]);
             setStep(1);
 
+            // Navigate to dashboard
+            navigate('/');
+
         } catch (error) {
             console.error('Error submitting form:', error);
-            console.log('Error submitting form:', error);
+            console.log(' submitting form:', error);
             toast.error('Failed to register startup. Please try again.');
         }
     };
@@ -201,7 +235,9 @@ const Register = () => {
                             </div>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                        }} className="space-y-6">
                             {step === 1 && (
                                 <>
                                     <div>
@@ -360,15 +396,46 @@ const Register = () => {
                                 <div className="space-y-6">
                                     <div>
                                         <label className="block text-lg font-semibold text-gray-700 mb-2">Upload Media</label>
-                                        <p className="text-sm text-gray-500 mb-4">Add images, logos, or other media files</p>
-                                        <FilePond
-                                            files={files}
-                                            onupdatefiles={setFiles}
-                                            allowMultiple={true}
-                                            maxFiles={5}
-                                            name="files"
-                                            labelIdle='Drag & Drop your files or <span class="filepond--label-action">Browse</span>'
-                                        />
+                                        <p className="text-sm text-gray-500 mb-4">Add images, logos, or other media files (max 5MB each)</p>
+
+                                        <div
+                                            {...getRootProps()}
+                                            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+                                                ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                                        >
+                                            <input {...getInputProps()} />
+                                            <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                            {isDragActive ? (
+                                                <p className="text-blue-500">Drop the files here...</p>
+                                            ) : (
+                                                <p className="text-gray-600">
+                                                    Drag & drop files here, or click to select files
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {files.length > 0 && (
+                                            <div className="mt-4 space-y-2">
+                                                <h4 className="font-medium text-gray-700">Selected Files:</h4>
+                                                {files.map((file, index) => (
+                                                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="text-sm text-gray-600">{file.name}</span>
+                                                            <span className="text-xs text-gray-400">
+                                                                ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeFile(index)}
+                                                            className="text-red-600 hover:text-red-700"
+                                                        >
+                                                            <X className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -384,7 +451,7 @@ const Register = () => {
                                         Next
                                     </button>
                                 ) : (
-                                    <button type="submit" className="px-6 py-3 bg-blue-900 text-white rounded-lg">
+                                    <button type="button" onClick={handleSubmit} className="px-6 py-3 bg-blue-900 text-white rounded-lg">
                                         Submit
                                     </button>
                                 )}
