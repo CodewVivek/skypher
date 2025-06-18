@@ -148,7 +148,7 @@ const Register = () => {
             links: links.filter(link => link.trim() !== ''),
             is_founder: formData.isFounder,
             created_at: new Date().toISOString(),
-            user_id: user.id // Add the user's ID to the submission
+            user_id: user.id 
         };
 
         try {

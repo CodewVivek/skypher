@@ -100,7 +100,7 @@ const Footer = () => {
                         <h4 className="font-semibold text-lg mb-4">Company</h4>
                         <ul className="space-y-2">
                             <li>
-                                <a href="#" className=" text-black
+                                <a href="/aboutus" className=" text-black
                                 transition-colors">
                                     About Us
                                 </a>
@@ -111,12 +111,12 @@ const Footer = () => {
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className="text-black transition-colors">
+                                <a href="/privacy" className="text-black transition-colors">
                                     Privacy Policy
                                 </a>
                             </li>
                             <li>
-                                <a href="#" className=" text-black
+                                <a href="/terms" className=" text-black
                                 transition-colors">
                                     Terms of Service
                                 </a>
@@ -124,11 +124,11 @@ const Footer = () => {
                         </ul>
                     </div>
 
-                <p className="text-black">
-                    <div className="flex">
-                        <Copyright /> Skypher. All rights reserved.
-                    </div>
-                </p>
+                    <p className="text-black">
+                        <div className="flex">
+                            <Copyright /> Skypher. All rights reserved.
+                        </div>
+                    </p>
                 </div>
             </div >
         </footer >

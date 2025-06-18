@@ -8,6 +8,9 @@ import DashBoard from './Pages/DashBoard.jsx';
 import TermsOfService from './Pages/TermsOfService';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import AdminDashboard from './Pages/AdminDashboard';
+import Settings from './Components/Settings.jsx';
+import Profile from './Components/Profile.jsx';
+import Aboutus from './Components/Aboutus.jsx';
 
 function App() {
   return (
@@ -16,13 +19,17 @@ function App() {
         <main className="flex-grow">
           <Header />
           <Routes>
-            <Route path="/submit" element={<Register />} />
-            <Route path="/UserRegister" element={<UserRegister />} />
             <Route path="/" element={<DashBoard />} />
+            <Route path="/UserRegister" element={<UserRegister />} />
+            <Route path="/submit" element={<Register />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/about-us" element={<Aboutus />} />
+
             {/* Add more routes here */}
           </Routes>
         </main>
