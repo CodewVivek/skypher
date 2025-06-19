@@ -4,20 +4,23 @@ import Register from './Pages/Register';
 import LandingPage from './Pages/LandingPage';
 import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import UserRegister from './Pages/UserRegister';
-import DashBoard from './Pages/DashBoard.jsx';
+import DashBoard from './Pages/Dashboard.jsx';
 import TermsOfService from './Pages/TermsOfService';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import AdminDashboard from './Pages/AdminDashboard';
 import Settings from './Components/Settings.jsx';
 import Profile from './Components/Profile.jsx';
 import Aboutus from './Components/Aboutus.jsx';
+import Footer from './Components/Footer.jsx';
 
 function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col min-h-screen">
         <main className="flex-grow">
-          <Header />
+          <div className='mb-20'>
+            <Header />
+          </div>
           <Routes>
             <Route path="/" element={<DashBoard />} />
             <Route path="/UserRegister" element={<UserRegister />} />
@@ -29,9 +32,11 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/about-us" element={<Aboutus />} />
+            <Route path="/footer" element={<Footer />} />
 
             {/* Add more routes here */}
           </Routes>
+          <Footer />
         </main>
       </div>
     </BrowserRouter>

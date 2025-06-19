@@ -1,100 +1,131 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { ExternalLink } from 'lucide-react';
-import Button from '@mui/joy/Button';
-import Stack from '@mui/joy/Stack';
-import Modal from '@mui/joy/Modal';
-import ModalClose from '@mui/joy/ModalClose';
-import ModalDialog from '@mui/joy/ModalDialog';
-import DialogTitle from '@mui/joy/DialogTitle';
-import DialogContent from '@mui/joy/DialogContent';
-
+import { ExternalLink, X, Calendar, Users, Link as LinkIcon, Tag, Building2, Globe, ArrowLeft } from 'lucide-react';
+import Like from '../Components/Like';
 
 const Dashboard = () => {
   const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+
   useEffect(() => {
     const fetchProjectsData = async () => {
       const { data, error } = await supabase.from('projects').select('*');
       if (error) {
-        console.error("error fecthing project data", error)
+        console.error("error fetching project data", error)
       }
       else {
         setProjects(data)
       }
     };
     fetchProjectsData();
-  }, [])
-  const [layout, setLayout] = React.useState(undefined);
-  const [selectedProject, setSelectedProject] = useState([]);
+  }, []);
 
+  const openProjectDetails = (project) => {
+    setSelectedProject(project);
+    // Scroll to the details section
+    document.getElementById('project-details').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  const closeProjectDetails = () => {
+    setSelectedProject(null);
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
 
   return (
     <>
-      <div className="container-custom py-8 mt-28">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
 
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                onClick={() => openProjectDetails(project)}
+              >
+                <div className="p-6">
+                  <div className='flex items-center justify-between'>
+                    <div className="flex items-center gap-2 mb-2 w-auto ">
+                      <h2 className="text-xl font-semibold text-gray-900 w-auto">{project.name}</h2>
+                      <a
+                        href={project.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
 
-          {projects.map((projects, index) => (
+                    </div>
 
-            < div className="bg-gray-200 rounded-xl shadow-lg p-6" key={index} variant="outlined"
-              color="neutral"
-              onClick={() => {
-                setSelectedProject(projects)
-                setLayout('fullscreen');
-              }}>
+                    <div className="flex items-center w-auto line-clamp-1 gap-10">
+                      <Like projectId={project.id} />
+                    </div>
+                  </div>
+                  <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-sm ">
+                      <Tag className="w-4 h-4 mr-2 text-black" />
+                      <span className="capitalize">{project.category_type}</span>
+                    </div>
 
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">{projects.name}</h2>
+                    <div className="flex items-center text-sm ">
+                      <Calendar className="w-4 h-4 mr-2 text-black" />
+                      <span className='text-gray-600'>{formatDate(project.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div >
 
-              <a href={projects.website_url} target='_blank' rel='no oppener' className='flex gap-1 text-blue-700 w-10'>
-                <ExternalLink />Link
-              </a>
+      {
+        selectedProject && (
+          <div className="p-6">
+            <div className='flex items-center justify-between'>
+              <div className="flex items-center gap-2 mb-2 w-auto ">
+                <h2 className="text-xl font-semibold text-gray-900 w-auto">{project.name}</h2>
+                <a
+                  href={project.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
 
-              <p className="text-sm  text-blue-900">{projects.tagline}</p>
-              <div className='flex'>
-                category Type:
-                <p className="text-lg  text-blue-900">{selectedProject.category_type}</p>
+              </div>
+              <Like />
+            </div>
+            <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center text-sm ">
+                <Tag className="w-4 h-4 mr-2 text-black" />
+                <span className="capitalize">{project.category_type}</span>
+              </div>
+
+              <div className="flex items-center text-sm ">
+                <Calendar className="w-4 h-4 mr-2 text-black" />
+                <span className='text-gray-600'>{formatDate(project.created_at)}</span>
               </div>
             </div>
-          ))
-          }
-        </div >
-      </div >
-      <div>
+          </div>
 
-        <Modal open={!!layout} onClose={() => setLayout(undefined)}>
-          <ModalDialog layout={layout}>
-            <ModalClose />
-            {selectedProject && (
-              <>
-                <DialogTitle className="text-2xl font-bold text-gray-800 mb-4">{selectedProject.name}</DialogTitle>
-                <a href={projects.website_url} target='_blank' rel='no oppener' className='flex gap-1 text-blue-700'>
-                  <ExternalLink />Link
-                </a>
-                <p className="text-sm  text-blue-900">{projects.tagline}</p>
-                <div className='flex'>
-                  category Type:
-                  <p className="text-lg  text-blue-900">{selectedProject.category_type}</p>
-                </div>
-                <DialogContent>
-                  <p>{selectedProject.description}</p>
-                  <p>
-                    {new Date(selectedProject.created_at).toLocaleDateString("en-GB", {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </p>
-                  <p>{selectedProject.team_emails}</p>
-                  <p>{selectedProject.links}</p>
-                </DialogContent>
-              </>
-            )}
-          </ModalDialog>
-        </Modal>
-      </div >
+        )
+      }
     </>
-
   );
 };
 
-export default Dashboard
+export default Dashboard;
