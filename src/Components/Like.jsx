@@ -64,18 +64,18 @@ const Like = ({ projectId }) => {
 
     return (
         <div>
-            <div className='flex gap-2 hover:border-red-900 transition-all duration-150'>
+            <div className='flex gap-2 hover:border-red-900 transition-all duration-150 items-center'>
                 <button
                     onClick={handleLike}
                     className={`transition-all duration-150 rounded-full p-2 
-                        ${liked ? 'bg-red-100' : 'bg-gray-100'} 
+                        ${liked ? 'bg-red-100' : 'bg-white'} 
                         hover:scale-110 hover:bg-red-200 focus:outline-none`}
                     aria-label={liked ? 'Unlike' : 'Like'}
                     title={liked ? 'Unlike' : 'Like'}
                 >
                     <Heart fill={liked ? 'red' : 'none'} className={`w-6 h-6 transition-all duration-150`} />
                 </button>
-                <span className="text-sm font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                <span className="text-[20px]  rounded-full  text-gray-700">
                     {count}
                 </span>
             </div>

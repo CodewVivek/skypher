@@ -4,6 +4,7 @@ import Register from './Pages/Register';
 import LandingPage from './Pages/LandingPage';
 import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import UserRegister from './Pages/UserRegister';
+import ProjectDetails from './Pages/ProjectDetails.jsx';
 import DashBoard from './Pages/Dashboard.jsx';
 import TermsOfService from './Pages/TermsOfService';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
@@ -13,31 +14,33 @@ import Profile from './Components/Profile.jsx';
 import Aboutus from './Components/Aboutus.jsx';
 import Footer from './Components/Footer.jsx';
 
+
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen"> {/* full height flex container */}
+        {/* HEADER SECTION */}
+        <Header />
+
         <main className="flex-grow">
-          <div className='mb-20'>
-            <Header />
-          </div>
           <Routes>
             <Route path="/" element={<DashBoard />} />
             <Route path="/UserRegister" element={<UserRegister />} />
             <Route path="/submit" element={<Register />} />
+            <Route path="/launches/:name" element={<ProjectDetails />} />
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/launchpage" element={<LandingPage />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/about-us" element={<Aboutus />} />
+            <Route path="/aboutus" element={<Aboutus />} />
             <Route path="/footer" element={<Footer />} />
-
-            {/* Add more routes here */}
           </Routes>
-          <Footer />
         </main>
+
+        {/* FOOTER STUCK TO BOTTOM ALWAYS */}
+        <Footer />
       </div>
     </BrowserRouter>
   );
