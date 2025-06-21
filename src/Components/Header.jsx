@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Telescope, CirclePlus, CircleUserRound, Settings, LogOut, User } from 'lucide-react';
-import { Link } from "react-router-dom";
-import { supabase } from '../supabaseClient';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import {
+    Telescope,
+    CirclePlus,
+    CircleUserRound,
+    Settings,
+    LogOut,
+    User
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import toast from "react-hot-toast";
 
 const Header = () => {
     const [user, setUser] = useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -25,14 +32,9 @@ const Header = () => {
         };
     }, []);
 
-    const [anchorEl, setAnchorEl] = React.useState(null);
     const handlepopover = (event) => {
         event.stopPropagation();
-        if (anchorEl) {
-            setAnchorEl(null);
-        } else {
-            setAnchorEl(event.currentTarget);
-        }
+        setAnchorEl(prev => (prev ? null : event.currentTarget));
     };
 
     const handleClose = () => {
@@ -41,30 +43,28 @@ const Header = () => {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (anchorEl && !event.target.closest('.user-dropdown')) {
+            if (anchorEl && !event.target.closest(".user-dropdown")) {
                 handleClose();
             }
         };
 
-        document.addEventListener('click', handleClickOutside);
+        document.addEventListener("click", handleClickOutside);
         return () => {
-            document.removeEventListener('click', handleClickOutside);
+            document.removeEventListener("click", handleClickOutside);
         };
     }, [anchorEl]);
 
     const open = Boolean(anchorEl);
-    const id = open ? 'simple-popover' : undefined;
 
     const handleSignOut = async () => {
         try {
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
-
-            toast.success('Signed out successfully');
-            navigate('/');
+            toast.success("Signed out successfully");
+            navigate("/");
         } catch (error) {
-            console.error('Error signing out:', error.message);
-            toast.error('Failed to sign out');
+            console.error("Error signing out:", error.message);
+            toast.error("Failed to sign out");
         }
     };
 
@@ -82,38 +82,88 @@ const Header = () => {
                     </Link>
 
                     <nav className="flex items-center space-x-8">
-                        <Link to="/submit" className="text-white/90 hover:text-white transition-colors font-medium flex gap-1 items-center justify-center">
-                            <CirclePlus />Submit
+                        <Link
+                            to="/submit"
+                            className="text-white/90 hover:text-white transition-colors font-medium flex gap-1 items-center justify-center"
+                        >
+                            <CirclePlus />
+                            Submit
                         </Link>
 
-                        <Link to="/UserRegister" className="text-white/90 hover:text-white transition-colors font-medium">
+                        <Link
+                            to="/UserRegister"
+                            className="text-white/90 hover:text-white transition-colors font-medium"
+                        >
                             Get Started
                         </Link>
 
-                        {user?.email === 'vivekmanikonda113@gmail.com' && (
-                            <Link to="/admin" className="text-white/90 hover:text-white transition-colors font-medium">
+                        <Link
+                            to="/news"
+                            className="text-white/90 hover:text-white transition-colors font-medium"
+                        >
+                            News
+                        </Link>
+
+                        {user?.email === "vivekmanikonda113@gmail.com" && (
+                            <Link
+                                to="/admin"
+                                className="text-white/90 hover:text-white transition-colors font-medium"
+                            >
                                 Admin
                             </Link>
                         )}
 
                         <div className="text-white/90 hover:text-white transition-colors font-medium user-dropdown relative">
-                            <button className="p-2 rounded-full hover:bg-white/20 transition-colors">
-                                <CircleUserRound className="w-6 h-6 text-white" onClick={handlepopover} />
+                            <button
+                                className="p-2 rounded-full hover:bg-white/20 transition-colors"
+                                onClick={handlepopover}
+                            >
+                                {user ? (
+                                    <img
+                                        src={
+                                            user.user_metadata?.avatar_url ||
+                                            user.user_metadata?.picture ||
+                                            'no Pic'
+                                        }
+                                        alt="profile"
+                                        className="w-6 h-6 rounded-full"
+                                    />
+                                ) : (
+                                    <CircleUserRound className="w-6 h-6 text-white" />
+                                )}
                             </button>
+
                             {open && (
-                                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-lg border border-gray-100 py-1 z-50">
+                                <div className="absolute right-0 mt-2.5 w-56 rounded-xl bg-white shadow-lg border border-gray-100 py-1 z-50">
                                     {user ? (
                                         <>
                                             <div className="px-4 py-2 border-b border-gray-100">
-                                                <p className="text-sm font-medium text-gray-900">Account</p>
-                                                <p className="text-xs text-gray-500 truncate">{user.Displayname}</p>
-                                                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={
+                                                            user.user_metadata?.avatar_url ||
+                                                            user.user_metadata?.picture ||
+                                                            "https://via.placeholder.com/32"
+                                                        }
+                                                        alt="profile"
+                                                        className="w-6 h-6 rounded-full"
+                                                    />
+                                                    <p className="text-sm font-semibold text-gray-700 truncate">
+                                                        {user.user_metadata?.full_name ||
+                                                            user.user_metadata?.name ||
+                                                            "No Name"}
+                                                    </p>
+                                                </div>
+                                                <p className="text-sm text-gray-500 truncate mt-2">
+                                                    {user.email}
+                                                </p>
                                             </div>
+
                                             <div className="py-1">
                                                 <button
                                                     onClick={() => {
                                                         handleClose();
-                                                        navigate('/profile');
+                                                        navigate("/profile");
                                                     }}
                                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 >
@@ -123,7 +173,7 @@ const Header = () => {
                                                 <button
                                                     onClick={() => {
                                                         handleClose();
-                                                        navigate('/settings');
+                                                        navigate("/settings");
                                                     }}
                                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 >
@@ -147,7 +197,7 @@ const Header = () => {
                                             <button
                                                 onClick={() => {
                                                     handleClose();
-                                                    navigate('/UserRegister');
+                                                    navigate("/UserRegister");
                                                 }}
                                                 className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                             >

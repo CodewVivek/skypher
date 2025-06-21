@@ -13,6 +13,7 @@ import Settings from './Components/Settings.jsx';
 import Profile from './Components/Profile.jsx';
 import Aboutus from './Components/Aboutus.jsx';
 import Footer from './Components/Footer.jsx';
+import News from './Pages/News.jsx';
 
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/aboutus" element={<Aboutus />} />
             <Route path="/footer" element={<Footer />} />
+            <Route path="/news" element={<News />} />
           </Routes>
         </main>
 
