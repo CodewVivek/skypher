@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const [projects, setProjects] = useState([]);
-  const [projectct, setprojectct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -28,7 +27,7 @@ const Dashboard = () => {
   }, []);
 
   const slugify = (text) =>
-    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''); // it basically will remove capticals - etc... and convert into small Letters
 
   const openProjectDetails = (projectName) => {
     const slug = slugify(projectName);
@@ -57,6 +56,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
+
               <div
                 key={project.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
@@ -78,6 +78,13 @@ const Dashboard = () => {
                     </div>
                     <Like projectId={project.id} />
                   </div>
+                  {project.media_urls && project.media_urls.length > 0 && (
+                    <img
+                      src={project.media_urls[0]}
+                      alt='Image of Launch'
+                      className='w-full object-cover p-1'
+                    />
+                  )}
                   <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center text-sm ">

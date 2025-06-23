@@ -68,7 +68,7 @@ const Like = ({ projectId }) => {
                 <button
                     onClick={handleLike}
                     className={`transition-all duration-150 rounded-full p-2 
-                        ${liked ? 'bg-red-100' : 'bg-white'} 
+                        ${liked ? 'bg-white' : 'bg-white'} 
                         hover:scale-110 hover:bg-red-200 focus:outline-none`}
                     aria-label={liked ? 'Unlike' : 'Like'}
                     title={liked ? 'Unlike' : 'Like'}

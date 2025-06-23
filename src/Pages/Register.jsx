@@ -90,6 +90,7 @@ const Register = () => {
         });
     };
 
+    //this is to show the file that we dropped /uploaded
     const onDrop = useCallback((acceptedFiles) => {
         setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
     }, []);
@@ -103,21 +104,23 @@ const Register = () => {
         maxSize: 5242880, // 5MB
         maxFiles: 5
     });
-
+    //this code is for remove the files user has uploaded
     const removeFile = (index) => {
         setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
     };
 
+
+    //Checking if the user is authenticated......
     useEffect(() => {
         // Check if user is authenticated
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();//getting the user from db
             if (!user) {
                 toast.error('Please sign in to submit a project');
                 navigate('/UserRegister');
                 return;
             }
-            setUser(user);
+            setUser(user);//else set user
         };
         checkUser();
     }, [navigate]);
@@ -141,18 +144,18 @@ const Register = () => {
         const submissionData = {
             name: formData.name,
             website_url: formData.websiteUrl,
-            description: formData.description,
             tagline: formData.tagline,
+            description: formData.description,
             category_type: selectedCategory?.value,
             team_emails: teamEmails,
             links: links.filter(link => link.trim() !== ''),
             is_founder: formData.isFounder,
             created_at: new Date().toISOString(),
-            user_id: user.id 
+            user_id: user.id
         };
 
         try {
-            // Upload files to Supabase storage if there are any
+
             let fileUrls = [];
             if (files.length > 0) {
                 const uploadPromises = files.map(async (file, index) => {

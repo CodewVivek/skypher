@@ -63,38 +63,22 @@ const ProjectDetails = () => {
                     </div>
 
                     <p className="text-gray-600 mt-2">{project.tagline}</p>
+                    {project.media_urls.map((url, index) =>
+                    (
+                        < div className="mt-6 mb-4" >
+                            <img
+                                key={index}
+                                src={url}
+                                alt='launch images'
+                                className="w-full rounded-lg border"
+                            />
+                        </div>
+                    )
+                    )}
 
-                    <div className="mt-6 mb-4">
-                        <img
-                            src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExc2dwaWczajVpeGltMmplOGJqdmJwd2lvc3RpdXdpdmQ1dHplem52eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/4NKJhDAEv8TRu/giphy.gif"
-                            alt="Project demo"
-                            className="w-full rounded-lg border"
-                        />
-                    </div>
-
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 mb-6">{project.description}</p>
                     <p className="text-gray-700 mb-6">{project.description}</p>
                     <p className="text-gray-700 font-extrabold mb-6">{project.team_emails}</p>
                     <p className="text-gray-700 font-extrabold  mb-6">{project.links}</p>
-                    <p className="text-gray-700 font-extrabold  mb-6">{project.is_founder}Founder:</p>
                     <p className="text-gray-700 font-extrabold mb-6">{formatDate(project.created_at)}</p>
 
 
@@ -127,6 +111,7 @@ const ProjectDetails = () => {
                         >
                             {project.website_url}
                         </a>
+                        <p className="text-gray-700 font-extrabold  mb-6">{project.is_founder}Founder:Promoter</p>
                         <p className="text-xs text-gray-500 mt-1">
                             Launched in {new Date(project.created_at).getFullYear()}
                         </p>
@@ -154,7 +139,7 @@ const ProjectDetails = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
