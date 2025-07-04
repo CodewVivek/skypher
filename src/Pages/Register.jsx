@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, X, Upload } from 'lucide-react';
+import { Plus, X, Upload, User } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
@@ -210,15 +210,58 @@ const Register = () => {
     };
     const [step, setStep] = useState(1);
 
+
+    //using ai to generate the data of the launches and saving ...
+
+    const handleGenerateLaunchData = async () => {
+        if (!formData.websiteUrl) {
+            toast.error("Please enter a website URL first.");
+            return;
+        }
+        try {
+            const { data: userData } = await supabase.auth.getUser();
+            const user_id = userData?.user?.id;
+
+            const res = await fetch("http://localhost:3001/generatelaunchdata", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: formData.websiteUrl,
+                    user_id,
+                }),
+
+            });
+            console.log("sending url", formData.websiteUrl);
+            const gptData = await res.json();
+            if (gptData.err) throw new Error(gptData.message);
+
+            setFormData((prev) => ({
+                ...prev,
+                name: gptData.name,
+                website_url: gptData.website_url,
+                tagline: gptData.tagline,
+                description: gptData.description,
+            }));
+            if (gptData.links?.length) setLinks(gptData.links)
+            if (gptData.emails?.length) setTeamEmails(gptData.emails)
+            toast.success("Startup details fetched! You can now edit them.");
+
+        }
+        catch (error) {
+            console.error("Auto Generate failed :", error);
+            toast.error("AI failed to extract startup info...");
+        }
+
+    }
     return (
         <>
 
             <div className="container-custom py-12">
-                <div className="max-w-2xl mx-auto">
+                <div className="max-w-2xl mx-auto mt-15">
                     <div className="bg-white rounded-xl shadow-lg p-8">
                         <div className="mb-8">
                             <div className="flex justify-between items-center">
-                                {[1, 2, 3, 4].map((stepNumber) => (
+                                {[1, 2, 3].map((stepNumber) => (
                                     <div key={stepNumber} className="flex flex-col items-center">
                                         <div
                                             className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
@@ -227,7 +270,7 @@ const Register = () => {
                                             {stepNumber}
                                         </div>
                                         <span className={`mt-2 text-sm ${step >= stepNumber ? 'text-blue-900' : 'text-gray-400'}`}>
-                                            {stepNumber === 1 ? 'Basic Info' : stepNumber === 2 ? 'Details' : stepNumber === 3 ? 'Team' : 'Media'}
+                                            {stepNumber === 1 ? 'Basic Info' : stepNumber === 2 ? 'Details' : 'Media'}
                                         </span>
                                     </div>
                                 ))}
@@ -244,6 +287,26 @@ const Register = () => {
                             {step === 1 && (
                                 <>
                                     <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Website URL</label>
+                                        <div className='flex gap-1'>
+                                            <input
+                                                type="url"
+                                                name="websiteUrl"
+                                                value={formData.websiteUrl}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                                placeholder="https://example.com"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleGenerateLaunchData}
+                                                className="px-4 py-2 bg-indigo-600 text-white text-lg rounded-lg"
+                                            >
+                                                Generate
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
                                         <label className="block text-lg font-semibold text-gray-700 mb-2">Startup Name</label>
                                         <input
                                             type="text"
@@ -252,17 +315,6 @@ const Register = () => {
                                             onChange={handleInputChange}
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                                             placeholder="Enter your startup name"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Website URL</label>
-                                        <input
-                                            type="url"
-                                            name="websiteUrl"
-                                            value={formData.websiteUrl}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                            placeholder="https://example.com"
                                         />
                                     </div>
                                     <div>
@@ -276,11 +328,6 @@ const Register = () => {
                                             placeholder="Enter a catchy tagline"
                                         />
                                     </div>
-                                </>
-                            )}
-
-                            {step === 2 && (
-                                <>
                                     <div>
                                         <label className="block text-lg font-semibold text-gray-700 mb-2">Description</label>
                                         <textarea
@@ -305,6 +352,11 @@ const Register = () => {
                                             className="max-w-md"
                                         />
                                     </section>
+                                </>
+                            )}
+
+                            {step === 2 && (
+                                <>
 
                                     <div className="space-y-4">
                                         <label className="block text-lg font-semibold text-gray-700">Links</label>
@@ -330,11 +382,6 @@ const Register = () => {
                                             Add another link
                                         </button>
                                     </div>
-                                </>
-                            )}
-
-                            {step === 3 && (
-                                <div className="space-y-6">
                                     <div>
                                         <label className="block text-lg font-semibold text-gray-700 mb-2">Add Team Members</label>
                                         <div className="flex space-x-2">
@@ -354,7 +401,6 @@ const Register = () => {
                                             </button>
                                         </div>
                                     </div>
-
                                     {teamEmails.length > 0 && (
                                         <div className="space-y-2">
                                             <h4 className="font-medium text-gray-700">Team Members:</h4>
@@ -391,11 +437,12 @@ const Register = () => {
                                         />
                                         <label className="text-base text-gray-700">No, I am just promote </label>
                                     </div>
-                                </div>
-
+                                </>
                             )}
 
-                            {step === 4 && (
+
+
+                            {step === 3 && (
                                 <div className="space-y-6">
                                     <div>
                                         <label className="block text-lg font-semibold text-gray-700 mb-2">Upload Media</label>
@@ -449,7 +496,7 @@ const Register = () => {
                                         Previous
                                     </button>
                                 )}
-                                {step < 4 ? (
+                                {step < 3 ? (
                                     <button type="button" onClick={() => setStep(step + 1)} className="px-6 py-3 bg-blue-900 text-white rounded-lg">
                                         Next
                                     </button>

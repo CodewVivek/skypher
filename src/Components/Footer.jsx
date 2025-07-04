@@ -11,7 +11,7 @@ const Footer = () => {
                         <div>
                             <Link to="/" className="flex items-center gap-2 mb-4">
                                 <Rocket className="h-6 w-6 text-primary-400" />
-                                <span className="font-display font-bold text-2xl text-black">Skypher</span>
+                                <span className="font-display font-bold text-2xl text-black">Launch It</span>
                             </Link>
                             <p className="text-black mb-4">
                                 Connecting innovative startups with the resources they need to succeed.
@@ -53,7 +53,7 @@ const Footer = () => {
                     {/* Copyright bar */}
                     <div className="flex justify-center items-center text-sm text-gray-500 mt-8">
                         <Copyright className="w-4 h-4 mr-1" />
-                        <span>Skypher. All rights reserved.</span>
+                        <span>Launch It. All rights reserved.</span>
                     </div>
                 </div>
             </div>

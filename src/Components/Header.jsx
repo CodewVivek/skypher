@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-    Telescope,
+    Rocket,
     CirclePlus,
     CircleUserRound,
     Settings,
@@ -74,10 +74,10 @@ const Header = () => {
                 <div className="flex justify-between items-center h-full">
                     <Link to="/" className="flex items-center space-x-2 group">
                         <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                            <Telescope className="w-5 h-5 text-white" />
+                            <Rocket className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xl font-light tracking-wide text-white group-hover:text-white/90">
-                            Skypher
+                        <span className="text-xl font-bold tracking-wide text-white group-hover:text-white/90">
+                            Launch It
                         </span>
                     </Link>
 
@@ -103,6 +103,12 @@ const Header = () => {
                         >
                             News
                         </Link>
+                        <a
+                            href="https://startup.jobs/"
+                            className="text-white/90 hover:text-white transition-colors font-medium"
+                        >
+                            Startup Jobs
+                        </a>
 
                         {user?.email === "vivekmanikonda113@gmail.com" && (
                             <Link

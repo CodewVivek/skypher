@@ -14,6 +14,8 @@ import Profile from './Components/Profile.jsx';
 import Aboutus from './Components/Aboutus.jsx';
 import Footer from './Components/Footer.jsx';
 import News from './Pages/News.jsx';
+import Report from './Pages/Report.jsx';
+import UserProfile from './Pages/UserProfile.jsx';
 
 
 function App() {
@@ -35,6 +37,7 @@ function App() {
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:name" element={<UserProfile />} />
             <Route path="/aboutus" element={<Aboutus />} />
             <Route path="/footer" element={<Footer />} />
             <Route path="/news" element={<News />} />

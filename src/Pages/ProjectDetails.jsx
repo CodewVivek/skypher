@@ -30,6 +30,17 @@ const ProjectDetails = () => {
                 console.error(error);
             } else {
                 setProject(data);
+                if (data && data.user_id) {
+                    const { data: userData, error: userError } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', data.user_id)
+                        .single();
+
+                    if (userError) console.error(userError);
+                    else setCreator(userData);
+                }
+
             }
             setLoading(false);
         };
@@ -37,10 +48,20 @@ const ProjectDetails = () => {
         fetchProject();
     }, [name]);
 
+    const [user, setUser] = useState(null);
 
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user)
+        };
+        checkUser();
+    }, []);
 
     if (loading) return <div>Loading...</div>;
     if (!project) return <div>Project not found</div>;
+
+
 
     return (
         <div className="min-h-screen bg-white">
@@ -50,16 +71,18 @@ const ProjectDetails = () => {
                 <div className="w-full md:w-2/3 pr-4">
                     <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-bold">{project.name}</h2>
-                        <a
-                            href={project.website_url}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            <button className='flex gap-2 p-2 bg-blue-400 text-white rounded-2xl font-sans text-md'>
-                                <ExternalLink />Visit Lauch
-                            </button>
-                        </a>
-
+                        <div className='flex gap-2'>
+                            <a
+                                href={project.website_url}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <button className='flex gap-2 p-2 bg-white text-black border-gray-200 border-2 rounded-2xl font-semibold text-md'>
+                                    <ExternalLink />Lauch
+                                </button>
+                            </a>
+                            <Like projectId={project.id} />
+                        </div>
                     </div>
 
                     <p className="text-gray-600 mt-2">{project.tagline}</p>
@@ -94,12 +117,6 @@ const ProjectDetails = () => {
 
                 {/* Right Sidebar */}
                 <div className="w-full md:w-1/3 ">
-                    <div className="mb-4">
-                        <span className="text-sm text-gray-500">Launch Likes</span>
-                        <div className="flex items-center justify-between mt-1">
-                            <span className="text-2xl font-bold text-red-500"> <Like projectId={project.id} /></span>
-                        </div>
-                    </div>
 
                     <div className="mb-4">
                         <h4 className="text-md font-semibold mb-1">Company Info</h4>
@@ -112,6 +129,7 @@ const ProjectDetails = () => {
                             {project.website_url}
                         </a>
                         <p className="text-gray-700 font-extrabold  mb-6">{project.is_founder}Founder:Promoter</p>
+                        <p className="text-gray-700 font-extrabold  mb-6">Launcher</p>
                         <p className="text-xs text-gray-500 mt-1">
                             Launched in {new Date(project.created_at).getFullYear()}
                         </p>
@@ -135,7 +153,14 @@ const ProjectDetails = () => {
 
                     <div className="mt-6">
                         <h4 className="text-md font-semibold mb-1">Built By</h4>
-                        <p className="text-sm text-gray-700">{project.user_name}</p>
+                        <button className='flex items-center gap-1 '>
+                            <img
+                                alt='<User/>'
+                                src={user.user_metadata?.avatar_url || user.user_metadata?.picture || '<User/>'}
+                                className='h-8 w-8 rounded-xl'
+                            />
+                            <p className="text-md font-medium text-gray-700">{user.user_metadata?.full_name || user.user_metadata?.name || 'user'}</p>
+                        </button>
                     </div>
                 </div>
             </div>
