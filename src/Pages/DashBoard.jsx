@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { ExternalLink, Calendar, Tag, Search } from 'lucide-react';
 import Like from '../Components/Like';
 import { useNavigate } from 'react-router-dom';
-
+import { format, isToday, isYesterday } from 'date-fns';
 
 const Dashboard = () => {
   const [projects, setProjects] = useState([]);
@@ -11,12 +11,6 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const projectsSearch = projects.filter(
-    project => project.name.toLowerCase().includes(search.toLowerCase()) ||
-      (project.category_type.toLowerCase().includes(search.toLowerCase())) ||
-      (project.description.toLowerCase().includes(search.toLowerCase()))
-  )
-
 
   useEffect(() => {
     const fetchProjectsData = async () => {
@@ -34,8 +28,37 @@ const Dashboard = () => {
     fetchProjectsData();
   }, []);
 
+  // Filter projects by search query
+  const projectsSearch = projects.filter(
+    project =>
+      (project.name && project.name.toLowerCase().includes(search.toLowerCase())) ||
+      (project.category_type && project.category_type.toLowerCase().includes(search.toLowerCase())) ||
+      (project.description && project.description.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  // Sort projects by date (descending)
+  const sortProjects = [...projectsSearch].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  );
+
+  // Group projects by date
+  const groupProjectsByDate = (projects) => {
+    const groups = {};
+    projects.forEach(project => {
+      const date = new Date(project.created_at);
+      let label;
+      if (isToday(date)) label = 'Today';
+      else if (isYesterday(date)) label = 'Yesterday';
+      else label = format(date, 'd MMMM yyyy');
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(project);
+    });
+    return groups;
+  };
+  const groupedProjects = groupProjectsByDate(sortProjects);
+
   const slugify = (text) =>
-    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''); // it basically will remove capticals - etc... and convert into small Letters
+    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
   const openProjectDetails = (projectName) => {
     const slug = slugify(projectName);
@@ -58,15 +81,14 @@ const Dashboard = () => {
     return <div className="min-h-screen flex items-center justify-center text-red-600">Error: {error}</div>;
   }
 
-
   return (
     <>
       <div className="min-h-screen mt-20">
         <div className='flex items-center justify-center'>
-          <div className="relative  justify-center w-full max-w-md">
+          <div className="relative justify-center w-full max-w-md">
             <input
               type="text"
-              placeholder="Search for Launches,categories,or more..."
+              placeholder="Search for Launches, categories, or more..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -76,76 +98,73 @@ const Dashboard = () => {
             </span>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {
-            projectsSearch.length == 0 && (
-              <div>
-                <div className="flex justify-center items-center min-h-[60vh] sm:min-h-[70vh]">
-                  <div className="flex flex-col justify-center items-center text-center">
-                    <svg data-v-ad307406="" xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-animal-icon lucide-animal animal-icon"><path d="M13 16a3 3 0 0 1 2.24 5"></path><path d="M18 12h.01"></path><path d="M18 21h-8a4 4 0 0 1-4-4 7 7 0 0 1 7-7h.2L9.6 6.4a1 1 0 1 1 2.8-2.8L15.8 7h.2c3.3 0 6 2.7 6 6v1a2 2 0 0 1-2 2h-1a3 3 0 0 0-3 3"></path><path d="M20 8.54V4a2 2 0 1 0-4 0v3"></path><path d="M7.612 12.524a3 3 0 1 0-1.6 4.3"></path></svg>
-                    <h2 className="text-4xl sm:text-5xl font-bold text-gray-650 mb-4">
-                      No Launches Available
-                    </h2>
-                    <p className="text-lg text-gray-600">
-                      Currently, there are no  launches scheduled or listed.<br />
-                      We are continuously updating our records; please revisit shortly for new information.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-            )
-          }
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projectsSearch.map((project) => (
-
-              <div
-                key={project.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-1 border-gray-300"
-                onClick={() => openProjectDetails(project.name)}
-              >
-                <div className="p-6">
-                  <div className='flex items-center justify-between'>
-                    <div className="flex items-center gap-2 mb-2 w-auto ">
-                      <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
-                      <a
-                        href={project.website_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
+        {Object.keys(groupedProjects).length === 0 && (
+          <div className="flex justify-center items-center min-h-[60vh] sm:min-h-[70vh]">
+            <div className="flex flex-col justify-center items-center text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-animal-icon lucide-animal animal-icon"><path d="M13 16a3 3 0 0 1 2.24 5"></path><path d="M18 12h.01"></path><path d="M18 21h-8a4 4 0 0 1-4-4 7 7 0 0 1 7-7h.2L9.6 6.4a1 1 0 1 1 2.8-2.8L15.8 7h.2c3.3 0 6 2.7 6 6v1a2 2 0 0 1-2 2h-1a3 3 0 0 0-3 3"></path><path d="M20 8.54V4a2 2 0 1 0-4 0v3"></path><path d="M7.612 12.524a3 3 0 1 0-1.6 4.3"></path></svg>
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-650 mb-4">
+                No Launches Available
+              </h2>
+              <p className="text-lg text-gray-600">
+                Currently, there are no launches scheduled or listed.<br />
+                We are continuously updating our records; please revisit shortly for new information.
+              </p>
+            </div>
+          </div>
+        )}
+        {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
+          <div key={dateLabel}>
+            <h3 className="text-2xl font-bold my-6 m-10">{dateLabel}</h3>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-1 border-gray-300"
+                    onClick={() => openProjectDetails(project.name)}
+                  >
+                    <div className="p-4">
+                      <div className='flex items-center justify-between'>
+                        <div className="flex items-center gap-2 mb-2 w-auto ">
+                          <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
+                          <a
+                            href={project.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-700 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+                        <Like projectId={project.id} />
+                      </div>
+                      {project.media_urls && project.media_urls.length > 0 && (
+                        <img
+                          src={project.media_urls[0]}
+                          alt='Image of Launch'
+                          className='w-full object-cover p-1'
+                        />
+                      )}
+                      <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm ">
+                          <Tag className="w-4 h-4 mr-2 text-black" />
+                          <span className="capitalize">{project.category_type}</span>
+                        </div>
+                        <div className="flex items-center text-sm ">
+                          <Calendar className="w-4 h-4 mr-2 text-black" />
+                          <span className='text-gray-600'>{formatDate(project.created_at)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <Like projectId={project.id} />
                   </div>
-                  {project.media_urls && project.media_urls.length > 0 && (
-                    <img
-                      src={project.media_urls[0]}
-                      alt='Image of Launch'
-                      className='w-full object-cover p-1'
-                    />
-                  )}
-                  <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm ">
-                      <Tag className="w-4 h-4 mr-2 text-black" />
-                      <span className="capitalize">{project.category_type}</span>
-                    </div>
-                    <div className="flex items-center text-sm ">
-                      <Calendar className="w-4 h-4 mr-2 text-black" />
-                      <span className='text-gray-600'>{formatDate(project.created_at)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                ))}
+              </div >
+            </div >
           </div >
-        </div >
-      </div >
-
-
+        ))}
+      </div>
     </>
   );
 };

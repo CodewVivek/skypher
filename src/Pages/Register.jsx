@@ -1,10 +1,19 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import toast from 'react-hot-toast';
 import { Plus, X, Upload, User } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import Alert from '@mui/material/Alert';
+
+const MAX_FILE_SIZE = 5242880; // 5 MB in bytes
+const MAX_FILES = 3;
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return `${bytes} bytes`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const Register = () => {
     const navigate = useNavigate();
@@ -12,6 +21,8 @@ const Register = () => {
     const [isClearable, setIsClearable] = useState(true);
     const [isSearchable, setIsSearchable] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [formError, setFormError] = useState('');
+    const [uploadError, setUploadError] = useState('');
     const categoryOptions = [
         {
             label: "💸 Finance & Fintech",
@@ -221,8 +232,6 @@ const Register = () => {
         }
     ];
     const [files, setFiles] = useState([]);
-
-    //LINK INPUT
     const [links, setLinks] = useState(['']);
     const addLink = () => setLinks([...links, '']);
     const updateLink = (index, value) => {
@@ -233,22 +242,18 @@ const Register = () => {
     const removeLink = (index) => {
         setLinks(links.filter((_, i) => i !== index));
     };
-
-    //TEAM MEMBERS 
     const [teamEmails, setTeamEmails] = useState([]);
     const [newTeamEmail, setNewTeamEmail] = useState('');
     const addTeamMember = () => {
         if (newTeamEmail && !teamEmails.includes(newTeamEmail)) {
             setTeamEmails([...teamEmails, newTeamEmail]);
             setNewTeamEmail('');
-            toast.success('Team member added successfully!');
+            setFormError('');
         }
     };
     const removeTeamMember = (email) => {
         setTeamEmails(teamEmails.filter((e) => e !== email));
     };
-
-    //FORM DATA
     const [formData, setFormData] = useState({
         name: '',
         websiteUrl: '',
@@ -256,68 +261,93 @@ const Register = () => {
         tagline: '',
         isFounder: false,
         categoryOptions: '',
-
     });
-
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData({
             ...formData,
             [name]: type === 'checkbox' ? checked : value,
         });
+        setFormError('');
     };
-
-    //this is to show the file that we dropped /uploaded
     const onDrop = useCallback((acceptedFiles) => {
         setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
+        setUploadError('');
     }, []);
-
+    const onDropRejected = (fileRejections) => {
+        let message = '';
+        fileRejections.forEach(rejection => {
+            rejection.errors.forEach(err => {
+                if (err.code === "file-too-large") {
+                    message = "Each file must be smaller than 5.0 MB.";
+                }
+                if (err.code === "too-many-files") {
+                    message = "You can only upload up to 3 files.";
+                }
+                if (err.code === "file-invalid-type") {
+                    message = "Invalid file type. Please upload images or PDFs only.";
+                }
+            });
+        });
+        setUploadError(message);
+    };
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
+        onDropRejected,
         accept: {
             'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
             'application/pdf': ['.pdf']
         },
-        maxSize: 5242880, // 5MB
-        maxFiles: 5
+        maxSize: MAX_FILE_SIZE,
+        maxFiles: MAX_FILES
     });
-    //this code is for remove the files user has uploaded
     const removeFile = (index) => {
         setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
     };
-
-
-    //Checking if the user is authenticated......
     useEffect(() => {
-        // Check if user is authenticated
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();//getting the user from db
+            const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                toast.error('Please sign in to submit a project');
+                setFormError('Please sign in to submit a project');
                 navigate('/UserRegister');
                 return;
             }
-            setUser(user);//else set user
+            setUser(user);
         };
         checkUser();
     }, [navigate]);
 
+    // Validation functions for submit only
+    const validateStep1 = () => {
+        if (!formData.name || !formData.websiteUrl || !formData.description || !selectedCategory) {
+            setFormError('Please fill in all required fields in Basic Info (Step 1).');
+            return false;
+        }
+        setFormError('');
+        return true;
+    };
+    const validateStep3 = () => {
+        if (files.length === 0) {
+            setUploadError('Please upload at least one media file (Step 3).');
+            return false;
+        }
+        setUploadError('');
+        return true;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setFormError('');
+        setUploadError('');
+        // Only validate on submit
+        const valid1 = validateStep1();
+        const valid3 = validateStep3();
+        if (!valid1 || !valid3) return;
         if (!user) {
-            toast.error('Please sign in to submit a project');
+            setFormError('Please sign in to submit a project');
             navigate('/UserRegister');
             return;
         }
-
-        // Validate required fields
-        if (!formData.name || !formData.websiteUrl || !formData.description || !selectedCategory) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
-
-        // Prepare the data
         const submissionData = {
             name: formData.name,
             website_url: formData.websiteUrl,
@@ -330,9 +360,7 @@ const Register = () => {
             created_at: new Date().toISOString(),
             user_id: user.id
         };
-
         try {
-
             let fileUrls = [];
             if (files.length > 0) {
                 const uploadPromises = files.map(async (file, index) => {
@@ -341,28 +369,17 @@ const Register = () => {
                     const { data, error } = await supabase.storage
                         .from('startup-media')
                         .upload(filePath, file);
-
                     if (error) throw error;
                     const { data: urlData } = supabase.storage.from('startup-media').getPublicUrl(filePath);
                     return urlData.publicUrl;
                 });
-
                 fileUrls = await Promise.all(uploadPromises);
             }
-
-            // Add file URLs to submission data
             submissionData.media_urls = fileUrls;
-
-            // Insert data into Supabase
             const { data, error } = await supabase
                 .from('projects')
                 .insert([submissionData]);
-
             if (error) throw error;
-
-            toast.success('Startup registered successfully!');
-
-            // Reset form
             setFormData({
                 name: '',
                 websiteUrl: '',
@@ -375,30 +392,23 @@ const Register = () => {
             setLinks(['']);
             setFiles([]);
             setStep(1);
-
-            // Navigate to dashboard
+            setFormError('');
+            setUploadError('');
             navigate('/');
-
         } catch (error) {
             console.error('Error submitting form:', error);
-            console.log(' submitting form:', error);
-            toast.error('Failed to register startup. Please try again.');
+            setFormError('Failed to register startup. Please try again.');
         }
     };
     const [step, setStep] = useState(1);
-
-
-    //using ai to generate the data of the launches and saving ...
-
     const handleGenerateLaunchData = async () => {
         if (!formData.websiteUrl) {
-            toast.error("Please enter a website URL first.");
+            setFormError("Please enter a website URL first.");
             return;
         }
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
-
             const res = await fetch("http://localhost:3001/generatelaunchdata", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -406,12 +416,9 @@ const Register = () => {
                     url: formData.websiteUrl,
                     user_id,
                 }),
-
             });
-            console.log("sending url", formData.websiteUrl);
             const gptData = await res.json();
             if (gptData.err) throw new Error(gptData.message);
-
             setFormData((prev) => ({
                 ...prev,
                 name: gptData.name,
@@ -421,21 +428,23 @@ const Register = () => {
             }));
             if (gptData.links?.length) setLinks(gptData.links)
             if (gptData.emails?.length) setTeamEmails(gptData.emails)
-            toast.success("Startup details fetched! You can now edit them.");
-
+            setFormError('');
         }
         catch (error) {
             console.error("Auto Generate failed :", error);
-            toast.error("AI failed to extract startup info...");
+            setFormError("AI failed to extract startup info...");
         }
-
     }
     return (
         <>
-
             <div className="container-custom py-12">
                 <div className="max-w-2xl mx-auto mt-15">
                     <div className="bg-white rounded-xl shadow-lg p-8">
+                        {(formError || uploadError) && (
+                            <Alert severity="warning" onClose={() => { setFormError(''); setUploadError(''); }} className="mb-4">
+                                {formError || uploadError}
+                            </Alert>
+                        )}
                         <div className="mb-8">
                             <div className="flex justify-between items-center">
                                 {[1, 2, 3].map((stepNumber) => (
@@ -457,10 +466,7 @@ const Register = () => {
                                 <div className="h-1 bg-gray-200 w-full" />
                             </div>
                         </div>
-
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                        }} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6">
                             {step === 1 && (
                                 <>
                                     <div>
@@ -531,10 +537,8 @@ const Register = () => {
                                     </section>
                                 </>
                             )}
-
                             {step === 2 && (
                                 <>
-
                                     <div className="space-y-4">
                                         <label className="block text-lg font-semibold text-gray-700">Links</label>
                                         {links.map((link, index) => (
@@ -546,7 +550,6 @@ const Register = () => {
                                                     placeholder="Enter URL"
                                                     className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
                                                 />
-
                                                 {links.length > 1 && (
                                                     <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600">
                                                         <X className="w-5 h-5" />
@@ -616,15 +619,13 @@ const Register = () => {
                                     </div>
                                 </>
                             )}
-
-
-
                             {step === 3 && (
                                 <div className="space-y-6">
                                     <div>
                                         <label className="block text-lg font-semibold text-gray-700 mb-2">Upload Media</label>
-                                        <p className="text-sm text-gray-500 mb-4">Add images, logos, or other media files (max 5MB each)</p>
-
+                                        <p className="text-sm text-gray-500 mb-4">
+                                            Add images, logos, or other media files (max {formatBytes(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)
+                                        </p>
                                         <div
                                             {...getRootProps()}
                                             className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
@@ -640,7 +641,6 @@ const Register = () => {
                                                 </p>
                                             )}
                                         </div>
-
                                         {files.length > 0 && (
                                             <div className="mt-4 space-y-2">
                                                 <h4 className="font-medium text-gray-700">Selected Files:</h4>
@@ -649,7 +649,7 @@ const Register = () => {
                                                         <div className="flex items-center space-x-2">
                                                             <span className="text-sm text-gray-600">{file.name}</span>
                                                             <span className="text-xs text-gray-400">
-                                                                ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                                                                ({(file.size / 1024 / 1024).toFixed(3)} MB)
                                                             </span>
                                                         </div>
                                                         <button
@@ -666,19 +666,35 @@ const Register = () => {
                                     </div>
                                 </div>
                             )}
-
                             <div className="flex justify-between mt-8 pt-4 border-t">
                                 {step > 1 && (
-                                    <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-3 bg-gray-100 rounded-lg">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(step - 1)}
+                                        className="px-6 py-3 bg-gray-100 rounded-lg"
+                                    >
                                         Previous
                                     </button>
                                 )}
                                 {step < 3 ? (
-                                    <button type="button" onClick={() => setStep(step + 1)} className="px-6 py-3 bg-blue-900 text-white rounded-lg">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(step + 1)}
+                                        className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                    >
                                         Next
                                     </button>
                                 ) : (
-                                    <button type="button" onClick={handleSubmit} className="px-6 py-3 bg-blue-900 text-white rounded-lg">
+                                    <button
+                                        type="submit"
+                                        onClick={e => {
+                                            e.preventDefault();
+                                            const valid1 = validateStep1();
+                                            const valid3 = validateStep3();
+                                            if (valid1 && valid3) handleSubmit(e);
+                                        }}
+                                        className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                    >
                                         Submit
                                     </button>
                                 )}
