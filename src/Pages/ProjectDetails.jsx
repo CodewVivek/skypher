@@ -154,12 +154,8 @@ const ProjectDetails = () => {
                     <div className="mt-6">
                         <h4 className="text-md font-semibold mb-1">Built By</h4>
                         <button className='flex items-center gap-1 '>
-                            <img
-                                alt='<User/>'
-                                src={user.user_metadata?.avatar_url || user.user_metadata?.picture || '<User/>'}
-                                className='h-8 w-8 rounded-xl'
-                            />
-                            <p className="text-md font-medium text-gray-700">{user.user_metadata?.full_name || user.user_metadata?.name || 'user'}</p>
+
+                            <p className="text-md font-medium text-gray-700">name</p>
                         </button>
                     </div>
                 </div>

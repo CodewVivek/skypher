@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { ExternalLink, X, Calendar, Tag } from 'lucide-react';
+import { ExternalLink, Calendar, Tag } from 'lucide-react';
 import Like from '../Components/Like';
 import { useNavigate } from 'react-router-dom';
+import SearchBar from '../Components/SearchBar';
 
 const Dashboard = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
 
   useEffect(() => {
     const fetchProjectsData = async () => {
@@ -54,21 +56,8 @@ const Dashboard = () => {
     <>
       <div className="min-h-screen mt-20">
         <div className='flex items-center justify-center'>
-          <div className="text-center">
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 bg-gradient-to-r from-cyan-500 via-purple-600 to-cyan-600 bg-clip-text text-transparent leading-tight">
-              Decode Limitless Growth
-            </h1>
-
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light mb-8 text-gray-700">
-              Connecting Startups with
-              <span className="block bg-gradient-to-r from-purple-700 to-cyan-600 bg-clip-text text-transparent font-semibold">
-                Growth Opportunities
-              </span>
-            </h2>
-
-          </div>
+          <SearchBar />
         </div>
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
@@ -117,7 +106,7 @@ const Dashboard = () => {
             ))}
           </div>
         </div>
-      </div>
+      </div >
 
 
     </>

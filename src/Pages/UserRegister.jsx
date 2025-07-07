@@ -31,14 +31,14 @@ const UserRegister = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-purple-100 via-white to-blue-100 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-white  px-4">
             <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8 transform hover:scale-[1.02] transition-transform duration-300">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-2">
-                        Welcome to StartupHunt
+                        Welcome to Launch It
                     </h1>
                     <p className="text-gray-600 text-lg">
-                        Your journey to startup success begins here
+                        DECODE LIMITLESS GOWRTH
                     </p>
                 </div>
 
