@@ -249,7 +249,6 @@ const Register = () => {
         websiteUrl: '',
         description: '',
         tagline: '',
-        isFounder: false,
         categoryOptions: '',
     });
     const handleInputChange = (e) => {
@@ -344,9 +343,7 @@ const Register = () => {
             tagline: formData.tagline,
             description: formData.description,
             category_type: selectedCategory?.value,
-
             links: links.filter(link => link.trim() !== ''),
-            is_founder: formData.isFounder,
             created_at: new Date().toISOString(),
             user_id: user.id
         };
@@ -375,7 +372,7 @@ const Register = () => {
                 websiteUrl: '',
                 description: '',
                 tagline: '',
-                isFounder: false,
+                
             });
             setSelectedCategory(null);
 
@@ -551,26 +548,6 @@ const Register = () => {
                                             <Plus className="w-5 h-5 mr-1" />
                                             Add another link
                                         </button>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <h3 >Did you contribute to building this product?</h3>
-                                        <input
-                                            type="checkbox"
-                                            name="isFounder"
-                                            checked={formData.isFounder}
-                                            onChange={handleInputChange}
-                                            className="w-5 h-5 rounded border-gray-300"
-                                        />
-                                        <label className="text-base text-gray-700">Yes, I am the founder</label>
-                                        <input
-                                            type="checkbox"
-                                            name="isPromoter"
-                                            checked={formData.isPromoter}
-                                            onChange={handleInputChange}
-                                            className="w-5 h-5 rounded border-gray-300"
-                                        />
-                                        <label className="text-base text-gray-700">No, I am just promote </label>
                                     </div>
                                 </>
                             )}
