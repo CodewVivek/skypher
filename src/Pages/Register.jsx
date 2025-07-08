@@ -242,18 +242,8 @@ const Register = () => {
     const removeLink = (index) => {
         setLinks(links.filter((_, i) => i !== index));
     };
-    const [teamEmails, setTeamEmails] = useState([]);
-    const [newTeamEmail, setNewTeamEmail] = useState('');
-    const addTeamMember = () => {
-        if (newTeamEmail && !teamEmails.includes(newTeamEmail)) {
-            setTeamEmails([...teamEmails, newTeamEmail]);
-            setNewTeamEmail('');
-            setFormError('');
-        }
-    };
-    const removeTeamMember = (email) => {
-        setTeamEmails(teamEmails.filter((e) => e !== email));
-    };
+
+
     const [formData, setFormData] = useState({
         name: '',
         websiteUrl: '',
@@ -354,7 +344,7 @@ const Register = () => {
             tagline: formData.tagline,
             description: formData.description,
             category_type: selectedCategory?.value,
-            team_emails: teamEmails,
+
             links: links.filter(link => link.trim() !== ''),
             is_founder: formData.isFounder,
             created_at: new Date().toISOString(),
@@ -388,7 +378,7 @@ const Register = () => {
                 isFounder: false,
             });
             setSelectedCategory(null);
-            setTeamEmails([]);
+
             setLinks(['']);
             setFiles([]);
             setStep(1);
@@ -427,7 +417,7 @@ const Register = () => {
                 description: gptData.description,
             }));
             if (gptData.links?.length) setLinks(gptData.links)
-            if (gptData.emails?.length) setTeamEmails(gptData.emails)
+
             setFormError('');
         }
         catch (error) {
@@ -562,42 +552,7 @@ const Register = () => {
                                             Add another link
                                         </button>
                                     </div>
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Add Team Members</label>
-                                        <div className="flex space-x-2">
-                                            <input
-                                                type="email"
-                                                value={newTeamEmail}
-                                                onChange={(e) => setNewTeamEmail(e.target.value)}
-                                                placeholder="Enter team member's email"
-                                                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={addTeamMember}
-                                                className="px-6 py-3 bg-blue-900 text-white rounded-lg"
-                                            >
-                                                Save
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {teamEmails.length > 0 && (
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium text-gray-700">Team Members:</h4>
-                                            {teamEmails.map((email, index) => (
-                                                <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                                    <span>{email}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeTeamMember(email)}
-                                                        className="text-red-600"
-                                                    >
-                                                        <X className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+
                                     <div className="flex items-center space-x-2">
                                         <h3 >Did you contribute to building this product?</h3>
                                         <input

@@ -90,13 +90,15 @@ const Header = () => {
                             Submit
                         </Link>
 
-                        <Link
-                            to="/UserRegister"
-                            className="text-white/90 hover:text-white transition-colors font-medium"
-                        >
-                            Get Started
-                        </Link>
-
+                        {
+                            !user && (
+                                <Link
+                                    to="/UserRegister"
+                                    className="text-white/90 hover:text-white transition-colors font-medium"
+                                >
+                                    Get Started
+                                </Link>
+                            )}
                         <Link
                             to="/news"
                             className="text-white/90 hover:text-white transition-colors font-medium"

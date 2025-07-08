@@ -70,7 +70,7 @@ const ProjectDetails = () => {
                 {/* Left Section */}
                 <div className="w-full md:w-2/3 pr-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-2xl font-bold">{project.name}</h2>
+                        <h2 className="text-3xl font-bold">{project.name}</h2>
                         <div className='flex gap-2'>
                             <a
                                 href={project.website_url}
@@ -85,7 +85,7 @@ const ProjectDetails = () => {
                         </div>
                     </div>
 
-                    <p className="text-gray-600 mt-2">{project.tagline}</p>
+                    <p className="text-gray-600 mt-2 text-xl">{project.tagline}</p>
                     {project.media_urls.map((url, index) =>
                     (
                         < div className="mt-6 mb-4" >
@@ -98,20 +98,8 @@ const ProjectDetails = () => {
                         </div>
                     )
                     )}
+                    <p className="text-gray-700 mb-6 text-xl text-justify ">{project.description}</p>
 
-                    <p className="text-gray-700 mb-6">{project.description}</p>
-                    <p className="text-gray-700 font-extrabold mb-6">{project.team_emails}</p>
-                    <p className="text-gray-700 font-extrabold  mb-6">{project.links}</p>
-                    <p className="text-gray-700 font-extrabold mb-6">{formatDate(project.created_at)}</p>
-
-
-                    <div className="flex gap-2 flex-wrap mb-6">
-                        {project.tags?.split(',').map((tag, i) => (
-                            <span key={i} className="bg-gray-100 text-sm px-3 py-1 rounded-full text-gray-700">
-                                {tag.trim()}
-                            </span>
-                        ))}
-                    </div>
                 </div>
 
 
@@ -128,34 +116,14 @@ const ProjectDetails = () => {
                         >
                             {project.website_url}
                         </a>
-                        <p className="text-gray-700 font-extrabold  mb-6">{project.is_founder}Founder:Promoter</p>
-                        <p className="text-gray-700 font-extrabold  mb-6">Launcher</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Launched in {new Date(project.created_at).getFullYear()}
+                        <p className="text-md text-gray-500 mt-1">Launched On:
+                            {formatDate(project.created_at)}
                         </p>
                     </div>
-
-                    <div className="mb-4">
-                        <h4 className="text-md font-semibold mb-1">Social</h4>
-                        <div className="flex gap-2">
-                            {project.instagram && (
-                                <a href={project.instagram} target="_blank" rel="noreferrer" className="text-pink-600 text-sm">
-                                    Instagram
-                                </a>
-                            )}
-                            {project.linkedin && (
-                                <a href={project.linkedin} target="_blank" rel="noreferrer" className="text-blue-700 text-sm">
-                                    LinkedIn
-                                </a>
-                            )}
-                        </div>
-                    </div>
-
                     <div className="mt-6">
                         <h4 className="text-md font-semibold mb-1">Built By</h4>
                         <button className='flex items-center gap-1 '>
-
-                            <p className="text-md font-medium text-gray-700">name</p>
+                            <p className="text-sm font-medium text-gray-700">Launcher PROFILE</p>
                         </button>
                     </div>
                 </div>
