@@ -6,14 +6,6 @@ import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
 
-const MAX_FILE_SIZE = 5242880; // 5 MB in bytes
-const MAX_FILES = 3;
-
-function formatBytes(bytes) {
-    if (bytes < 1024) return `${bytes} bytes`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function getLinkType(url) {
     if (!url) return { label: 'Website', icon: '🌐' };
@@ -27,6 +19,15 @@ function getLinkType(url) {
     return { label: 'Website', icon: '🌐' };
 }
 
+const isValidUrl = (string) => {
+    try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+        return false;
+    }
+};
+
 const Register = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
@@ -35,6 +36,7 @@ const Register = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [formError, setFormError] = useState('');
     const [uploadError, setUploadError] = useState('');
+    const [urlError, setUrlError] = useState('');
     const categoryOptions = [
         {
             label: "💸 Finance & Fintech",
@@ -243,7 +245,18 @@ const Register = () => {
             ]
         }
     ];
-    const [files, setFiles] = useState([]);
+
+    //validate wheather user entered url is url or not 
+    const handleUrlBlur = (e) => {
+        const { value } = e.target;
+        if (value && !isValidUrl(value)) {
+            setUrlError('Please enter a valid URL (e.g., https://example.com)');
+        } else {
+            setUrlError('');
+        }
+    };
+
+    //links of launches (optional step)
     const [links, setLinks] = useState(['']);
     const addLink = () => setLinks([...links, '']);
     const updateLink = (index, value) => {
@@ -254,6 +267,7 @@ const Register = () => {
     const removeLink = (index) => {
         setLinks(links.filter((_, i) => i !== index));
     };
+
 
 
     const [formData, setFormData] = useState({
@@ -271,10 +285,27 @@ const Register = () => {
         });
         setFormError('');
     };
+
+
+
+
+    //media code
+
+    const [files, setFiles] = useState([]);
+    const MAX_FILE_SIZE = 5242880; // 5 MB in bytes
+    const MAX_FILES = 3;
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} bytes`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
     const onDrop = useCallback((acceptedFiles) => {
         setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
         setUploadError('');
     }, []);
+
     const onDropRejected = (fileRejections) => {
         let message = '';
         fileRejections.forEach(rejection => {
@@ -305,10 +336,13 @@ const Register = () => {
     const removeFile = (index) => {
         setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
     };
+
+
+    //supabase 
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
+            const { data: { user } } = await supabase.auth.getUser(); //get user from supabase
+            if (!user) { //if not signed up then make them to sign up
                 setFormError('Please sign in to submit a project');
                 navigate('/UserRegister');
                 return;
@@ -318,6 +352,7 @@ const Register = () => {
         checkUser();
     }, [navigate]);
 
+    
     // Validation functions for submit only
     const validateStep1 = () => {
         if (!formData.name || !formData.websiteUrl || !formData.description || !formData.tagline || !selectedCategory) {
@@ -336,10 +371,12 @@ const Register = () => {
         return true;
     };
 
+    //submission handle with media and all other form data
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');
         setUploadError('');
+        setUploadError(message);
         // Only validate on submit
         const valid1 = validateStep1();
         const valid2 = validateStep2();
@@ -359,6 +396,7 @@ const Register = () => {
             created_at: new Date().toISOString(),
             user_id: user.id
         };
+        //media into supabase bucket 
         try {
             let fileUrls = [];
             if (files.length > 0) {
@@ -387,7 +425,6 @@ const Register = () => {
 
             });
             setSelectedCategory(null);
-
             setLinks(['']);
             setFiles([]);
             setStep(1);
@@ -399,7 +436,9 @@ const Register = () => {
             setFormError('Failed to register startup. Please try again.');
         }
     };
-    const [step, setStep] = useState(1);
+
+
+    //ai generated content for submission
     const handleGenerateLaunchData = async () => {
         if (!formData.websiteUrl) {
             setFormError("Please enter a website URL first.");
@@ -434,6 +473,9 @@ const Register = () => {
             setFormError("AI failed to extract startup info...");
         }
     }
+
+
+    const [step, setStep] = useState(1);
     return (
         <>
             <div className="container-custom py-12">
@@ -474,7 +516,6 @@ const Register = () => {
                             }
                         }}
                             onKeyDown={e => {
-                                // Prevent Enter from submitting the form on steps 1 and 2
                                 if (e.key === 'Enter' && step !== 3) {
                                     e.preventDefault();
                                 }
@@ -493,17 +534,26 @@ const Register = () => {
                                                 name="websiteUrl"
                                                 value={formData.websiteUrl}
                                                 onChange={handleInputChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                                onBlur={handleUrlBlur}
+                                                className={`w-full px-4 py-3 border rounded-lg ${urlError ? 'border-red-500' : 'border-gray-300'
+                                                    }`}
                                                 placeholder="https://example.com"
+                                                required
                                             />
                                             <button
                                                 type="button"
                                                 onClick={handleGenerateLaunchData}
-                                                className="px-4 py-2 bg-indigo-600 text-white text-lg rounded-lg"
+                                                className="px-4 py-2 bg-indigo-600 text-white text-lg rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                                disabled={!formData.websiteUrl || !isValidUrl(formData.websiteUrl)}
                                             >
                                                 Generate
                                             </button>
                                         </div>
+                                        {urlError && (
+                                            <p className="text-red-500 text-sm mt-1">
+                                                {urlError}
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-lg font-semibold text-gray-700 mb-2">
@@ -564,6 +614,38 @@ const Register = () => {
                                 </>
                             )}
                             {step === 2 && (
+                                <div className="space-y-4">
+                                    <label className="block text-lg font-semibold text-gray-700">Links</label>
+                                    {links.map((link, index) => {
+                                        const { label, icon } = getLinkType(link);
+                                        return (
+                                            <div key={index} className="flex items-center space-x-2">
+                                                <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
+                                                    <span>{icon}</span>
+                                                    <span>{label}</span>
+                                                </span>
+                                                <input
+                                                    type="url"
+                                                    value={link}
+                                                    onChange={e => updateLink(index, e.target.value)}
+                                                    placeholder={`Enter ${label} URL`}
+                                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
+                                                />
+                                                {links.length > 1 && (
+                                                    <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600">
+                                                        <X className="w-5 h-5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                    <button type="button" onClick={addLink} className="flex items-center text-blue-900">
+                                        <Plus className="w-5 h-5 mr-1" />
+                                        Add another link
+                                    </button>
+                                </div>
+                            )}
+                            {step === 3 && (
                                 <>
                                     <div className="space-y-6">
                                         <div>
@@ -577,7 +659,7 @@ const Register = () => {
                                             <div
                                                 {...getRootProps()}
                                                 className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                                ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                                        ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
                                             >
                                                 <input {...getInputProps()} />
                                                 <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
@@ -614,38 +696,6 @@ const Register = () => {
                                         </div>
                                     </div>
                                 </>
-                            )}
-                            {step === 3 && (
-                                <div className="space-y-4">
-                                    <label className="block text-lg font-semibold text-gray-700">Links</label>
-                                    {links.map((link, index) => {
-                                        const { label, icon } = getLinkType(link);
-                                        return (
-                                            <div key={index} className="flex items-center space-x-2">
-                                                <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
-                                                    <span>{icon}</span>
-                                                    <span>{label}</span>
-                                                </span>
-                                                <input
-                                                    type="url"
-                                                    value={link}
-                                                    onChange={e => updateLink(index, e.target.value)}
-                                                    placeholder={`Enter ${label} URL`}
-                                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
-                                                />
-                                                {links.length > 1 && (
-                                                    <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600">
-                                                        <X className="w-5 h-5" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                    <button type="button" onClick={addLink} className="flex items-center text-blue-900">
-                                        <Plus className="w-5 h-5 mr-1" />
-                                        Add another link
-                                    </button>
-                                </div>
                             )}
                             <div className="flex justify-between mt-8 pt-4 border-t">
                                 {step > 1 && (
