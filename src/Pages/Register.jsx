@@ -5,7 +5,7 @@ import Select from 'react-select';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
-
+import { nanoid } from 'nanoid';
 
 function getLinkType(url) {
     if (!url) return { label: 'Website', icon: '🌐' };
@@ -27,6 +27,12 @@ const isValidUrl = (string) => {
         return false;
     }
 };
+
+
+
+const slugify = (text) =>
+    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+
 
 const Register = () => {
     const navigate = useNavigate();
@@ -352,7 +358,7 @@ const Register = () => {
         checkUser();
     }, [navigate]);
 
-    
+
     // Validation functions for submit only
     const validateStep1 = () => {
         if (!formData.name || !formData.websiteUrl || !formData.description || !formData.tagline || !selectedCategory) {
@@ -376,7 +382,6 @@ const Register = () => {
         e.preventDefault();
         setFormError('');
         setUploadError('');
-        setUploadError(message);
         // Only validate on submit
         const valid1 = validateStep1();
         const valid2 = validateStep2();
@@ -396,6 +401,10 @@ const Register = () => {
             created_at: new Date().toISOString(),
             user_id: user.id
         };
+        // Generate unique slug
+        const baseSlug = slugify(formData.name);
+        const uniqueSlug = `${baseSlug}-${nanoid(6)}`;
+        submissionData.slug = uniqueSlug;
         //media into supabase bucket 
         try {
             let fileUrls = [];
@@ -422,7 +431,6 @@ const Register = () => {
                 websiteUrl: '',
                 description: '',
                 tagline: '',
-
             });
             setSelectedCategory(null);
             setLinks(['']);

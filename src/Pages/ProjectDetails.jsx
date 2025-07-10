@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { ExternalLink } from 'lucide-react';
 import Like from '../Components/Like';
 
-
 const ProjectDetails = () => {
-    const { name } = useParams();
+    const { slug } = useParams();
+
+    const [project, setProject] = useState(null);
+    const [creator, setCreator] = useState(null); 
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString("en-GB", {
@@ -15,53 +19,66 @@ const ProjectDetails = () => {
             year: 'numeric'
         });
     };
-    const [project, setProject] = useState(null);
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchProject = async () => {
             const { data, error } = await supabase
                 .from('projects')
                 .select('*')
-                .ilike('name', name.replace(/-/g, ' ')) // if slugified
-                .maybeSingle();
+                .eq('slug', slug)
+                .single();
 
             if (error) {
                 console.error(error);
             } else {
                 setProject(data);
+
                 if (data && data.user_id) {
                     const { data: userData, error: userError } = await supabase
                         .from('profiles')
-                        .select('*')
+                        .select('id, full_name, avatar_url')
                         .eq('id', data.user_id)
                         .single();
 
-                    if (userError) console.error(userError);
-                    else setCreator(userData);
+                    if (userError) {
+                        console.error(userError);
+                    } else {
+                        setCreator(userData);
+                    }
                 }
-
             }
+
             setLoading(false);
         };
 
         fetchProject();
-    }, [name]);
-
-    const [user, setUser] = useState(null);
+    }, [slug]);
 
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            setUser(user)
+            setUser(user);
+
+            if (user) {
+                
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('full_name, avatar_url')
+                    .eq('id', user.id)
+                    .single();
+                if (!profile || !profile.full_name || !profile.avatar_url) {
+                    await supabase.from('profiles').update({
+                        full_name: user.user_metadata.full_name,
+                        avatar_url: user.user_metadata.avatar_url
+                    }).eq('id', user.id);
+                }
+            }
         };
         checkUser();
     }, []);
 
     if (loading) return <div>Loading...</div>;
     if (!project) return <div>Project not found</div>;
-
-
 
     return (
         <div className="min-h-screen bg-white">
@@ -78,7 +95,7 @@ const ProjectDetails = () => {
                                 rel="noreferrer"
                             >
                                 <button className='flex gap-2 p-2 bg-white text-black border-gray-200 border-2 rounded-2xl font-semibold text-md'>
-                                    <ExternalLink />Lauch
+                                    <ExternalLink />Launch
                                 </button>
                             </a>
                             <Like projectId={project.id} />
@@ -86,26 +103,20 @@ const ProjectDetails = () => {
                     </div>
 
                     <p className="text-gray-600 mt-2 text-xl">{project.tagline}</p>
-                    {project.media_urls.map((url, index) =>
-                    (
-                        < div className="mt-6 mb-4" >
+                    {project.media_urls.map((url, index) => (
+                        <div key={index} className="mt-6 mb-4">
                             <img
-                                key={index}
                                 src={url}
                                 alt='launch images'
                                 className="w-full rounded-lg border"
                             />
                         </div>
-                    )
-                    )}
+                    ))}
                     <p className="text-gray-700 mb-6 text-xl text-justify ">{project.description}</p>
-
                 </div>
-
 
                 {/* Right Sidebar */}
                 <div className="w-full md:w-1/3 ">
-
                     <div className="mb-4">
                         <h4 className="text-md font-semibold mb-1">Company Info</h4>
                         <a
@@ -116,19 +127,40 @@ const ProjectDetails = () => {
                         >
                             {project.website_url}
                         </a>
-                        <p className="text-md text-gray-500 mt-1">Launched On:
-                            {formatDate(project.created_at)}
+                        <p className="text-md text-gray-500 mt-1">
+                            Launched On: {formatDate(project.created_at)}
                         </p>
                     </div>
+
                     <div className="mt-6">
-                        <h4 className="text-md font-semibold mb-1">Built By</h4>
-                        <button className='flex items-center gap-1 '>
-                            <p className="text-sm font-medium text-gray-700">Launcher PROFILE</p>
-                        </button>
+                        <h4 className="text-md font-semibold mb-2">Built By</h4>
+                        {creator ? (
+                            <Link
+                                to={`/user/${creator.id}`}
+                                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition"
+                            >
+                                <img
+                                    src={
+                                        creator.avatar_url ||
+                                        '/default-avatar.png'
+                                    }
+                                    alt="creator avatar"
+                                    className="w-10 h-10 rounded-full border object-cover"
+                                />
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-800">
+                                        {creator.full_name || creator.email}
+                                    </p>
+                                    <p className="text-xs text-gray-500">View profile</p>
+                                </div>
+                            </Link>
+                        ) : (
+                            <p className="text-sm text-gray-500">Loading creator info...</p>
+                        )}
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

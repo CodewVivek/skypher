@@ -14,37 +14,46 @@ import Profile from './Components/Profile.jsx';
 import Aboutus from './Components/Aboutus.jsx';
 import Footer from './Components/Footer.jsx';
 import News from './Pages/News.jsx';
-import Report from './Pages/Report.jsx';
 import UserProfile from './Pages/UserProfile.jsx';
+
 
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen"> {/* full height flex container */}
-        {/* HEADER SECTION */}
+      <div className="flex flex-col min-h-screen"> 
+       
         <Header />
 
         <main className="flex-grow">
           <Routes>
+
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/" element={<DashBoard />} />
+            <Route path="/launchpage" element={<LandingPage />} />
+
+            {/*user realted */}
             <Route path="/UserRegister" element={<UserRegister />} />
             <Route path="/submit" element={<Register />} />
-            <Route path="/launches/:name" element={<ProjectDetails />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/launchpage" element={<LandingPage />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/launches/:slug" element={<ProjectDetails />} />
+
+
+            {/*user Profile realted */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:name" element={<UserProfile />} />
+            <Route path="/profile/:id" element={<UserProfile />} />
+
+
+            <Route path="/news" element={<News />} />
+            
+            {/*footer details */}
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/aboutus" element={<Aboutus />} />
             <Route path="/footer" element={<Footer />} />
-            <Route path="/news" element={<News />} />
           </Routes>
         </main>
 
-        {/* FOOTER STUCK TO BOTTOM ALWAYS */}
         <Footer />
       </div>
     </BrowserRouter>

@@ -60,9 +60,8 @@ const Dashboard = () => {
   const slugify = (text) =>
     text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-  const openProjectDetails = (projectName) => {
-    const slug = slugify(projectName);
-    navigate(`/launches/${slug}`);
+  const openProjectDetails = (project) => {
+    navigate(`/launches/${project.slug}`);
   };
 
   const formatDate = (dateString) => {
@@ -121,7 +120,7 @@ const Dashboard = () => {
                   <div
                     key={project.id}
                     className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-1 border-gray-300"
-                    onClick={() => openProjectDetails(project.name)}
+                    onClick={() => openProjectDetails(project)}
                   >
                     <div className="p-4">
                       <div className='flex items-center justify-between'>
