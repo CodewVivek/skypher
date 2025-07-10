@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plus, X, Upload, User } from 'lucide-react';
+import { Plus, X, Upload, User, Star } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
@@ -13,6 +13,18 @@ function formatBytes(bytes) {
     if (bytes < 1024) return `${bytes} bytes`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getLinkType(url) {
+    if (!url) return { label: 'Website', icon: '🌐' };
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return { label: 'YouTube', icon: '▶️' };
+    if (url.includes('instagram.com')) return { label: 'Instagram', icon: '📸' };
+    if (url.includes('play.google.com')) return { label: 'Play Store', icon: '🤖' };
+    if (url.includes('apps.apple.com')) return { label: 'App Store', icon: '🍎' };
+    if (url.includes('linkedin.com')) return { label: 'LinkedIn', icon: '💼' };
+    if (url.includes('twitter.com') || url.includes('x.com')) return { label: 'Twitter/X', icon: '🐦' };
+    if (url.includes('facebook.com')) return { label: 'Facebook', icon: '📘' };
+    return { label: 'Website', icon: '🌐' };
 }
 
 const Register = () => {
@@ -308,16 +320,16 @@ const Register = () => {
 
     // Validation functions for submit only
     const validateStep1 = () => {
-        if (!formData.name || !formData.websiteUrl || !formData.description || !selectedCategory) {
+        if (!formData.name || !formData.websiteUrl || !formData.description || !formData.tagline || !selectedCategory) {
             setFormError('Please fill in all required fields in Basic Info (Step 1).');
             return false;
         }
         setFormError('');
         return true;
     };
-    const validateStep3 = () => {
+    const validateStep2 = () => {
         if (files.length === 0) {
-            setUploadError('Please upload at least one media file (Step 3).');
+            setUploadError('Please upload at least one media file (Step 2).');
             return false;
         }
         setUploadError('');
@@ -330,8 +342,8 @@ const Register = () => {
         setUploadError('');
         // Only validate on submit
         const valid1 = validateStep1();
-        const valid3 = validateStep3();
-        if (!valid1 || !valid3) return;
+        const valid2 = validateStep2();
+        if (!valid1 || !valid2) return;
         if (!user) {
             setFormError('Please sign in to submit a project');
             navigate('/UserRegister');
@@ -372,7 +384,7 @@ const Register = () => {
                 websiteUrl: '',
                 description: '',
                 tagline: '',
-                
+
             });
             setSelectedCategory(null);
 
@@ -453,11 +465,28 @@ const Register = () => {
                                 <div className="h-1 bg-gray-200 w-full" />
                             </div>
                         </div>
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={e => {
+                            e.preventDefault();
+                            if (step === 3) {
+                                const valid1 = validateStep1();
+                                const valid2 = validateStep2();
+                                if (valid1 && valid2) handleSubmit(e);
+                            }
+                        }}
+                            onKeyDown={e => {
+                                // Prevent Enter from submitting the form on steps 1 and 2
+                                if (e.key === 'Enter' && step !== 3) {
+                                    e.preventDefault();
+                                }
+                            }}
+                            className="space-y-6">
                             {step === 1 && (
                                 <>
                                     <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Website URL</label>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Website URL
+                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                        </label>
                                         <div className='flex gap-1'>
                                             <input
                                                 type="url"
@@ -477,7 +506,10 @@ const Register = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Startup Name</label>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Startup Name
+                                            <span className="text-red-500 ml-1 w-auto h-auto">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             name="name"
@@ -488,7 +520,10 @@ const Register = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Tagline</label>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Tagline
+                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                        </label>
                                         <input
                                             type="text"
                                             name="tagline"
@@ -499,7 +534,10 @@ const Register = () => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Description</label>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Description
+                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                        </label>
                                         <textarea
                                             name="description"
                                             value={formData.description}
@@ -512,6 +550,7 @@ const Register = () => {
                                     <section>
                                         <label className="block font-semibold text-gray-700 mb-2">
                                             Select Category / Industry
+                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
                                         </label>
                                         <Select
                                             options={categoryOptions}
@@ -526,15 +565,72 @@ const Register = () => {
                             )}
                             {step === 2 && (
                                 <>
-                                    <div className="space-y-4">
-                                        <label className="block text-lg font-semibold text-gray-700">Links</label>
-                                        {links.map((link, index) => (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                                Upload Media
+                                                <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                            </label>
+                                            <p className="text-sm text-gray-500 mb-4">
+                                                Add images, logos, or other media files (max {formatBytes(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)
+                                            </p>
+                                            <div
+                                                {...getRootProps()}
+                                                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+                                                ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                                            >
+                                                <input {...getInputProps()} />
+                                                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                                {isDragActive ? (
+                                                    <p className="text-blue-500">Drop the files here...</p>
+                                                ) : (
+                                                    <p className="text-gray-600">
+                                                        Drag & drop files here, or click to select files
+                                                    </p>
+                                                )}
+                                            </div>
+                                            {files.length > 0 && (
+                                                <div className="mt-4 space-y-2">
+                                                    <h4 className="font-medium text-gray-700">Selected Files:</h4>
+                                                    {files.map((file, index) => (
+                                                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                                            <div className="flex items-center space-x-2">
+                                                                <span className="text-sm text-gray-600">{file.name}</span>
+                                                                <span className="text-xs text-gray-400">
+                                                                    ({(file.size / 1024 / 1024).toFixed(3)} MB)
+                                                                </span>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeFile(index)}
+                                                                className="text-red-600 hover:text-red-700"
+                                                            >
+                                                                <X className="w-5 h-5" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                            {step === 3 && (
+                                <div className="space-y-4">
+                                    <label className="block text-lg font-semibold text-gray-700">Links</label>
+                                    {links.map((link, index) => {
+                                        const { label, icon } = getLinkType(link);
+                                        return (
                                             <div key={index} className="flex items-center space-x-2">
+                                                <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
+                                                    <span>{icon}</span>
+                                                    <span>{label}</span>
+                                                </span>
                                                 <input
                                                     type="url"
                                                     value={link}
-                                                    onChange={(e) => updateLink(index, e.target.value)}
-                                                    placeholder="Enter URL"
+                                                    onChange={e => updateLink(index, e.target.value)}
+                                                    placeholder={`Enter ${label} URL`}
                                                     className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
                                                 />
                                                 {links.length > 1 && (
@@ -543,59 +639,12 @@ const Register = () => {
                                                     </button>
                                                 )}
                                             </div>
-                                        ))}
-                                        <button type="button" onClick={addLink} className="flex items-center text-blue-900">
-                                            <Plus className="w-5 h-5 mr-1" />
-                                            Add another link
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                            {step === 3 && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">Upload Media</label>
-                                        <p className="text-sm text-gray-500 mb-4">
-                                            Add images, logos, or other media files (max {formatBytes(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)
-                                        </p>
-                                        <div
-                                            {...getRootProps()}
-                                            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                                ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-                                        >
-                                            <input {...getInputProps()} />
-                                            <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                            {isDragActive ? (
-                                                <p className="text-blue-500">Drop the files here...</p>
-                                            ) : (
-                                                <p className="text-gray-600">
-                                                    Drag & drop files here, or click to select files
-                                                </p>
-                                            )}
-                                        </div>
-                                        {files.length > 0 && (
-                                            <div className="mt-4 space-y-2">
-                                                <h4 className="font-medium text-gray-700">Selected Files:</h4>
-                                                {files.map((file, index) => (
-                                                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                                        <div className="flex items-center space-x-2">
-                                                            <span className="text-sm text-gray-600">{file.name}</span>
-                                                            <span className="text-xs text-gray-400">
-                                                                ({(file.size / 1024 / 1024).toFixed(3)} MB)
-                                                            </span>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeFile(index)}
-                                                            className="text-red-600 hover:text-red-700"
-                                                        >
-                                                            <X className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                        );
+                                    })}
+                                    <button type="button" onClick={addLink} className="flex items-center text-blue-900">
+                                        <Plus className="w-5 h-5 mr-1" />
+                                        Add another link
+                                    </button>
                                 </div>
                             )}
                             <div className="flex justify-between mt-8 pt-4 border-t">
@@ -619,12 +668,6 @@ const Register = () => {
                                 ) : (
                                     <button
                                         type="submit"
-                                        onClick={e => {
-                                            e.preventDefault();
-                                            const valid1 = validateStep1();
-                                            const valid3 = validateStep3();
-                                            if (valid1 && valid3) handleSubmit(e);
-                                        }}
                                         className="px-6 py-3 bg-blue-900 text-white rounded-lg"
                                     >
                                         Submit
