@@ -3,12 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { ExternalLink } from 'lucide-react';
 import Like from '../Components/Like';
+import Share from '../Components/Share';
 
 const ProjectDetails = () => {
     const { slug } = useParams();
 
     const [project, setProject] = useState(null);
-    const [creator, setCreator] = useState(null); 
+    const [creator, setCreator] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -29,11 +30,13 @@ const ProjectDetails = () => {
                 .single();
 
             if (error) {
-                console.error(error);
+                console.error('Error fetching project:', error);
             } else {
                 setProject(data);
+                console.log('Project data:', data); // Debug log
 
                 if (data && data.user_id) {
+                    console.log('Fetching creator info for user_id:', data.user_id); // Debug log
                     const { data: userData, error: userError } = await supabase
                         .from('profiles')
                         .select('id, full_name, avatar_url')
@@ -41,10 +44,13 @@ const ProjectDetails = () => {
                         .single();
 
                     if (userError) {
-                        console.error(userError);
+                        console.error('Error fetching creator:', userError);
                     } else {
+                        console.log('Creator data:', userData); // Debug log
                         setCreator(userData);
                     }
+                } else {
+                    console.log('No user_id found in project data'); // Debug log
                 }
             }
 
@@ -60,7 +66,7 @@ const ProjectDetails = () => {
             setUser(user);
 
             if (user) {
-                
+
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('full_name, avatar_url')
@@ -130,6 +136,9 @@ const ProjectDetails = () => {
                         <p className="text-md text-gray-500 mt-1">
                             Launched On: {formatDate(project.created_at)}
                         </p>
+                        <div className="flex gap-2 mt-3">
+                            <Share projectSlug={project.slug} projectName={project.name} />
+                        </div>
                     </div>
 
                     <div className="mt-6">
@@ -149,17 +158,29 @@ const ProjectDetails = () => {
                                 />
                                 <div>
                                     <p className="text-sm font-semibold text-gray-800">
-                                        {creator.full_name || creator.email}
+                                        {creator.full_name || 'Anonymous'}
                                     </p>
                                     <p className="text-xs text-gray-500">View profile</p>
                                 </div>
                             </Link>
                         ) : (
-                            <p className="text-sm text-gray-500">Loading creator info...</p>
+                            <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <span className="text-gray-500 text-sm">?</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-800">
+                                        Unknown Creator
+                                    </p>
+                                    <p className="text-xs text-gray-500">Creator information unavailable</p>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>
             </div>
+
+
         </div>
     );
 };
