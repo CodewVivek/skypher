@@ -77,15 +77,9 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
                 <div
                     className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50"
                     onClick={handleBackdropClick}
-                    style={{
-                        animation: 'fadeIn 0.3s ease-out'
-                    }}
                 >
                     <div
                         className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl border border-gray-200"
-                        style={{
-                            animation: 'slideInUp 0.4s ease-out'
-                        }}
                     >
                         {/* Modal Header */}
                         <div className="flex items-center justify-between mb-6">
@@ -222,52 +216,6 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
                     </div>
                 </div>
             )}
-
-            {/* CSS Animations */}
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                    }
-                    to {
-                        opacity: 1;
-                    }
-                }
-
-                @keyframes slideInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px) scale(0.95);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                }
-
-                @keyframes slideOutDown {
-                    from {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                    to {
-                        opacity: 0;
-                        transform: translateY(20px) scale(0.95);
-                    }
-                }
-
-                .modal-enter {
-                    animation: fadeIn 0.3s ease-out;
-                }
-
-                .modal-content-enter {
-                    animation: slideInUp 0.4s ease-out;
-                }
-
-                .modal-exit {
-                    animation: slideOutDown 0.3s ease-in;
-                }
-            `}</style>
         </>
     )
 }

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Flag } from 'lucide-react';
 import Like from '../Components/Like';
 import Share from '../Components/Share';
+import ReportModal from '../Components/ReportModal';
+import Comments from '../Components/Comments';
 
 const ProjectDetails = () => {
     const { slug } = useParams();
@@ -12,6 +14,7 @@ const ProjectDetails = () => {
     const [creator, setCreator] = useState(null);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString("en-GB", {
@@ -33,10 +36,10 @@ const ProjectDetails = () => {
                 console.error('Error fetching project:', error);
             } else {
                 setProject(data);
-                console.log('Project data:', data); // Debug log
+
 
                 if (data && data.user_id) {
-                    console.log('Fetching creator info for user_id:', data.user_id); // Debug log
+
                     const { data: userData, error: userError } = await supabase
                         .from('profiles')
                         .select('id, full_name, avatar_url')
@@ -46,11 +49,11 @@ const ProjectDetails = () => {
                     if (userError) {
                         console.error('Error fetching creator:', userError);
                     } else {
-                        console.log('Creator data:', userData); // Debug log
+
                         setCreator(userData);
                     }
                 } else {
-                    console.log('No user_id found in project data'); // Debug log
+                    console.log('No user_id found in project data');
                 }
             }
 
@@ -138,6 +141,14 @@ const ProjectDetails = () => {
                         </p>
                         <div className="flex gap-2 mt-3">
                             <Share projectSlug={project.slug} projectName={project.name} />
+                            <button
+                                onClick={() => setIsReportModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 font-medium"
+                                title="Report this project"
+                            >
+                                <Flag className="w-4 h-4" />
+                                Report
+                            </button>
                         </div>
                     </div>
 
@@ -180,7 +191,18 @@ const ProjectDetails = () => {
                 </div>
             </div>
 
+            {/* Comments Section */}
+            <div className="ml-12 mr-12 mx-auto">
+                <Comments projectId={project.id} />
+            </div>
 
+            {/* Report Modal */}
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                projectId={project.id}
+                projectName={project.name}
+            />
         </div>
     );
 };

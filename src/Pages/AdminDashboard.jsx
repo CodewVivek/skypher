@@ -2,16 +2,19 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
-import { Eye, AlertTriangle, ExternalLink, Trash2, Package } from 'lucide-react';
+import { Eye, AlertTriangle, ExternalLink, Trash2, Package, Flag, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
+    const [reports, setReports] = useState([]);
     const [loadingProjects, setLoadingProjects] = useState(true);
+    const [loadingReports, setLoadingReports] = useState(true);
     const [deletingProject, setDeletingProject] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('projects');
 
     useEffect(() => {
         const checkAccess = async () => {
@@ -35,6 +38,7 @@ const AdminDashboard = () => {
                 } else {
                     setIsAdmin(true);
                     fetchProjects();
+                    fetchReports();
                 }
             } catch (error) {
                 console.error('Error in checkAccess:', error);
@@ -77,6 +81,58 @@ const AdminDashboard = () => {
         } finally {
             setLoadingProjects(false);
             console.log('Finished loading projects'); // Debug log
+        }
+    };
+
+    const fetchReports = async () => {
+        try {
+            console.log('Fetching reports...'); // Debug log
+
+            // First, let's check if we can access the reports table at all
+            const { data: testData, error: testError } = await supabase
+                .from('reports')
+                .select('count')
+                .limit(1);
+
+            console.log('Test query result:', { testData, testError });
+
+            const { data, error } = await supabase
+                .from('reports')
+                .select(`
+                    *,
+                    projects:project_id (
+                        id,
+                        name,
+                        slug,
+                        website_url
+                    ),
+                    profiles:user_id (
+                        id,
+                        full_name,
+                        email
+                    )
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching reports:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    code: error.code
+                });
+                setReports([]);
+            } else {
+                console.log('Reports data:', data); // Debug log
+                console.log('Number of reports:', data?.length || 0);
+                setReports(data || []);
+            }
+        } catch (error) {
+            console.error('Error in fetchReports:', error);
+            setReports([]);
+        } finally {
+            setLoadingReports(false);
         }
     };
 
@@ -133,6 +189,37 @@ const AdminDashboard = () => {
         }
     };
 
+    const updateReportStatus = async (reportId, status) => {
+        try {
+            const { error } = await supabase
+                .from('reports')
+                .update({
+                    status: status,
+                    resolved_at: status !== 'pending' ? new Date().toISOString() : null
+                })
+                .eq('id', reportId);
+
+            if (error) {
+                console.error('Error updating report:', error);
+                toast.error('Failed to update report status');
+            } else {
+                toast.success('Report status updated successfully');
+                fetchReports();
+            }
+        } catch (error) {
+            console.error('Error in updateReportStatus:', error);
+        }
+    };
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'pending': return 'bg-yellow-100 text-yellow-800';
+            case 'resolved': return 'bg-green-100 text-green-800';
+            case 'ignored': return 'bg-gray-100 text-gray-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
@@ -162,109 +249,255 @@ const AdminDashboard = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
-                    <p className="text-gray-600">Manage platform projects</p>
+                    <p className="text-gray-600">Manage platform projects and user reports</p>
                 </div>
 
-                {/* Projects Management */}
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-800">All Projects ({projects.length})</h2>
-                    </div>
+                {/* Tabs */}
+                <div className="flex gap-4 mb-8 border-b border-gray-200">
+                    <button
+                        onClick={() => setActiveTab('projects')}
+                        className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'projects'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Projects ({projects.length})
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('reports')}
+                        className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'reports'
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Flag className="w-4 h-4" />
+                            Reports ({reports.length})
+                        </div>
+                    </button>
+                </div>
 
-                    {loadingProjects ? (
-                        <div className="p-8 text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                            <p className="mt-2 text-gray-600">Loading projects...</p>
+                {/* Projects Tab */}
+                {activeTab === 'projects' && (
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h2 className="text-lg font-semibold text-gray-800">All Projects ({projects.length})</h2>
                         </div>
-                    ) : projects.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">
-                            <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                            <p>No projects found.</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Project
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Creator
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Website
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Created
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {projects.map((project) => (
-                                        <tr key={project.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4">
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900">
-                                                        {project.name}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {project.tagline}
-                                                    </p>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-900">
-                                                    {project.user_id || 'Anonymous'}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <a
-                                                    href={project.website_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-                                                >
-                                                    {project.website_url}
-                                                    <ExternalLink className="w-3 h-3" />
-                                                </a>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500">
-                                                {new Date(project.created_at).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex gap-2">
-                                                    <Link
-                                                        to={`/launches/${project.slug}`}
-                                                        className="text-blue-600 hover:text-blue-800"
-                                                        title="View project"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => deleteProject(project.id, project.media_urls)}
-                                                        className="text-red-600 hover:text-red-800"
-                                                        title="Delete project"
-                                                        disabled={deletingProject === project.id}
-                                                    >
-                                                        {deletingProject === project.id ? (
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                                        ) : (
-                                                            <Trash2 className="w-4 h-4" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </td>
+
+                        {loadingProjects ? (
+                            <div className="p-8 text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                                <p className="mt-2 text-gray-600">Loading projects...</p>
+                            </div>
+                        ) : projects.length === 0 ? (
+                            <div className="p-8 text-center text-gray-500">
+                                <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                                <p>No projects found.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Project
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Creator
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Website
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Created
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Actions
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {projects.map((project) => (
+                                            <tr key={project.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {project.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {project.tagline}
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-gray-900">
+                                                        {project.user_id || 'Anonymous'}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <a
+                                                        href={project.website_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                                                    >
+                                                        {project.website_url}
+                                                        <ExternalLink className="w-3 h-3" />
+                                                    </a>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">
+                                                    {new Date(project.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex gap-2">
+                                                        <Link
+                                                            to={`/launches/${project.slug}`}
+                                                            className="text-blue-600 hover:text-blue-800"
+                                                            title="View project"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => deleteProject(project.id, project.media_urls)}
+                                                            className="text-red-600 hover:text-red-800"
+                                                            title="Delete project"
+                                                            disabled={deletingProject === project.id}
+                                                        >
+                                                            {deletingProject === project.id ? (
+                                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                                            ) : (
+                                                                <Trash2 className="w-4 h-4" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Reports Tab */}
+                {activeTab === 'reports' && (
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200">
+                            <h2 className="text-lg font-semibold text-gray-800">User Reports ({reports.length})</h2>
                         </div>
-                    )}
-                </div>
+
+                        {loadingReports ? (
+                            <div className="p-8 text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                                <p className="mt-2 text-gray-600">Loading reports...</p>
+                            </div>
+                        ) : reports.length === 0 ? (
+                            <div className="p-8 text-center text-gray-500">
+                                <Flag className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                                <p>No reports found.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Report
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Project
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Reporter
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Status
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Date
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {reports.map((report) => (
+                                            <tr key={report.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-4">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900 capitalize">
+                                                            {report.reason.replace('_', ' ')}
+                                                        </p>
+                                                        {report.description && (
+                                                            <p className="text-xs text-gray-500 truncate max-w-xs">
+                                                                {report.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {report.projects ? (
+                                                        <Link
+                                                            to={`/launches/${report.projects.slug}`}
+                                                            className="text-blue-600 hover:text-blue-800 font-medium"
+                                                        >
+                                                            {report.projects.name}
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="text-gray-500">Project deleted</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-gray-900">
+                                                        {report.profiles?.full_name || 'Anonymous'}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        {report.profiles?.email}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(report.status)}`}>
+                                                        {report.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-500">
+                                                    {new Date(report.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex gap-2">
+                                                        {report.status === 'pending' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => updateReportStatus(report.id, 'resolved')}
+                                                                    className="text-green-600 hover:text-green-800"
+                                                                    title="Mark as resolved"
+                                                                >
+                                                                    <Check className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => updateReportStatus(report.id, 'ignored')}
+                                                                    className="text-gray-600 hover:text-gray-800"
+                                                                    title="Ignore report"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
