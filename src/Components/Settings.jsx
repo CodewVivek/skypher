@@ -1,27 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, AlertCircle, CheckCircle } from 'lucide-react';
 
 const Settings = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const navigate = useNavigate();
+    const [profile, setProfile] = useState(null);
+    const [bio, setBio] = useState('');
+    const [twitter, setTwitter] = useState('');
+    const [linkedin, setLinkedin] = useState('');
+    const [portfolio, setPortfolio] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState('');
+    const fileInputRef = useRef(null);
 
     const handleDeleteAccount = async () => {
         try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-
-            // Delete user data from your database tables
-            const { error: deleteError } = await supabase
-                .from('users')
-                .delete()
-                .eq('id', (await supabase.auth.getUser()).data.user.id);
-
-            if (deleteError) throw deleteError;
-
-            toast.success('Account deleted successfully');
+            if (!profile) return;
+            // Delete all user-related data
+            // 1. Delete comments
+            await supabase.from('comments').delete().eq('user_id', profile.id);
+            // 2. Delete likes
+            await supabase.from('project_likes').delete().eq('user_id', profile.id);
+            // 3. Delete projects (and optionally, related comments/likes for those projects)
+            const { data: userProjects } = await supabase.from('projects').select('id').eq('user_id', profile.id);
+            if (userProjects && userProjects.length > 0) {
+                const projectIds = userProjects.map(p => p.id);
+                // Delete comments on user's projects
+                await supabase.from('comments').delete().in('project_id', projectIds);
+                // Delete likes on user's projects
+                await supabase.from('project_likes').delete().in('project_id', projectIds);
+                // Delete the projects
+                await supabase.from('projects').delete().in('id', projectIds);
+            }
+            // 4. Delete profile
+            await supabase.from('profiles').delete().eq('id', profile.id);
+            // 5. Delete user from Supabase Auth
+            const { error: signOutError } = await supabase.auth.signOut();
+            if (signOutError) throw signOutError;
+            toast.success('Account and all data deleted successfully');
             navigate('/');
         } catch (error) {
             console.error('Error deleting account:', error);
@@ -29,22 +49,88 @@ const Settings = () => {
         }
     };
 
-    const [user, setUser] = useState(null);
-
     useEffect(() => {
-        const checkUser = async () => {
+        const fetchProfile = async () => {
             const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            if (!user) return;
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+            setProfile(profileData);
+            setBio(profileData?.bio || '');
+            setTwitter(profileData?.twitter || '');
+            setLinkedin(profileData?.linkedin || '');
+            setPortfolio(profileData?.portfolio || '');
+            setAvatarUrl(profileData?.avatar_url || '');
         };
-        checkUser();
+        fetchProfile();
     }, []);
 
-    if (!user) {
+    const handleSave = async () => {
+        if (!profile) return;
+        setSaving(true);
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                bio,
+                twitter,
+                linkedin,
+                portfolio
+            })
+            .eq('id', profile.id);
+        setSaving(false);
+        if (error) {
+            toast.error('Failed to save changes');
+        } else {
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 4000);
+            toast.success('Profile updated successfully');
+        }
+    };
+
+    const handleAvatarChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !profile) return;
+        const fileExt = file.name.split('.').pop();
+        const filePath = `avatars/${profile.id}.${fileExt}`;
+        // Upload to Supabase Storage
+        let { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
+        if (uploadError) {
+            toast.error('Failed to upload avatar');
+            return;
+        }
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        const publicUrl = publicUrlData.publicUrl;
+        // Update profile
+        const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
+        if (updateError) {
+            toast.error('Failed to update avatar');
+        } else {
+            setAvatarUrl(publicUrl);
+            toast.success('Profile picture updated!');
+        }
+    };
+
+    if (!profile) {
         return <div className="text-center mt-12">Loading profile...</div>;
     }
 
     return (
         <div className="max-w-5xl mx-auto mt-16 px-6 md:px-12">
+            {showSuccess && (
+                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <div>
+                            <h4 className="text-sm font-medium text-green-800">Profile updated successfully!</h4>
+                            <p className="text-xs text-green-700 mt-1">Your changes have been saved.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
             <h1 className="text-3xl font-bold text-gray-900 mb-10">Account Settings</h1>
 
             {/* SECTION: Personal Info */}
@@ -59,7 +145,7 @@ const Settings = () => {
                         <label className="block text-sm font-medium text-gray-700">Name</label>
                         <input
                             type="text"
-                            value={user.user_metadata?.full_name || user.user_metadata?.name || 'no name'}
+                            value={profile?.full_name || profile?.name || 'no name'}
                             placeholder="Your Name"
                             className="mt-1 w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-blue-600 focus:border-blue-600"
                             readOnly
@@ -69,7 +155,7 @@ const Settings = () => {
                         <label className="block text-sm font-medium text-gray-700">Email Address</label>
                         <input
                             type="email"
-                            value={user.email}
+                            value={profile?.email || ''}
                             placeholder="you@gmail.com"
                             className="mt-1 w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-blue-600 focus:border-blue-600"
                             readOnly
@@ -82,53 +168,95 @@ const Settings = () => {
                             className="mt-1 w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                             rows="3"
                             placeholder="Tell us about yourself..."
+                            value={bio}
+                            onChange={e => setBio(e.target.value)}
                         />
                     </div>
                 </div>
 
+                <div className="flex flex-col items-center mb-8">
+                    <img
+                        src={avatarUrl || '/default-avatar.png'}
+                        alt="Profile Avatar"
+                        className="w-24 h-24 rounded-full object-cover border shadow mb-2"
+                    />
+                    <button
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                        type="button"
+                    >
+                        Change Profile Picture
+                    </button>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        onChange={handleAvatarChange}
+                    />
+                </div>
+
             </section>
 
-            <section className="space-y-6">
+            <section className="space-y-6 mt-10">
                 <div>
                     <h2 className="text-xl font-semibold text-gray-800">Social Links</h2>
                     <p className="text-sm text-gray-500">Share how people can connect with you.</p>
                 </div>
 
                 <div className="space-y-4">
-                    {['Twitter', 'LinkedIn', 'Portfolio'].map((label) => (
-                        <div key={label}>
-                            <label className="block text-sm font-medium text-gray-700">{label}</label>
-                            <input
-                                type="url"
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder={`https://${label.toLowerCase()}.com/yourprofile`}
-                            />
-                        </div>
-                    ))}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Twitter</label>
+                        <input
+                            type="url"
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="https://twitter.com/yourprofile"
+                            value={twitter}
+                            onChange={e => setTwitter(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">LinkedIn</label>
+                        <input
+                            type="url"
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="https://linkedin.com/in/yourprofile"
+                            value={linkedin}
+                            onChange={e => setLinkedin(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Portfolio</label>
+                        <input
+                            type="url"
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="https://yourportfolio.com"
+                            value={portfolio}
+                            onChange={e => setPortfolio(e.target.value)}
+                        />
+                    </div>
                 </div>
             </section>
 
             {/* Save Button */}
             <div className="pt-4">
-                <button className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-md font-medium transition">
-                    Save Changes
+                <button
+                    className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-md font-medium transition"
+                    onClick={handleSave}
+                    disabled={saving}
+                >
+                    {saving ? 'Saving...' : 'Save Changes'}
                 </button>
             </div>
 
-            <section className="bg-white p-8 shadow rounded-2xl space-y-6 border border-gray-200 mt-12">
-                <div>
-                    <h2 className="text-xl font-semibold text-gray-800">Preferences</h2>
-                    <p className="text-sm text-gray-500">Control your experience on the platform.</p>
+            {/* SECTION: Connected Accounts */}
+            <div className="bg-white p-8 shadow rounded-2xl space-y-6 border border-gray-200 mt-12">
+                <h2 className="text-xl font-semibold text-gray-800">Connected Accounts</h2>
+                <div className="flex items-center gap-3">
+                    <img src="/google-icon.svg" alt="Google" className="w-6 h-6" />
+                    <span className="text-gray-700 font-medium">Google Connected</span>
                 </div>
-
-                <div className="space-y-5">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700">Receive Email Notifications</span>
-                        <input type="checkbox" className="w-5 h-5 text-blue-600 rounded focus:ring-blue-600" />
-                    </div>
-                </div>
-            </section>
-
+            </div>
 
             {/* SECTION: Danger Zone */}
             <section className="bg-white p-8 shadow rounded-2xl space-y-4 border border-red-200 mt-12">

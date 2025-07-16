@@ -89,6 +89,23 @@ const Header = () => {
         }
     };
 
+    const handleProfileClick = async () => {
+        handleClose();
+        if (user) {
+            // Fetch username from profiles table
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', user.id)
+                .single();
+            if (profile && profile.username) {
+                navigate(`/profile/${profile.username}`);
+            } else {
+                toast.error('Profile not found');
+            }
+        }
+    };
+
     return (
         <header className="fixed top-0 left-0 right-0 bg-blue-400 text-black z-50 h-16 mb-10">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
@@ -153,7 +170,7 @@ const Header = () => {
                                             </div>
 
                                             <div className="py-1">
-                                                <button onClick={() => { handleClose(); navigate("/profile"); }}
+                                                <button onClick={handleProfileClick}
                                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                                     <User className="w-4 h-4 mr-2" />
                                                     Profile

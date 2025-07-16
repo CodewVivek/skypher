@@ -1,11 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { ExternalLink, Flag } from 'lucide-react';
+import { ArrowBigRight, ArrowBigLeft, ExternalLink, Flag } from 'lucide-react';
 import Like from '../Components/Like';
 import Share from '../Components/Share';
 import ReportModal from '../Components/ReportModal';
 import Comments from '../Components/Comments';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+
+const NextArrow = (props) => (
+    <div
+        {...props}
+        style={{
+            ...props.style,
+            display: 'flex',
+            background: 'gray',
+            borderRadius: '50%',
+            width: 40,
+            height: 40,
+            right: 10,
+            left: 'auto',
+            zIndex: 2,
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            cursor: 'pointer',
+            opacity: 0.85,
+            transition: 'opacity 0.2s',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = 1)}
+        onMouseLeave={e => (e.currentTarget.style.opacity = 0.85)}
+    >
+
+    </div>
+);
+
+const PrevArrow = (props) => (
+    <div
+        {...props}
+        style={{
+            ...props.style,
+            display: 'flex',
+            background: 'gray',
+            borderRadius: '50%',
+            width: 40,
+            height: 40,
+            left: 10,
+            right: 'auto',
+            zIndex: 2,
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            cursor: 'pointer',
+            opacity: 0.85,
+            transition: 'opacity 0.2s',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = 1)}
+        onMouseLeave={e => (e.currentTarget.style.opacity = 0.85)}
+    >
+    </div>
+);
 
 const ProjectDetails = () => {
     const { slug } = useParams();
@@ -112,15 +168,40 @@ const ProjectDetails = () => {
                     </div>
 
                     <p className="text-gray-600 mt-2 text-xl">{project.tagline}</p>
-                    {project.media_urls.map((url, index) => (
-                        <div key={index} className="mt-6 mb-4">
-                            <img
-                                src={url}
-                                alt='launch images'
-                                className="w-full rounded-lg border"
-                            />
-                        </div>
-                    ))}
+                    {project.media_urls && project.media_urls.length > 0 && (
+                        project.media_urls.length === 1 ? (
+                            <div className="mt-6 mb-4">
+                                <img
+                                    src={project.media_urls[0]}
+                                    alt="launch image"
+                                    className="rounded-lg border"
+                                />
+                            </div>
+                        ) : (
+                            <div className="mt-6 mb-4">
+                                <Slider
+                                    dots={true}
+                                    infinite={true}
+                                    speed={500}
+                                    slidesToShow={1}
+                                    slidesToScroll={1}
+                                    className="rounded-lg"
+                                    nextArrow={<NextArrow />}
+                                    prevArrow={<PrevArrow />}
+                                >
+                                    {project.media_urls.map((url, index) => (
+                                        <div key={index}>
+                                            <img
+                                                src={url}
+                                                alt={`launch images ${index + 1}`}
+                                                className="rounded-lg border"
+                                            />
+                                        </div>
+                                    ))}
+                                </Slider>
+                            </div>
+                        )
+                    )}
                     <p className="text-gray-700 mb-6 text-xl text-justify ">{project.description}</p>
                 </div>
 
@@ -156,7 +237,7 @@ const ProjectDetails = () => {
                         <h4 className="text-md font-semibold mb-2">Built By</h4>
                         {creator ? (
                             <Link
-                                to={`/profile/${creator.username}`}
+                                to={`/profile/${encodeURIComponent(creator.full_name)}?id=${creator.id}`}
                                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition"
                             >
                                 <img

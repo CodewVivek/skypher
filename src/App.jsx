@@ -10,7 +10,6 @@ import TermsOfService from './Pages/TermsOfService';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import AdminDashboard from './Pages/AdminDashboard';
 import Settings from './Components/Settings.jsx';
-import Profile from './Components/Profile.jsx';
 import Aboutus from './Components/Aboutus.jsx';
 import Footer from './Components/Footer.jsx';
 import News from './Pages/News.jsx';
@@ -40,7 +39,6 @@ function App() {
 
             {/*user Profile realted */}
             <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:username" element={<UserProfile />} />
 
 
