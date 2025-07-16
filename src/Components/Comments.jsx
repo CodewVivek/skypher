@@ -226,6 +226,7 @@ const Comments = ({ projectId }) => {
                 isOpen={isReportModalOpen}
                 onClose={() => { setIsReportModalOpen(false); setReportCommentId(null); }}
                 commentId={reportCommentId}
+                projectId={projectId}
             />
         </div>
     );

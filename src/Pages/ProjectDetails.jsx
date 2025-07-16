@@ -156,7 +156,7 @@ const ProjectDetails = () => {
                         <h4 className="text-md font-semibold mb-2">Built By</h4>
                         {creator ? (
                             <Link
-                                to={`/user/${creator.id}`}
+                                to={`/profile/${creator.username}`}
                                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition"
                             >
                                 <img

@@ -21,8 +21,8 @@ import UserProfile from './Pages/UserProfile.jsx';
 function App() {
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen"> 
-       
+      <div className="flex flex-col min-h-screen">
+
         <Header />
 
         <main className="flex-grow">
@@ -41,11 +41,11 @@ function App() {
             {/*user Profile realted */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:id" element={<UserProfile />} />
+            <Route path="/profile/:username" element={<UserProfile />} />
 
 
             <Route path="/news" element={<News />} />
-            
+
             {/*footer details */}
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />

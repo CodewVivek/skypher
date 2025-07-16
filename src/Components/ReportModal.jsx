@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Flag, AlertTriangle, X, CheckCircle, AlertCircle } from 'lucide-react';
 
-const ReportModal = ({ isOpen, onClose, projectId, projectName }) => {
+const ReportModal = ({ isOpen, onClose, projectId, projectName, commentId }) => {
     const [reason, setReason] = useState('');
     const [description, setDescription] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -59,15 +59,21 @@ const ReportModal = ({ isOpen, onClose, projectId, projectName }) => {
 
         setSubmitting(true);
 
+        // Prepare report object
+        const reportData = {
+            project_id: projectId,
+            user_id: user.id,
+            reason: reason,
+            description: description.trim() || null,
+            status: 'pending',
+        };
+        if (commentId) {
+            reportData.comment_id = commentId;
+        }
+
         const { error } = await supabase
             .from('reports')
-            .insert({
-                project_id: projectId,
-                user_id: user.id,
-                reason: reason,
-                description: description.trim() || null,
-                status: 'pending'
-            });
+            .insert(reportData);
 
         setSubmitting(false);
 
@@ -138,7 +144,9 @@ const ReportModal = ({ isOpen, onClose, projectId, projectName }) => {
                                 <Flag className="w-4 h-4 text-red-600" />
                             </div>
                             <div>
-                                <h3 className="text-base font-semibold text-gray-800">Report Project</h3>
+                                <h3 className="text-base font-semibold text-gray-800">
+                                    {commentId ? 'Report Comment' : 'Report Project'}
+                                </h3>
                                 <p className="text-xs text-gray-600">Help us keep the community safe</p>
                             </div>
                         </div>
@@ -195,8 +203,8 @@ const ReportModal = ({ isOpen, onClose, projectId, projectName }) => {
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder={isDescriptionRequired ? "Please provide details about the issue..." : "Please provide more details about the issue..."}
                                 className={`w-full p-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:border-transparent ${isDescriptionRequired
-                                        ? 'border-red-300 focus:ring-red-500'
-                                        : 'border-gray-200 focus:ring-red-500'
+                                    ? 'border-red-300 focus:ring-red-500'
+                                    : 'border-gray-200 focus:ring-red-500'
                                     }`}
                                 rows="2"
                                 maxLength="200"

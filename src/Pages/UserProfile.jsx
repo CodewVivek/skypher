@@ -3,16 +3,21 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 const UserProfile = () => {
-    const { id } = useParams();
+    const { username } = useParams();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchProfile = async () => {
+            if (!username) {
+                setProfile(null);
+                setLoading(false);
+                return;
+            }
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', id)
+                .eq('username', username)
                 .single();
 
             if (error) {
@@ -25,7 +30,7 @@ const UserProfile = () => {
         };
 
         fetchProfile();
-    }, [id]);
+    }, [username]);
 
     if (loading) {
         return (
