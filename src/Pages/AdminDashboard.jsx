@@ -88,14 +88,6 @@ const AdminDashboard = () => {
         try {
             console.log('Fetching reports...'); // Debug log
 
-            // First, let's check if we can access the reports table at all
-            const { data: testData, error: testError } = await supabase
-                .from('reports')
-                .select('count')
-                .limit(1);
-
-            console.log('Test query result:', { testData, testError });
-
             const { data, error } = await supabase
                 .from('reports')
                 .select(`
@@ -110,22 +102,25 @@ const AdminDashboard = () => {
                         id,
                         full_name,
                         email
+                    ),
+                    comments:comment_id (
+                        id,
+                        content,
+                        project_id,
+                        projects (
+                            id,
+                            name,
+                            slug,
+                            website_url
+                        )
                     )
                 `)
                 .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error fetching reports:', error);
-                console.error('Error details:', {
-                    message: error.message,
-                    details: error.details,
-                    hint: error.hint,
-                    code: error.code
-                });
                 setReports([]);
             } else {
-                console.log('Reports data:', data); // Debug log
-                console.log('Number of reports:', data?.length || 0);
                 setReports(data || []);
             }
         } catch (error) {
@@ -409,6 +404,9 @@ const AdminDashboard = () => {
                                                 Report
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Comment (if reported)
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Project
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -441,7 +439,21 @@ const AdminDashboard = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    {report.projects ? (
+                                                    {report.comment_id && report.comments?.content ? (
+                                                        <div className="text-xs text-gray-700 italic max-w-xs truncate">{report.comments.content}</div>
+                                                    ) : (
+                                                        <span className="text-gray-400">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {report.comment_id && report.comments?.projects ? (
+                                                        <Link
+                                                            to={`/launches/${report.comments.projects.slug}`}
+                                                            className="text-blue-600 hover:text-blue-800 font-medium"
+                                                        >
+                                                            {report.comments.projects.name}
+                                                        </Link>
+                                                    ) : report.projects ? (
                                                         <Link
                                                             to={`/launches/${report.projects.slug}`}
                                                             className="text-blue-600 hover:text-blue-800 font-medium"
@@ -470,6 +482,31 @@ const AdminDashboard = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex gap-2">
+                                                        {/* View button for project or comment */}
+                                                        {report.projects ? (
+                                                            <Link
+                                                                to={`/launches/${report.projects.slug}`}
+                                                                className="text-blue-600 hover:text-blue-800"
+                                                                title="View reported project"
+                                                                target="_blank"
+                                                            >
+                                                                <Eye className="w-4 h-4" />
+                                                            </Link>
+                                                        ) : report.comment_id ? (
+                                                            // If it's a comment report, try to link to the project and scroll to comment
+                                                            report.project_id && report.projects ? (
+                                                                <Link
+                                                                    to={`/launches/${report.projects.slug}?comment=${report.comment_id}`}
+                                                                    className="text-blue-600 hover:text-blue-800"
+                                                                    title="View reported comment"
+                                                                    target="_blank"
+                                                                >
+                                                                    <Eye className="w-4 h-4" />
+                                                                </Link>
+                                                            ) : (
+                                                                <span className="text-gray-400">No project</span>
+                                                            )
+                                                        ) : null}
                                                         {report.status === 'pending' && (
                                                             <>
                                                                 <button

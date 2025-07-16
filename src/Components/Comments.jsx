@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import ReportModal from './ReportModal';
 
-const formatTime = (dateString) => {
+// Helper to show relative time (e.g., '1h ago', '2d ago', 'just now')
+function getRelativeTime(dateString) {
+    const now = new Date();
     const date = new Date(dateString);
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const mins = minutes < 10 ? '0' + minutes : minutes;
-    return `${hours}:${mins} ${ampm}`;
-};
+    const diff = Math.floor((now - date) / 1000); // in seconds
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return date.toLocaleDateString();
+}
 
 const Comments = ({ projectId }) => {
     const [comments, setComments] = useState([]);
@@ -25,6 +26,8 @@ const Comments = ({ projectId }) => {
     const [reporting, setReporting] = useState(null); // commentId being reported
     const [reportReason, setReportReason] = useState('');
     const [reportSuccess, setReportSuccess] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [reportCommentId, setReportCommentId] = useState(null);
 
     useEffect(() => {
         fetchComments();
@@ -107,8 +110,6 @@ const Comments = ({ projectId }) => {
         fetchComments();
     };
 
-
-
     // Helper to nest replies
     const nestComments = (comments) => {
         const map = {};
@@ -140,7 +141,7 @@ const Comments = ({ projectId }) => {
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-0.5">
                                 <span className="font-semibold text-gray-800 text-sm">{comment.profiles?.full_name || 'User'}</span>
-                                <span className="text-xs text-gray-400">{formatTime(comment.created_at)}</span>
+                                <span className="text-xs text-gray-400">{getRelativeTime(comment.created_at)}</span>
                             </div>
                             {isDeleted ? (
                                 <p className="italic text-gray-400 text-sm mb-1">This comment was deleted.</p>
@@ -159,7 +160,7 @@ const Comments = ({ projectId }) => {
                                     </button>
                                 )}
                                 {!isDeleted && user && user.id !== comment.user_id && (
-                                    <button className="text-yellow-600 font-medium hover:underline" onClick={() => setReporting(comment.id)}>
+                                    <button className="text-yellow-600 font-medium hover:underline" onClick={() => { setReportCommentId(comment.id); setIsReportModalOpen(true); }}>
                                         Report
                                     </button>
                                 )}
@@ -190,9 +191,9 @@ const Comments = ({ projectId }) => {
                                     {renderComments(comment.replies, level + 1)}
                                 </div>
                             )}
-
                         </div>
                     </div>
+                    <div className="border-b border-gray-100 mt-2" />
                 </div>
             );
         })
@@ -221,6 +222,11 @@ const Comments = ({ projectId }) => {
                     renderComments(nestComments(comments))
                 )}
             </div>
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={() => { setIsReportModalOpen(false); setReportCommentId(null); }}
+                commentId={reportCommentId}
+            />
         </div>
     );
 };
