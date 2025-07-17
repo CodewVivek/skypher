@@ -15,6 +15,10 @@ const AdminDashboard = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('projects');
+    const [userCount, setUserCount] = useState(0);
+    const [projectCount, setProjectCount] = useState(0);
+    const [commentCount, setCommentCount] = useState(0);
+    const [reportCount, setReportCount] = useState(0);
 
     useEffect(() => {
         const checkAccess = async () => {
@@ -56,6 +60,20 @@ const AdminDashboard = () => {
         checkAccess();
 
         return () => clearTimeout(timeout);
+    }, []);
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+            const { count: projects } = await supabase.from('projects').select('*', { count: 'exact', head: true });
+            const { count: comments } = await supabase.from('comments').select('*', { count: 'exact', head: true });
+            const { count: reports } = await supabase.from('reports').select('*', { count: 'exact', head: true });
+            setUserCount(users || 0);
+            setProjectCount(projects || 0);
+            setCommentCount(comments || 0);
+            setReportCount(reports || 0);
+        };
+        fetchCounts();
     }, []);
 
     const fetchProjects = async () => {
@@ -245,6 +263,26 @@ const AdminDashboard = () => {
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
                     <p className="text-gray-600">Manage platform projects and user reports</p>
+                </div>
+
+                {/* Analytics Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+                        <span className="text-2xl font-bold text-blue-600">{userCount}</span>
+                        <span className="text-gray-700 mt-2">Users</span>
+                    </div>
+                    <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+                        <span className="text-2xl font-bold text-green-600">{projectCount}</span>
+                        <span className="text-gray-700 mt-2">Projects</span>
+                    </div>
+                    <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+                        <span className="text-2xl font-bold text-purple-600">{commentCount}</span>
+                        <span className="text-gray-700 mt-2">Comments</span>
+                    </div>
+                    <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
+                        <span className="text-2xl font-bold text-red-600">{reportCount}</span>
+                        <span className="text-gray-700 mt-2">Reports</span>
+                    </div>
                 </div>
 
                 {/* Tabs */}

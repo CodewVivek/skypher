@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'
 import { ChevronDown, Play, Search, Users, TrendingUp, User, Megaphone, ArrowRight, Check, Menu, X, Telescope, Zap } from 'lucide-react';
+
 const LandingPage = () => {
     const navigate = useNavigate()
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,6 +28,7 @@ const LandingPage = () => {
         { title: "Predictive Analytics", desc: "Forecast your growth trajectory and identify potential challenges before they arise." },
         { title: "Content Generator", desc: "Create compelling pitch decks, marketing materials, and investor updates with AI-powered templates." }
     ];
+
     useEffect(() => {
         // Save old margin value (just in case)
         const oldMarginBottom = document.body.style.marginBottom;
@@ -40,6 +42,7 @@ const LandingPage = () => {
             document.body.style.marginBottom = oldMarginBottom;
         };
     }, []);
+
     return (
         <div className="min-h-screen bg-black text-white overflow-x-hidden ">
             {/* Navigation */}
@@ -274,7 +277,7 @@ const LandingPage = () => {
                             Intelligent Tools for Smarter Growth
                         </p>
                         <p className="text-gray-500 mt-4 max-w-2xl mx-auto">
-                            Our upcoming AI suite will empower you to make data-driven decisions, uncover hidden opportunities, and supercharge your startup’s growth journey — stay tuned!
+                            Our upcoming AI suite will empower you to make data-driven decisions, uncover hidden opportunities, and supercharge your startup's growth journey — stay tuned!
                         </p>
                     </div>
 

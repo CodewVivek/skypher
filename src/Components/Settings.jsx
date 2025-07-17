@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import { AlertTriangle, X, AlertCircle, CheckCircle } from 'lucide-react';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
 
 const Settings = () => {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -16,6 +17,7 @@ const Settings = () => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [avatarUrl, setAvatarUrl] = useState('');
     const fileInputRef = useRef(null);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
     const handleDeleteAccount = async () => {
         try {
@@ -41,11 +43,11 @@ const Settings = () => {
             // 5. Delete user from Supabase Auth
             const { error: signOutError } = await supabase.auth.signOut();
             if (signOutError) throw signOutError;
-            toast.success('Account and all data deleted successfully');
+            setSnackbar({ open: true, message: 'Account and all data deleted successfully', severity: 'success' });
             navigate('/');
         } catch (error) {
             console.error('Error deleting account:', error);
-            toast.error('Failed to delete account');
+            setSnackbar({ open: true, message: 'Failed to delete account', severity: 'error' });
         }
     };
 
@@ -82,11 +84,9 @@ const Settings = () => {
             .eq('id', profile.id);
         setSaving(false);
         if (error) {
-            toast.error('Failed to save changes');
+            setSnackbar({ open: true, message: 'Failed to save changes', severity: 'error' });
         } else {
-            setShowSuccess(true);
-            setTimeout(() => setShowSuccess(false), 4000);
-            toast.success('Profile updated successfully');
+            setSnackbar({ open: true, message: 'Profile updated successfully', severity: 'success' });
         }
     };
 
@@ -98,7 +98,7 @@ const Settings = () => {
         // Upload to Supabase Storage
         let { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
         if (uploadError) {
-            toast.error('Failed to upload avatar');
+            setSnackbar({ open: true, message: 'Failed to upload avatar', severity: 'error' });
             return;
         }
         // Get public URL
@@ -107,10 +107,10 @@ const Settings = () => {
         // Update profile
         const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
         if (updateError) {
-            toast.error('Failed to update avatar');
+            setSnackbar({ open: true, message: 'Failed to update avatar', severity: 'error' });
         } else {
             setAvatarUrl(publicUrl);
-            toast.success('Profile picture updated!');
+            setSnackbar({ open: true, message: 'Profile picture updated!', severity: 'success' });
         }
     };
 
@@ -120,17 +120,22 @@ const Settings = () => {
 
     return (
         <div className="max-w-5xl mx-auto mt-16 px-6 md:px-12">
-            {showSuccess && (
-                <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                        <div>
-                            <h4 className="text-sm font-medium text-green-800">Profile updated successfully!</h4>
-                            <p className="text-xs text-green-700 mt-1">Your changes have been saved.</p>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <MuiAlert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                    elevation={6}
+                    variant="filled"
+                >
+                    {snackbar.message}
+                </MuiAlert>
+            </Snackbar>
             <h1 className="text-3xl font-bold text-gray-900 mb-10">Account Settings</h1>
 
             {/* SECTION: Personal Info */}

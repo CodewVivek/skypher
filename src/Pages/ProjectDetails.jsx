@@ -72,6 +72,8 @@ const ProjectDetails = () => {
     const [loading, setLoading] = useState(true);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+
+
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString("en-GB", {
             day: '2-digit',
@@ -98,7 +100,7 @@ const ProjectDetails = () => {
 
                     const { data: userData, error: userError } = await supabase
                         .from('profiles')
-                        .select('id, full_name, avatar_url')
+                        .select('id, full_name, avatar_url, username')
                         .eq('id', data.user_id)
                         .single();
 
@@ -141,6 +143,7 @@ const ProjectDetails = () => {
         };
         checkUser();
     }, []);
+
 
     if (loading) return <div>Loading...</div>;
     if (!project) return <div>Project not found</div>;
@@ -237,14 +240,11 @@ const ProjectDetails = () => {
                         <h4 className="text-md font-semibold mb-2">Built By</h4>
                         {creator ? (
                             <Link
-                                to={`/profile/${encodeURIComponent(creator.full_name)}?id=${creator.id}`}
+                                to={`/profile/${creator.username}`}
                                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition"
                             >
                                 <img
-                                    src={
-                                        creator.avatar_url ||
-                                        '/default-avatar.png'
-                                    }
+                                    src={creator.avatar_url || '/default-avatar.png'}
                                     alt="creator avatar"
                                     className="w-10 h-10 rounded-full border object-cover"
                                 />
@@ -256,34 +256,24 @@ const ProjectDetails = () => {
                                 </div>
                             </Link>
                         ) : (
-                            <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                    <span className="text-gray-500 text-sm">?</span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-800">
-                                        Unknown Creator
-                                    </p>
-                                    <p className="text-xs text-gray-500">Creator information unavailable</p>
-                                </div>
-                            </div>
+                            <span className="text-gray-500">Unknown Creator</span>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* Comments Section */}
             <div className="ml-12 mr-12 mx-auto">
                 <Comments projectId={project.id} />
             </div>
 
-            {/* Report Modal */}
             <ReportModal
                 isOpen={isReportModalOpen}
                 onClose={() => setIsReportModalOpen(false)}
                 projectId={project.id}
                 projectName={project.name}
             />
+
+
         </div>
     );
 };
