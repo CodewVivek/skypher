@@ -455,7 +455,7 @@ const Register = () => {
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
-            const res = await fetch("http://localhost:3001/generatelaunchdata", {
+            const res = await fetch(import.meta.env.VITE_API_URL + "/generatelaunchdata", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

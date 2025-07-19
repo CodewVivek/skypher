@@ -18,7 +18,7 @@ const Share = ({ projectSlug, projectName = "this project" }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // You can easily change this when you get your domain
-    const baseUrl = 'http://localhost:5173'; // Change this to your domain when ready
+    const baseUrl = window.location.origin; // Use current domain
     const shareUrl = `${baseUrl}/launches/${projectSlug}`;
     const title = `Check out ${projectName} on LaunchIt!`;
 
