@@ -232,14 +232,14 @@ const Settings = () => {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Portfolio</label>
-                        <input
-                            type="url"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            <input
+                                type="url"
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="https://yourportfolio.com"
                             value={portfolio}
                             onChange={e => setPortfolio(e.target.value)}
-                        />
-                    </div>
+                            />
+                        </div>
                 </div>
             </section>
 
@@ -260,8 +260,8 @@ const Settings = () => {
                 <div className="flex items-center gap-3">
                     <img src="/google-icon.svg" alt="Google" className="w-6 h-6" />
                     <span className="text-gray-700 font-medium">Google Connected</span>
+                    </div>
                 </div>
-            </div>
 
             {/* SECTION: Danger Zone */}
             <section className="bg-white p-8 shadow rounded-2xl space-y-4 border border-red-200 mt-12">

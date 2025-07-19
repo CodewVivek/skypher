@@ -5,7 +5,7 @@ import LandingPage from './Pages/LandingPage';
 import { Route, Routes, BrowserRouter } from 'react-router-dom';
 import UserRegister from './Pages/UserRegister';
 import ProjectDetails from './Pages/ProjectDetails.jsx';
-import DashBoard from './Pages/Dashboard.jsx';
+import DashBoard from './Pages/DashBoard.jsx';
 import TermsOfService from './Pages/TermsOfService';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
 import AdminDashboard from './Pages/AdminDashboard';

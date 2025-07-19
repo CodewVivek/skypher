@@ -29,14 +29,14 @@ const TermsOfService = () => (
         <ul className="list-disc ml-6 mb-4">
             <li>We may suspend or terminate your account if you violate these terms.</li>
             <li>You may delete your account at any time.</li>
-        </ul>
+                        </ul>
         <h2 className="text-xl font-semibold mt-8 mb-2">6. Disclaimer & Limitation of Liability</h2>
         <p className="mb-4">Launch It is provided "as is" without warranties of any kind. We are not liable for any damages resulting from your use of the platform.</p>
         <h2 className="text-xl font-semibold mt-8 mb-2">7. Changes to Terms</h2>
         <p className="mb-4">We may update these Terms of Service from time to time. We will notify you of significant changes by posting the new terms on this page.</p>
         <h2 className="text-xl font-semibold mt-8 mb-2">8. Contact Us</h2>
         <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:support@launchit.com" className="text-blue-600 underline">support@launchit.com</a>.</p>
-    </div>
-);
+        </div>
+    );
 
 export default TermsOfService; 
