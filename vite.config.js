@@ -11,11 +11,12 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
           supabase: ['@supabase/supabase-js'],
+          slick: ['react-slick', 'slick-carousel'],
         },
       },
     },
   },
   optimizeDeps: {
-    include: ['react-router-dom', '@supabase/supabase-js'],
+    include: ['react-router-dom', '@supabase/supabase-js', 'react-slick', 'slick-carousel'],
   },
 })
