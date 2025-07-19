@@ -150,12 +150,25 @@ const ProjectDetails = () => {
 
     return (
         <div className="min-h-screen bg-white">
-            <div className="bg-white p-20 flex flex-col md:flex-row gap-4">
+            <div className="bg-white px-2 py-6 md:p-10 lg:p-20 flex flex-col md:flex-row gap-6 md:gap-8 lg:gap-12 w-full max-w-7xl mx-auto">
 
                 {/* Left Section */}
-                <div className="w-full md:w-2/3 pr-4">
+                <div className="w-full md:w-2/3 md:pr-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-3xl font-bold">{project.name}</h2>
+                        <div className="flex items-center gap-3">
+                            {project.logo_url ? (
+                                <img
+                                    src={project.logo_url}
+                                    alt="Logo"
+                                    className="w-12 h-12 object-contain rounded-full border bg-white"
+                                />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
+                                    <span>L</span>
+                                </div>
+                            )}
+                            <h2 className="text-3xl font-bold">{project.name}</h2>
+                        </div>
                         <div className='flex gap-2'>
                             <a
                                 href={project.website_url}
@@ -171,13 +184,15 @@ const ProjectDetails = () => {
                     </div>
 
                     <p className="text-gray-600 mt-2 text-xl">{project.tagline}</p>
+                    <p className="text-gray-700 mb-6 text-lg md:text-xl text-justify break-words max-w-full overflow-x-auto">{project.description}</p>
                     {project.media_urls && project.media_urls.length > 0 && (
                         project.media_urls.length === 1 ? (
                             <div className="mt-6 mb-4">
                                 <img
                                     src={project.media_urls[0]}
                                     alt="launch image"
-                                    className="rounded-lg border"
+                                    className="rounded-lg border w-full max-h-[350px] object-contain"
+                                    style={{ maxWidth: '100%', height: 'auto' }}
                                 />
                             </div>
                         ) : (
@@ -193,11 +208,12 @@ const ProjectDetails = () => {
                                     prevArrow={<PrevArrow />}
                                 >
                                     {project.media_urls.map((url, index) => (
-                                        <div key={index}>
+                                        <div key={index} className="flex justify-center items-center">
                                             <img
                                                 src={url}
                                                 alt={`launch images ${index + 1}`}
-                                                className="rounded-lg border"
+                                                className="rounded-lg border w-full max-h-[350px] object-contain"
+                                                style={{ maxWidth: '100%', height: 'auto' }}
                                             />
                                         </div>
                                     ))}
@@ -205,11 +221,10 @@ const ProjectDetails = () => {
                             </div>
                         )
                     )}
-                    <p className="text-gray-700 mb-6 text-xl text-justify ">{project.description}</p>
                 </div>
 
                 {/* Right Sidebar */}
-                <div className="w-full md:w-1/3 ">
+                <div className="w-full md:w-1/3 mt-8 md:mt-0">
                     <div className="mb-4">
                         <h4 className="text-md font-semibold mb-1">Company Info</h4>
                         <a

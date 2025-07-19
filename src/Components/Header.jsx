@@ -131,7 +131,7 @@ const Header = () => {
                         </Link>
 
                         {!user && (
-                            <Link to="/UserRegister" className="text-white/90 hover:text-white font-medium">
+                            <Link to="/launchpage" className="text-white/90 hover:text-white font-medium">
                                 Get Started
                             </Link>
                         )}
@@ -297,7 +297,7 @@ const Header = () => {
 
                         {!user && (
                             <Link
-                                to="/UserRegister"
+                                to="/launchpage"
                                 className="block text-white/90 hover:text-white font-medium py-2"
                                 onClick={() => setMobileMenuOpen(false)}
                             >

@@ -6,6 +6,7 @@ import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
 import { nanoid } from 'nanoid';
+import Snackbar from '@mui/material/Snackbar';
 
 function getLinkType(url) {
     if (!url) return { label: 'Website', icon: '🌐' };
@@ -28,13 +29,11 @@ const isValidUrl = (string) => {
     }
 };
 
-
-
 const slugify = (text) =>
     text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
-
 const Register = () => {
+    const [step, setStep] = useState(1);
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [isClearable, setIsClearable] = useState(true);
@@ -43,6 +42,8 @@ const Register = () => {
     const [formError, setFormError] = useState('');
     const [uploadError, setUploadError] = useState('');
     const [urlError, setUrlError] = useState('');
+    const [showAutoSave, setShowAutoSave] = useState(false);
+    const [showDraftSaved, setShowDraftSaved] = useState(false);
     const categoryOptions = [
         {
             label: "💸 Finance & Fintech",
@@ -274,8 +275,6 @@ const Register = () => {
         setLinks(links.filter((_, i) => i !== index));
     };
 
-
-
     const [formData, setFormData] = useState({
         name: '',
         websiteUrl: '',
@@ -292,11 +291,7 @@ const Register = () => {
         setFormError('');
     };
 
-
-
-
     //media code
-
     const [files, setFiles] = useState([]);
     const MAX_FILE_SIZE = 5242880; // 5 MB in bytes
     const MAX_FILES = 3;
@@ -343,6 +338,46 @@ const Register = () => {
         setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
     };
 
+    // Logo upload state
+    const [logoFile, setLogoFile] = useState(null);
+    const [logoError, setLogoError] = useState('');
+
+    // Logo upload handler
+    const handleLogoChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+            setLogoError('Logo must be JPG, PNG, or GIF.');
+            setLogoFile(null);
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            setLogoError('Logo must be less than 2MB.');
+            setLogoFile(null);
+            return;
+        }
+        setLogoFile(file);
+        setLogoError('');
+    };
+
+    // Description word count state
+    const [descriptionWordCount, setDescriptionWordCount] = useState(0);
+    const DESCRIPTION_WORD_LIMIT = 260;
+
+    // Description input handler with word limit
+    const handleDescriptionChange = (e) => {
+        const value = e.target.value;
+        const words = value.trim().split(/\s+/).filter(Boolean);
+        if (words.length <= DESCRIPTION_WORD_LIMIT) {
+            setFormData({ ...formData, description: value });
+            setDescriptionWordCount(words.length);
+        } else {
+            // Only allow up to the word limit
+            const limited = words.slice(0, DESCRIPTION_WORD_LIMIT).join(' ');
+            setFormData({ ...formData, description: limited });
+            setDescriptionWordCount(DESCRIPTION_WORD_LIMIT);
+        }
+    };
 
     //supabase 
     useEffect(() => {
@@ -358,6 +393,31 @@ const Register = () => {
         checkUser();
     }, [navigate]);
 
+    // Auto-save to localStorage
+    useEffect(() => {
+        // Load draft from localStorage on mount
+        const savedDraft = localStorage.getItem('launch_draft');
+        if (savedDraft) {
+            try {
+                const draft = JSON.parse(savedDraft);
+                setFormData(draft.formData || {});
+                setSelectedCategory(draft.selectedCategory || null);
+                setLinks(draft.links || ['']);
+                setStep(draft.step || 1);
+            } catch { }
+        }
+    }, []);
+
+    useEffect(() => {
+        // Save to localStorage on form change, but do not show Snackbar here
+        const draft = {
+            formData,
+            selectedCategory,
+            links,
+            step
+        };
+        localStorage.setItem('launch_draft', JSON.stringify(draft));
+    }, [formData, selectedCategory, links, step]);
 
     // Validation functions for submit only
     const validateStep1 = () => {
@@ -376,6 +436,14 @@ const Register = () => {
         setUploadError('');
         return true;
     };
+    const validateLogo = () => {
+        if (!logoFile) {
+            setLogoError('Please upload a logo (Step 3).');
+            return false;
+        }
+        setLogoError('');
+        return true;
+    };
 
     //submission handle with media and all other form data
     const handleSubmit = async (e) => {
@@ -385,7 +453,8 @@ const Register = () => {
         // Only validate on submit
         const valid1 = validateStep1();
         const valid2 = validateStep2();
-        if (!valid1 || !valid2) return;
+        const validLogo = validateLogo();
+        if (!valid1 || !valid2 || !validLogo) return;
         if (!user) {
             setFormError('Please sign in to submit a project');
             navigate('/UserRegister');
@@ -422,6 +491,18 @@ const Register = () => {
                 fileUrls = await Promise.all(uploadPromises);
             }
             submissionData.media_urls = fileUrls;
+            // Logo upload
+            let logoUrl = '';
+            if (logoFile) {
+                const logoPath = `${Date.now()}-logo-${logoFile.name}`;
+                const { data: logoData, error: logoErrorUpload } = await supabase.storage
+                    .from('startup-media')
+                    .upload(logoPath, logoFile);
+                if (logoErrorUpload) throw logoErrorUpload;
+                const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
+                logoUrl = logoUrlData.publicUrl;
+            }
+            submissionData.logo_url = logoUrl;
             const { data, error } = await supabase
                 .from('projects')
                 .insert([submissionData]);
@@ -435,16 +516,17 @@ const Register = () => {
             setSelectedCategory(null);
             setLinks(['']);
             setFiles([]);
+            setLogoFile(null);
             setStep(1);
             setFormError('');
             setUploadError('');
+            setLogoError('');
             navigate('/');
         } catch (error) {
             console.error('Error submitting form:', error);
             setFormError('Failed to register startup. Please try again.');
         }
     };
-
 
     //ai generated content for submission
     const handleGenerateLaunchData = async () => {
@@ -482,18 +564,79 @@ const Register = () => {
         }
     }
 
+    // Save as Draft handler
+    const handleSaveDraft = async () => {
+        setFormError('');
+        if (!user) {
+            setFormError('Please sign in to save');
+            navigate('/UserRegister');
+            return;
+        }
+        if (!formData.name) {
+            setFormError('Please enter a project name before saving.');
+            return;
+        }
+        const draftData = {
+            name: formData.name,
+            website_url: formData.websiteUrl || '',
+            tagline: formData.tagline || '',
+            description: formData.description || '',
+            category_type: selectedCategory?.value || '',
+            links: links.filter(link => link.trim() !== ''),
+            created_at: new Date().toISOString(),
+            user_id: user.id,
+            status: 'draft',
+            slug: slugify(formData.name) + '-' + nanoid(6),
+            media_urls: [] // Optionally save media if you want
+        };
+        console.log('Saving draft:', draftData);
+        try {
+            const { error } = await supabase
+                .from('projects')
+                .insert([draftData]);
+            if (error) throw error;
+            setShowDraftSaved(true);
+        } catch (error) {
+            setFormError('Failed to save draft. Please try again.');
+            console.error('Supabase error:', error);
+        }
+    };
 
-    const [step, setStep] = useState(1);
+    // In the Next button handler, show the Snackbar
+    const handleNext = () => {
+        setStep(step + 1);
+        setShowAutoSave(true);
+        setTimeout(() => setShowAutoSave(false), 1200);
+    };
+
     return (
         <>
             <div className="container-custom py-12">
                 <div className="max-w-2xl mx-auto mt-15">
                     <div className="bg-white rounded-xl shadow-lg p-8">
-                        {(formError || uploadError) && (
-                            <Alert severity="warning" onClose={() => { setFormError(''); setUploadError(''); }} className="mb-4">
+                        <Snackbar
+                            open={!!(formError || uploadError)}
+                            autoHideDuration={4000}
+                            onClose={() => { setFormError(''); setUploadError(''); }}
+                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            sx={{ mt: '70px' }}
+                        >
+                            <Alert
+                                onClose={() => { setFormError(''); setUploadError(''); }}
+                                severity="warning"
+                                sx={{ width: '100%' }}
+                            >
                                 {formError || uploadError}
                             </Alert>
-                        )}
+                        </Snackbar>
+                        {/* Snackbar for auto-save */}
+                        <Snackbar open={showAutoSave} autoHideDuration={1200} onClose={() => setShowAutoSave(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} sx={{ mt: '70px' }}>
+                            <Alert severity="info" sx={{ width: '100%' }}>Progress auto-saved locally</Alert>
+                        </Snackbar>
+                        {/* Snackbar for draft saved */}
+                        <Snackbar open={showDraftSaved} autoHideDuration={3000} onClose={() => setShowDraftSaved(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} sx={{ mt: '70px' }}>
+                            <Alert severity="success" sx={{ width: '100%' }}>Launch saved!</Alert>
+                        </Snackbar>
                         <div className="mb-8">
                             <div className="flex justify-between items-center">
                                 {[1, 2, 3].map((stepNumber) => (
@@ -520,7 +663,8 @@ const Register = () => {
                             if (step === 3) {
                                 const valid1 = validateStep1();
                                 const valid2 = validateStep2();
-                                if (valid1 && valid2) handleSubmit(e);
+                                const validLogo = validateLogo();
+                                if (valid1 && valid2 && validLogo) handleSubmit(e);
                             }
                         }}
                             onKeyDown={e => {
@@ -596,10 +740,16 @@ const Register = () => {
                                             Description
                                             <span className="text-red-500 ml-1  w-auto h-auto">*</span>
                                         </label>
+                                        <div className="flex items-center justify-end mb-1 w-auto">
+                                            <span className={`text-xs ${descriptionWordCount >= DESCRIPTION_WORD_LIMIT ? 'text-red-500' : 'text-gray-500'}`}>{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</span>
+                                            {descriptionWordCount >= DESCRIPTION_WORD_LIMIT && (
+                                                <span className="text-xs text-red-500 ml-2">Word limit reached</span>
+                                            )}
+                                        </div>
                                         <textarea
                                             name="description"
                                             value={formData.description}
-                                            onChange={handleInputChange}
+                                            onChange={handleDescriptionChange}
                                             rows={4}
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg"
                                             placeholder="Describe your startup"
@@ -656,6 +806,34 @@ const Register = () => {
                             {step === 3 && (
                                 <>
                                     <div className="space-y-6">
+                                        {/* Logo upload */}
+                                        <div>
+                                            <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                                Logo
+                                                <span className="text-red-500 ml-1">*</span>
+                                            </label>
+                                            <p className="text-sm text-gray-500 mb-2">
+                                                Recommended size: 240x240 | JPG, PNG, GIF. Max size: 2MB
+                                            </p>
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/gif"
+                                                onChange={handleLogoChange}
+                                                className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                            />
+                                            {logoFile && (
+                                                <div className="mt-2">
+                                                    <img
+                                                        src={URL.createObjectURL(logoFile)}
+                                                        alt="Logo preview"
+                                                        className="w-24 h-24 object-contain rounded border"
+                                                    />
+                                                </div>
+                                            )}
+                                            {logoError && (
+                                                <p className="text-red-500 text-sm mt-1">{logoError}</p>
+                                            )}
+                                        </div>
                                         <div>
                                             <label className="block text-lg font-semibold text-gray-700 mb-2">
                                                 Upload Media
@@ -715,22 +893,31 @@ const Register = () => {
                                         Previous
                                     </button>
                                 )}
-                                {step < 3 ? (
+                                <div className="flex gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => setStep(step + 1)}
-                                        className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                        onClick={handleSaveDraft}
+                                        className="px-6 py-3 bg-yellow-500 text-white rounded-lg"
                                     >
-                                        Next
+                                        Save
                                     </button>
-                                ) : (
-                                    <button
-                                        type="submit"
-                                        className="px-6 py-3 bg-blue-900 text-white rounded-lg"
-                                    >
-                                        Submit
-                                    </button>
-                                )}
+                                    {step < 3 ? (
+                                        <button
+                                            type="button"
+                                            onClick={handleNext}
+                                            className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                        >
+                                            Next
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="submit"
+                                            className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                        >
+                                            Submit
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </form>
                     </div>

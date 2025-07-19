@@ -41,38 +41,41 @@ const UserProfile = () => {
                 return;
             } else {
                 setProfile(data);
-                // Fetch projects for this user
-                const { data: userProjects, error: projectsError } = await supabase
-                    .from('projects')
-                    .select('*')
-                    .eq('user_id', data.id);
-                if (!projectsError) {
-                    setProjects(userProjects);
-                } else {
-                    setProjects([]);
-                }
                 // Check if logged-in user is the owner
                 const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+                let userProjects = [];
                 if (loggedInUser && loggedInUser.id === data.id) {
-                    setIsOwner(true);
-                    // Fetch comments on own projects
-                    if (userProjects && userProjects.length > 0) {
-                        const projectIds = userProjects.map(p => p.id);
-                        const { data: userComments, error: commentsError } = await supabase
-                            .from('comments')
-                            .select('*, projects(name, slug)')
-                            .in('project_id', projectIds)
-                            .eq('user_id', data.id);
-                        if (!commentsError) {
-                            setComments(userComments);
-                        } else {
-                            setComments([]);
-                        }
+                    // Owner: fetch all projects (including drafts)
+                    const { data: allProjects } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('user_id', data.id);
+                    userProjects = allProjects || [];
+                } else {
+                    // Not owner: only show submitted projects
+                    const { data: nonDraftProjects } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('user_id', data.id)
+                        .neq('status', 'draft');
+                    userProjects = nonDraftProjects || [];
+                }
+                setProjects(userProjects);
+                // Fetch comments on own projects
+                if (userProjects && userProjects.length > 0) {
+                    const projectIds = userProjects.map(p => p.id);
+                    const { data: userComments, error: commentsError } = await supabase
+                        .from('comments')
+                        .select('*, projects(name, slug)')
+                        .in('project_id', projectIds)
+                        .eq('user_id', data.id);
+                    if (!commentsError) {
+                        setComments(userComments);
                     } else {
                         setComments([]);
                     }
                 } else {
-                    setIsOwner(false);
+                    setComments([]);
                 }
                 setLoading(false);
             }
@@ -113,7 +116,7 @@ const UserProfile = () => {
             setEditSuccess(true);
             setEditProject(null);
             setEditWarning(false);
-            // Refetch projects
+
             const { data: userProjects } = await supabase
                 .from('projects')
                 .select('*')
@@ -228,13 +231,17 @@ const UserProfile = () => {
                                 {projects.map((project) => (
                                     <div
                                         key={project.id}
-                                        className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-1 border-gray-300"
-                                        onClick={() => window.location.href = `/launches/${project.slug}`}
+                                        className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-1 border-gray-300"
+                                        {...(project.status !== 'draft' && { onClick: () => window.location.href = `/launches/${project.slug}` })}
+                                        style={project.status === 'draft' ? { cursor: 'default', opacity: 0.9 } : { cursor: 'pointer' }}
                                     >
                                         <div className="p-4">
-                                            <div className='flex items-center justify-between'>
-                                                <div className="flex items-center gap-2 mb-2 w-auto ">
-                                                    <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
+                                            {project.status === 'draft' && (
+                                                <span className="inline-block bg-red-400 text-white text-sm px-2 py-1 rounded ml-2">!! Not Launched</span>
+                                            )}
+                                            <div className='flex items-center gap-2 mb-2 w-auto '>
+                                                <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
+                                                {project.status !== 'draft' && (
                                                     <a
                                                         href={project.website_url}
                                                         target="_blank"
@@ -244,27 +251,34 @@ const UserProfile = () => {
                                                     >
                                                         <ExternalLink className="w-4 h-4" />
                                                     </a>
-                                                </div>
-                                                <Like projectId={project.id} />
+                                                )}
                                             </div>
-                                            {project.media_urls && project.media_urls.length > 0 && (
-                                                <img
-                                                    src={project.media_urls[0]}
-                                                    alt='Image of Launch'
-                                                    className='w-full object-cover p-1'
-                                                />
+                                            {project.status === 'draft' ? (
+                                                <div>
+
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {project.media_urls && project.media_urls.length > 0 && (
+                                                        <img
+                                                            src={project.media_urls[0]}
+                                                            alt='Image of Launch'
+                                                            className='w-full object-cover p-1'
+                                                        />
+                                                    )}
+                                                    <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
+                                                    <div className="space-y-2 mb-4">
+                                                        <div className="flex items-center text-sm ">
+                                                            <Tag className="w-4 h-4 mr-2 text-black" />
+                                                            <span className="capitalize">{project.category_type}</span>
+                                                        </div>
+                                                        <div className="flex items-center text-sm ">
+                                                            <Calendar className="w-4 h-4 mr-2 text-black" />
+                                                            <span className='text-gray-600'>{new Date(project.created_at).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                        </div>
+                                                    </div>
+                                                </>
                                             )}
-                                            <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
-                                            <div className="space-y-2 mb-4">
-                                                <div className="flex items-center text-sm ">
-                                                    <Tag className="w-4 h-4 mr-2 text-black" />
-                                                    <span className="capitalize">{project.category_type}</span>
-                                                </div>
-                                                <div className="flex items-center text-sm ">
-                                                    <Calendar className="w-4 h-4 mr-2 text-black" />
-                                                    <span className='text-gray-600'>{new Date(project.created_at).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                                </div>
-                                            </div>
                                             {isOwner && (
                                                 <div className="flex gap-2 mt-2">
                                                     <Button
@@ -378,12 +392,12 @@ const UserProfile = () => {
                 </Dialog>
 
                 {/* Success Snackbars */}
-                <Snackbar open={editSuccess} autoHideDuration={4000} onClose={() => setEditSuccess(false)}>
+                <Snackbar open={editSuccess} autoHideDuration={4000} onClose={() => setEditSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
                     <Alert onClose={() => setEditSuccess(false)} severity="success" sx={{ width: '100%' }}>
                         Project updated successfully!
                     </Alert>
                 </Snackbar>
-                <Snackbar open={deleteSuccess} autoHideDuration={4000} onClose={() => setDeleteSuccess(false)}>
+                <Snackbar open={deleteSuccess} autoHideDuration={4000} onClose={() => setDeleteSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
                     <Alert onClose={() => setDeleteSuccess(false)} severity="success" sx={{ width: '100%' }}>
                         Project deleted successfully!
                     </Alert>

@@ -16,7 +16,7 @@ const Dashboard = () => {
     const fetchProjectsData = async () => {
       setLoading(true);
       setError(null);
-      const { data, error } = await supabase.from('projects').select('*');
+      const { data, error } = await supabase.from('projects').select('*').neq('status', 'draft');
       if (error) {
         console.error("Error fetching project data", error);
         setError(error.message);
@@ -88,13 +88,23 @@ const Dashboard = () => {
             <input
               type="text"
               placeholder="Search for Launches, categories, or more..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
               <Search />
             </span>
+            {search && (
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+              >
+                &#10005;
+              </button>
+            )}
           </div>
         </div>
         {Object.keys(groupedProjects).length === 0 && (
@@ -124,6 +134,17 @@ const Dashboard = () => {
                     <div className="p-4">
                       <div className='flex items-center justify-between'>
                         <div className="flex items-center gap-2 mb-2 w-auto ">
+                          {project.logo_url ? (
+                            <img
+                              src={project.logo_url}
+                              alt="Logo"
+                              className="w-10 h-10 object-contain rounded-full border bg-white"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
+                              <span>L</span>
+                            </div>
+                          )}
                           <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
                           <a
                             href={project.website_url}
