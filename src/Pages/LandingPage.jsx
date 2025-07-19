@@ -110,7 +110,8 @@ const LandingPage = () => {
                     </div>
 
                     <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent leading-tight">
-                        Decode Limitless Growth
+                        <span className="text-black">Launch</span>
+                        <span className="text-blue-600">IT</span>
                     </h1>
 
                     <h2 className="text-2xl sm:text-3xl lg:text-4xl font-light mb-8 text-gray-300">

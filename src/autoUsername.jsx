@@ -1,9 +1,5 @@
 import { supabase } from './supabaseClient';
 
-/**
- * Ensures the logged-in user has a unique username. If not, generates and assigns one.
- * Call this after Google login.
- */
 export async function ensureAutoUsername() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;

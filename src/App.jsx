@@ -14,6 +14,7 @@ import Aboutus from './Components/Aboutus.jsx';
 import Footer from './Components/Footer.jsx';
 import News from './Pages/News.jsx';
 import UserProfile from './Pages/UserProfile.jsx';
+import Suggestions from './Pages/Suggestions.jsx';
 
 
 
@@ -49,6 +50,8 @@ function App() {
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/aboutus" element={<Aboutus />} />
             <Route path="/footer" element={<Footer />} />
+
+            <Route path="/suggestions" element={<Suggestions />} />
           </Routes>
         </main>
 

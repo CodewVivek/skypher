@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-    Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User
+    Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User, Menu, X
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
@@ -10,6 +10,7 @@ const Header = () => {
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -83,6 +84,7 @@ const Header = () => {
             if (error) throw error;
             toast.success("Signed out successfully");
             navigate("/");
+            setMobileMenuOpen(false);
         } catch (error) {
             toast.error("Failed to sign out");
             console.error("Sign-out error:", error.message);
@@ -92,7 +94,6 @@ const Header = () => {
     const handleProfileClick = async () => {
         handleClose();
         if (user) {
-            // Fetch username from profiles table
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('username')
@@ -100,6 +101,7 @@ const Header = () => {
                 .single();
             if (profile && profile.username) {
                 navigate(`/profile/${profile.username}`);
+                setMobileMenuOpen(false);
             } else {
                 toast.error('Profile not found');
             }
@@ -107,21 +109,24 @@ const Header = () => {
     };
 
     return (
-        <header className="fixed top-0 left-0 right-0 bg-blue-400 text-black z-50 h-16 mb-10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <header className="fixed top-0 left-0 right-0 bg-blue-400 text-white z-50 shadow-lg">
+            <div className="max-w-7xl mx-auto px-4 h-16">
                 <div className="flex justify-between items-center h-full">
+                    {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2 group">
                         <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
                             <Rocket className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xl font-bold tracking-wide text-white group-hover:text-white/90">
-                            Launch It
+                        <span className="text-xl font-bold tracking-wide">
+                            <span className="text-black">Launch</span>
+                            <span className="text-blue-600">IT</span>
                         </span>
                     </Link>
 
-                    <nav className="flex items-center space-x-8">
-                        <Link to="/submit" className="text-white/90 hover:text-white font-medium flex gap-1 items-center">
-                            <CirclePlus />
+                    {/* Desktop Navigation */}
+                    <nav className="hidden md:flex items-center space-x-6">
+                        <Link to="/submit" className="text-white/90 hover:text-white font-medium flex items-center gap-2">
+                            <CirclePlus className="w-4 h-4" />
                             Submit
                         </Link>
 
@@ -132,13 +137,15 @@ const Header = () => {
                         )}
 
                         <Link to="/news" className="text-white/90 hover:text-white font-medium">News</Link>
-                        <a href="https://startup.jobs/" className="text-white/90 hover:text-white font-medium">Startup Jobs</a>
+
+                        <a href="https://startup.jobs/" className="text-white/90 hover:text-white font-medium">Jobs</a>
 
                         {userRole === "admin" && (
                             <Link to="/admin" className="text-white/90 hover:text-white font-medium">Admin</Link>
                         )}
 
-                        <div className="text-white/90 hover:text-white font-medium user-dropdown relative">
+                        {/* User Dropdown */}
+                        <div className="user-dropdown relative">
                             <button className="p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
                                 {user ? (
                                     <img
@@ -152,21 +159,21 @@ const Header = () => {
                             </button>
 
                             {open && (
-                                <div className="absolute right-0 mt-2.5 w-56 rounded-xl bg-white shadow-lg border border-gray-100 py-1 z-50">
+                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                                     {user ? (
                                         <>
-                                            <div className="px-4 py-2 border-b border-gray-100">
+                                            <div className="px-4 py-2 border-b border-gray-200">
                                                 <div className="flex items-center gap-3">
                                                     <img
                                                         src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
                                                         alt="profile"
                                                         className="w-6 h-6 rounded-full"
                                                     />
-                                                    <p className="text-sm font-semibold text-gray-700 truncate">
+                                                    <p className="text-sm font-semibold text-gray-700">
                                                         {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
                                                     </p>
                                                 </div>
-                                                <p className="text-sm text-gray-500 truncate mt-2">{user.email}</p>
+                                                <p className="text-sm text-gray-500 mt-1">{user.email}</p>
                                             </div>
 
                                             <div className="py-1">
@@ -200,8 +207,132 @@ const Header = () => {
                             )}
                         </div>
                     </nav>
+
+                    {/* Mobile Menu Button */}
+                    <div className="md:hidden flex items-center space-x-2">
+                        <div className="user-dropdown relative">
+                            <button className="p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
+                                {user ? (
+                                    <img
+                                        src={user.user_metadata?.avatar_url || user.user_metadata?.picture || 'https://via.placeholder.com/32'}
+                                        alt="profile"
+                                        className="w-6 h-6 rounded-full"
+                                    />
+                                ) : (
+                                    <CircleUserRound className="w-6 h-6 text-white" />
+                                )}
+                            </button>
+
+                            {open && (
+                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                                    {user ? (
+                                        <>
+                                            <div className="px-4 py-2 border-b border-gray-200">
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={user.user_metadata?.avatar_url || "https://via.placeholder.com/32"}
+                                                        alt="profile"
+                                                        className="w-6 h-6 rounded-full"
+                                                    />
+                                                    <p className="text-sm font-semibold text-gray-700">
+                                                        {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
+                                                    </p>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+                                            </div>
+
+                                            <div className="py-1">
+                                                <button onClick={handleProfileClick}
+                                                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                    <User className="w-4 h-4 mr-2" />
+                                                    Profile
+                                                </button>
+                                                <button onClick={() => { handleClose(); navigate("/settings"); }}
+                                                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                    <Settings className="w-4 h-4 mr-2" />
+                                                    Settings
+                                                </button>
+                                                <button onClick={() => { handleClose(); handleSignOut(); }}
+                                                    className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                                    <LogOut className="w-4 h-4 mr-2" />
+                                                    Sign Out
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="py-1">
+                                            <button onClick={() => { handleClose(); navigate("/UserRegister"); }}
+                                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                <CircleUserRound className="w-4 h-4 mr-2" />
+                                                Sign In
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="p-2 rounded-lg hover:bg-white/20 text-white"
+                        >
+                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Mobile Menu */}
+            {mobileMenuOpen && (
+                <div className="md:hidden bg-blue-400 border-t border-blue-300">
+                    <div className="px-4 py-4 space-y-3">
+                        <Link
+                            to="/submit"
+                            className="flex items-center space-x-2 text-white/90 hover:text-white font-medium py-2"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            <CirclePlus className="w-5 h-5" />
+                            <span>Submit Startup</span>
+                        </Link>
+
+                        {!user && (
+                            <Link
+                                to="/UserRegister"
+                                className="block text-white/90 hover:text-white font-medium py-2"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Get Started
+                            </Link>
+                        )}
+
+                        <Link
+                            to="/news"
+                            className="block text-white/90 hover:text-white font-medium py-2"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            News
+                        </Link>
+
+                        <a
+                            href="https://startup.jobs/"
+                            className="block text-white/90 hover:text-white font-medium py-2"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            Jobs
+                        </a>
+
+                        {userRole === "admin" && (
+                            <Link
+                                to="/admin"
+                                className="block text-white/90 hover:text-white font-medium py-2"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Admin
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            )}
         </header>
     );
 };

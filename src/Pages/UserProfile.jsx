@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { ExternalLink, Calendar, Tag, MessageCircle } from 'lucide-react';
 import Like from '../Components/Like';
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert, TextField } from '@mui/material';
 
 const UserProfile = () => {
     const { username } = useParams();
@@ -12,6 +13,13 @@ const UserProfile = () => {
     const [loading, setLoading] = useState(true);
     const [isOwner, setIsOwner] = useState(false);
     const navigate = useNavigate();
+    const [editProject, setEditProject] = useState(null);
+    const [editForm, setEditForm] = useState({});
+    const [editWarning, setEditWarning] = useState(false);
+    const [editSuccess, setEditSuccess] = useState(false);
+    const [deleteProject, setDeleteProject] = useState(null);
+    const [deleteSuccess, setDeleteSuccess] = useState(false);
+    const [editError, setEditError] = useState('');
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -72,6 +80,72 @@ const UserProfile = () => {
 
         fetchProfile();
     }, [username]);
+
+    // Edit handlers
+    const handleEditClick = (project) => {
+        if (project.edit_count === 1) setEditWarning(true);
+        setEditProject(project);
+        setEditForm({ ...project });
+    };
+    const handleEditClose = () => {
+        setEditProject(null);
+        setEditWarning(false);
+        setEditError('');
+    };
+    const handleEditChange = (e) => {
+        setEditForm({ ...editForm, [e.target.name]: e.target.value });
+    };
+    const handleEditSave = async () => {
+        try {
+            // Only allow if edit_count < 2
+            if (editProject.edit_count >= 2) {
+                setEditError('Edit limit reached.');
+                return;
+            }
+            const { error } = await supabase
+                .from('projects')
+                .update({
+                    ...editForm,
+                    edit_count: (editProject.edit_count || 0) + 1,
+                })
+                .eq('id', editProject.id);
+            if (error) throw error;
+            setEditSuccess(true);
+            setEditProject(null);
+            setEditWarning(false);
+            // Refetch projects
+            const { data: userProjects } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('user_id', profile.id);
+            setProjects(userProjects);
+        } catch (err) {
+            setEditError(err.message || 'Failed to update project.');
+        }
+    };
+
+    // Delete handlers
+    const handleDeleteClick = (project) => setDeleteProject(project);
+    const handleDeleteCancel = () => setDeleteProject(null);
+    const handleDeleteConfirm = async () => {
+        try {
+            const { error } = await supabase
+                .from('projects')
+                .delete()
+                .eq('id', deleteProject.id);
+            if (error) throw error;
+            setDeleteSuccess(true);
+            setDeleteProject(null);
+            // Refetch projects
+            const { data: userProjects } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('user_id', profile.id);
+            setProjects(userProjects);
+        } catch (err) {
+            setEditError(err.message || 'Failed to delete project.');
+        }
+    };
 
     if (loading) {
         return (
@@ -191,6 +265,37 @@ const UserProfile = () => {
                                                     <span className='text-gray-600'>{new Date(project.created_at).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                                 </div>
                                             </div>
+                                            {isOwner && (
+                                                <div className="flex gap-2 mt-2">
+                                                    <Button
+                                                        variant="outlined"
+                                                        color="primary"
+                                                        size="small"
+                                                        disabled={project.edit_count >= 2}
+                                                        onClick={(e) => { e.stopPropagation(); handleEditClick(project); }}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        variant="outlined"
+                                                        color="error"
+                                                        size="small"
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(project); }}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            )}
+                                            {isOwner && project.edit_count === 1 && (
+                                                <Alert severity="warning" className="mt-2">
+                                                    You can only edit this project one more time!
+                                                </Alert>
+                                            )}
+                                            {isOwner && project.edit_count >= 2 && (
+                                                <Alert severity="error" className="mt-2">
+                                                    Edit limit reached. You cannot edit this project anymore.
+                                                </Alert>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -198,6 +303,91 @@ const UserProfile = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Edit Modal */}
+                <Dialog open={!!editProject} onClose={handleEditClose} maxWidth="sm" fullWidth>
+                    <DialogTitle>Edit Project</DialogTitle>
+                    <DialogContent>
+                        {editWarning && (
+                            <Alert severity="warning" className="mb-4">
+                                You can only edit this project one more time!
+                            </Alert>
+                        )}
+                        {editError && (
+                            <Alert severity="error" className="mb-4">{editError}</Alert>
+                        )}
+                        <TextField
+                            margin="dense"
+                            label="Name"
+                            name="name"
+                            value={editForm.name || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Tagline"
+                            name="tagline"
+                            value={editForm.tagline || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Website URL"
+                            name="website_url"
+                            value={editForm.website_url || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Category"
+                            name="category_type"
+                            value={editForm.category_type || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Description"
+                            name="description"
+                            value={editForm.description || ''}
+                            onChange={handleEditChange}
+                            fullWidth
+                            multiline
+                            minRows={3}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleEditClose}>Cancel</Button>
+                        <Button onClick={handleEditSave} color="primary" variant="contained">Save</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog open={!!deleteProject} onClose={handleDeleteCancel} maxWidth="xs" fullWidth>
+                    <DialogTitle>Confirm Delete</DialogTitle>
+                    <DialogContent>
+                        Are you sure you want to delete this project? This cannot be undone.
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleDeleteCancel}>Cancel</Button>
+                        <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
+                    </DialogActions>
+                </Dialog>
+
+                {/* Success Snackbars */}
+                <Snackbar open={editSuccess} autoHideDuration={4000} onClose={() => setEditSuccess(false)}>
+                    <Alert onClose={() => setEditSuccess(false)} severity="success" sx={{ width: '100%' }}>
+                        Project updated successfully!
+                    </Alert>
+                </Snackbar>
+                <Snackbar open={deleteSuccess} autoHideDuration={4000} onClose={() => setDeleteSuccess(false)}>
+                    <Alert onClose={() => setDeleteSuccess(false)} severity="success" sx={{ width: '100%' }}>
+                        Project deleted successfully!
+                    </Alert>
+                </Snackbar>
 
                 {isOwner && (
                     <div className="mt-10">
