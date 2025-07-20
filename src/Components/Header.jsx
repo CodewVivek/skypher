@@ -159,7 +159,7 @@ const Header = () => {
                             </button>
 
                             {open && (
-                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                                <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                                     {user ? (
                                         <>
                                             <div className="px-4 py-2 border-b border-gray-200">
@@ -173,7 +173,7 @@ const Header = () => {
                                                         {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
                                                     </p>
                                                 </div>
-                                                <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+                                                <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
                                             </div>
 
                                             <div className="py-1">
@@ -238,7 +238,7 @@ const Header = () => {
                                                         {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
                                                     </p>
                                                 </div>
-                                                <p className="text-sm text-gray-500 mt-1">{user.email}</p>
+                                                <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
                                             </div>
 
                                             <div className="py-1">

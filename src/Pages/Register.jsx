@@ -3,7 +3,7 @@ import { Plus, X, Upload, User, Star } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
 import { nanoid } from 'nanoid';
 import Snackbar from '@mui/material/Snackbar';
@@ -35,6 +35,7 @@ const slugify = (text) =>
 const Register = () => {
     const [step, setStep] = useState(1);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [user, setUser] = useState(null);
     const [isClearable, setIsClearable] = useState(true);
     const [isSearchable, setIsSearchable] = useState(true);
@@ -44,6 +45,13 @@ const Register = () => {
     const [urlError, setUrlError] = useState('');
     const [showAutoSave, setShowAutoSave] = useState(false);
     const [showDraftSaved, setShowDraftSaved] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingProjectId, setEditingProjectId] = useState(null);
+    const [loadingProject, setLoadingProject] = useState(false);
+    const [existingMediaUrls, setExistingMediaUrls] = useState([]);
+    const [existingLogoUrl, setExistingLogoUrl] = useState('');
+    const [editingLaunched, setEditingLaunched] = useState(false);
+    const [projectLoaded, setProjectLoaded] = useState(false);
     const categoryOptions = [
         {
             label: "💸 Finance & Fintech",
@@ -393,20 +401,93 @@ const Register = () => {
         checkUser();
     }, [navigate]);
 
+    // Load existing project data for editing
+    useEffect(() => {
+        const loadProjectForEditing = async () => {
+            const editId = searchParams.get('edit');
+            const draftId = searchParams.get('draft');
+            const projectId = editId || draftId;
+
+            if (projectId && user && !projectLoaded) {
+                setLoadingProject(true);
+                setIsEditing(true);
+                setEditingProjectId(projectId);
+
+                try {
+                    const { data: project, error } = await supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('id', projectId)
+                        .eq('user_id', user.id) // Ensure user owns the project
+                        .single();
+
+                    if (error) {
+                        console.error('Error loading project:', error);
+                        setFormError('Project not found or access denied.');
+                        return;
+                    }
+
+                    if (project) {
+                        setEditingLaunched(project.status !== 'draft');
+                        // Pre-fill form with existing data
+                        setFormData({
+                            name: project.name || '',
+                            websiteUrl: project.website_url || '',
+                            description: project.description || '',
+                            tagline: project.tagline || '',
+                        });
+                        // Set category if it exists
+                        if (project.category_type) {
+                            const categoryOption = categoryOptions.flatMap(group => group.options).find(option => option.value === project.category_type);
+                            setSelectedCategory(categoryOption || null);
+                        }
+                        // Set links if they exist
+                        if (project.links && project.links.length > 0) {
+                            setLinks(project.links);
+                        } else {
+                            setLinks(['']);
+                        }
+                        // Always start on step 1 for editing, just like new project
+                        setStep(1);
+                        if (project.media_urls && project.media_urls.length > 0) {
+                            console.log('Project has existing media:', project.media_urls);
+                        }
+                        if (project.logo_url) {
+                            console.log('Project has existing logo:', project.logo_url);
+                        }
+                        // Set existing media and logo URLs
+                        setExistingMediaUrls(project.media_urls || []);
+                        setExistingLogoUrl(project.logo_url || '');
+                    }
+                } catch (error) {
+                    console.error('Error loading project for editing:', error);
+                    setFormError('Failed to load project for editing.');
+                } finally {
+                    setLoadingProject(false);
+                    setProjectLoaded(true);
+                }
+            }
+        };
+        if (user && !projectLoaded) {
+            loadProjectForEditing();
+        }
+    }, [user, projectLoaded]);
+
     // Auto-save to localStorage
     useEffect(() => {
-        // Load draft from localStorage on mount
-        const savedDraft = localStorage.getItem('launch_draft');
-        if (savedDraft) {
-            try {
-                const draft = JSON.parse(savedDraft);
-                setFormData(draft.formData || {});
-                setSelectedCategory(draft.selectedCategory || null);
-                setLinks(draft.links || ['']);
-                setStep(draft.step || 1);
-            } catch { }
+        if (!isEditing) {
+            const savedDraft = localStorage.getItem('launch_draft');
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    setFormData(draft.formData || {});
+                    setSelectedCategory(draft.selectedCategory || null);
+                    setLinks(draft.links || ['']);
+                    setStep(draft.step || 1);
+                } catch { }
+            }
         }
-    }, []);
+    }, [isEditing]);
 
     useEffect(() => {
         // Save to localStorage on form change, but do not show Snackbar here
@@ -421,28 +502,37 @@ const Register = () => {
 
     // Validation functions for submit only
     const validateStep1 = () => {
-        if (!formData.name || !formData.websiteUrl || !formData.description || !formData.tagline || !selectedCategory) {
+        if (!editingLaunched && (!formData.name || !formData.websiteUrl)) {
+            setFormError('Please fill in all required fields in Basic Info (Step 1).');
+            return false;
+        }
+        if (!formData.description || !formData.tagline || !selectedCategory) {
             setFormError('Please fill in all required fields in Basic Info (Step 1).');
             return false;
         }
         setFormError('');
         return true;
     };
-    const validateStep2 = () => {
-        if (files.length === 0) {
-            setUploadError('Please upload at least one media file (Step 2).');
+    const validateStep3 = () => {
+        if (files.length === 0 && existingMediaUrls.length === 0) {
+            setUploadError('Please upload at least one media file (Step 3).');
             return false;
         }
         setUploadError('');
         return true;
     };
     const validateLogo = () => {
-        if (!logoFile) {
+        if (!logoFile && !existingLogoUrl) {
             setLogoError('Please upload a logo (Step 3).');
             return false;
         }
         setLogoError('');
         return true;
+    };
+
+    // Utility: Check if form is empty (no required fields filled)
+    const isFormEmpty = () => {
+        return !formData.name && !formData.tagline && !formData.description && !formData.websiteUrl && !selectedCategory;
     };
 
     //submission handle with media and all other form data
@@ -452,9 +542,9 @@ const Register = () => {
         setUploadError('');
         // Only validate on submit
         const valid1 = validateStep1();
-        const valid2 = validateStep2();
+        const valid3 = validateStep3();
         const validLogo = validateLogo();
-        if (!valid1 || !valid2 || !validLogo) return;
+        if (!valid1 || !valid3 || !validLogo) return;
         if (!user) {
             setFormError('Please sign in to submit a project');
             navigate('/UserRegister');
@@ -468,7 +558,9 @@ const Register = () => {
             category_type: selectedCategory?.value,
             links: links.filter(link => link.trim() !== ''),
             created_at: new Date().toISOString(),
-            user_id: user.id
+            user_id: user.id,
+            updated_at: new Date().toISOString(),
+            status: 'launched',
         };
         // Generate unique slug
         const baseSlug = slugify(formData.name);
@@ -476,7 +568,7 @@ const Register = () => {
         submissionData.slug = uniqueSlug;
         //media into supabase bucket 
         try {
-            let fileUrls = [];
+            let fileUrls = [...existingMediaUrls]; // Start with existing media
             if (files.length > 0) {
                 const uploadPromises = files.map(async (file, index) => {
                     const uniqueTimestamp = Date.now() + index;
@@ -488,11 +580,12 @@ const Register = () => {
                     const { data: urlData } = supabase.storage.from('startup-media').getPublicUrl(filePath);
                     return urlData.publicUrl;
                 });
-                fileUrls = await Promise.all(uploadPromises);
+                const newFileUrls = await Promise.all(uploadPromises);
+                fileUrls = [...fileUrls, ...newFileUrls];
             }
             submissionData.media_urls = fileUrls;
             // Logo upload
-            let logoUrl = '';
+            let logoUrl = existingLogoUrl;
             if (logoFile) {
                 const logoPath = `${Date.now()}-logo-${logoFile.name}`;
                 const { data: logoData, error: logoErrorUpload } = await supabase.storage
@@ -503,10 +596,30 @@ const Register = () => {
                 logoUrl = logoUrlData.publicUrl;
             }
             submissionData.logo_url = logoUrl;
-            const { data, error } = await supabase
-                .from('projects')
-                .insert([submissionData]);
-            if (error) throw error;
+
+            if (isEditing && editingProjectId) {
+                // Always update the existing project (draft or launched)
+                submissionData.status = 'launched';
+                const { data, error } = await supabase
+                    .from('projects')
+                    .update(submissionData)
+                    .eq('id', editingProjectId);
+                if (error) throw error;
+                console.log('Project updated:', data);
+                if (data && data[0]) {
+                    console.log('Updated project status:', data[0].status);
+                }
+                navigate('/');
+                return;
+            } else {
+                // Only for brand new projects
+                submissionData.status = 'launched';
+                const { data, error } = await supabase
+                    .from('projects')
+                    .insert([submissionData]);
+                if (error) throw error;
+            }
+
             setFormData({
                 name: '',
                 websiteUrl: '',
@@ -521,6 +634,8 @@ const Register = () => {
             setFormError('');
             setUploadError('');
             setLogoError('');
+            setIsEditing(false);
+            setEditingProjectId(null);
             navigate('/');
         } catch (error) {
             console.error('Error submitting form:', error);
@@ -572,6 +687,16 @@ const Register = () => {
             navigate('/UserRegister');
             return;
         }
+        // Do not save if form is empty
+        if (isFormEmpty()) {
+            setFormError('Cannot save an empty draft.');
+            return;
+        }
+        // Do not save as draft if editing a launched project
+        if (isEditing && editingLaunched) {
+            setFormError('Cannot save launched project as draft.');
+            return;
+        }
         if (!formData.name) {
             setFormError('Please enter a project name before saving.');
             return;
@@ -602,18 +727,124 @@ const Register = () => {
         }
     };
 
-    // In the Next button handler, show the Snackbar
-    const handleNext = () => {
+    // In the Next button handler, update draft if editing, otherwise insert
+    const handleNext = async () => {
+        // Save current progress as draft before moving to next step
+        if (user && formData.name) {
+            if (isEditing && editingLaunched) {
+                setStep(step + 1);
+                return;
+            }
+            // Do not save if form is empty
+            if (isFormEmpty()) {
+                setStep(step + 1);
+                return;
+            }
+            try {
+                const draftData = {
+                    name: formData.name,
+                    website_url: formData.websiteUrl || '',
+                    tagline: formData.tagline || '',
+                    description: formData.description || '',
+                    category_type: selectedCategory?.value || '',
+                    links: links.filter(link => link.trim() !== ''),
+                    created_at: new Date().toISOString(),
+                    user_id: user.id,
+                    status: 'draft',
+                    updated_at: new Date().toISOString(),
+                    media_urls: [...existingMediaUrls],
+                };
+                let draftId = editingProjectId;
+                // If not editing, check for an existing draft with same name and user
+                if (!isEditing) {
+                    const { data: existingDraft, error: findError } = await supabase
+                        .from('projects')
+                        .select('id')
+                        .eq('user_id', user.id)
+                        .eq('name', formData.name)
+                        .eq('status', 'draft')
+                        .maybeSingle();
+                    if (findError) {
+                        console.error('Error checking for existing draft:', findError);
+                    }
+                    if (existingDraft && existingDraft.id) {
+                        draftId = existingDraft.id;
+                    }
+                }
+                if (isEditing && editingProjectId && !editingLaunched) {
+                    // Update existing draft
+                    const { error } = await supabase
+                        .from('projects')
+                        .update(draftData)
+                        .eq('id', editingProjectId);
+                    if (error) {
+                        console.error('Error updating draft:', error);
+                    } else {
+                        setShowDraftSaved(true);
+                    }
+                } else if (draftId) {
+                    // Update found draft
+                    const { error } = await supabase
+                        .from('projects')
+                        .update(draftData)
+                        .eq('id', draftId);
+                    if (error) {
+                        console.error('Error updating draft:', error);
+                    } else {
+                        setShowDraftSaved(true);
+                    }
+                } else {
+                    // Insert new draft
+                    draftData.slug = slugify(formData.name) + '-' + nanoid(6);
+                    const { error } = await supabase
+                        .from('projects')
+                        .insert([draftData]);
+                    if (error) {
+                        console.error('Error saving draft:', error);
+                    } else {
+                        setShowDraftSaved(true);
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving draft:', error);
+            }
+        }
         setStep(step + 1);
-        setShowAutoSave(true);
-        setTimeout(() => setShowAutoSave(false), 1200);
     };
+
+    // Remove existing media/logo handlers
+    const handleRemoveExistingMedia = (url) => {
+        setExistingMediaUrls(existingMediaUrls.filter(u => u !== url));
+    };
+    const handleRemoveExistingLogo = () => {
+        setExistingLogoUrl('');
+    };
+
+    if (loadingProject) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <>
             <div className="container-custom py-12">
                 <div className="max-w-2xl mx-auto mt-15">
                     <div className="bg-white rounded-xl shadow-lg p-8">
+                        {isEditing && (
+                            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                                    {searchParams.get('draft') ? 'Continue Editing Draft' : 'Editing Project'}
+                                </h3>
+                                <p className="text-blue-600 text-sm">
+                                    {searchParams.get('draft')
+                                        ? 'Complete your draft and submit it to launch your project.'
+                                        : 'Make changes to your launched project.'}
+                                </p>
+                            </div>
+                        )}
                         <Snackbar
                             open={!!(formError || uploadError)}
                             autoHideDuration={4000}
@@ -658,231 +889,296 @@ const Register = () => {
                                 <div className="h-1 bg-gray-200 w-full" />
                             </div>
                         </div>
-                        <form onSubmit={e => {
-                            e.preventDefault();
-                            if (step === 3) {
-                                const valid1 = validateStep1();
-                                const valid2 = validateStep2();
-                                const validLogo = validateLogo();
-                                if (valid1 && valid2 && validLogo) handleSubmit(e);
-                            }
-                        }}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter' && step !== 3) {
-                                    e.preventDefault();
-                                }
-                            }}
-                            className="space-y-6">
-                            {step === 1 && (
-                                <>
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                            Website URL
-                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                        </label>
-                                        <div className='flex gap-1'>
-                                            <input
-                                                type="url"
-                                                name="websiteUrl"
-                                                value={formData.websiteUrl}
-                                                onChange={handleInputChange}
-                                                onBlur={handleUrlBlur}
-                                                className={`w-full px-4 py-3 border rounded-lg ${urlError ? 'border-red-500' : 'border-gray-300'
-                                                    }`}
-                                                placeholder="https://example.com"
-                                                required
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={handleGenerateLaunchData}
-                                                className="px-4 py-2 bg-indigo-600 text-white text-lg rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                                disabled={!formData.websiteUrl || !isValidUrl(formData.websiteUrl)}
-                                            >
-                                                Generate
-                                            </button>
-                                        </div>
-                                        {urlError && (
-                                            <p className="text-red-500 text-sm mt-1">
-                                                {urlError}
-                                            </p>
+                        {step === 1 && (
+                            <>
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                        Startup Name
+                                        <span className="text-red-500 ml-1 w-auto h-auto">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                        placeholder="Enter your startup name"
+                                        disabled={editingLaunched}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                        Website URL
+                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                    </label>
+                                    <div className='flex gap-1'>
+                                        <input
+                                            type="url"
+                                            name="websiteUrl"
+                                            value={formData.websiteUrl}
+                                            onChange={handleInputChange}
+                                            onBlur={handleUrlBlur}
+                                            className={`w-full px-4 py-3 border rounded-lg ${urlError ? 'border-red-500' : 'border-gray-300'}`}
+                                            placeholder="https://example.com"
+                                            required
+                                            disabled={editingLaunched}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleGenerateLaunchData}
+                                            className="px-4 py-2 bg-indigo-600 text-white text-lg rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                            disabled={!formData.websiteUrl || !isValidUrl(formData.websiteUrl)}
+                                        >
+                                            Generate
+                                        </button>
+                                    </div>
+                                    {urlError && (
+                                        <p className="text-red-500 text-sm mt-1">
+                                            {urlError}
+                                        </p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                        Tagline
+                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="tagline"
+                                        value={formData.tagline}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                        placeholder="Enter a catchy tagline"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                        Description
+                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                    </label>
+                                    <div className="flex items-center justify-end mb-1 w-auto">
+                                        <span className={`text-xs ${descriptionWordCount >= DESCRIPTION_WORD_LIMIT ? 'text-red-500' : 'text-gray-500'}`}>{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</span>
+                                        {descriptionWordCount >= DESCRIPTION_WORD_LIMIT && (
+                                            <span className="text-xs text-red-500 ml-2">Word limit reached</span>
                                         )}
                                     </div>
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                            Startup Name
-                                            <span className="text-red-500 ml-1 w-auto h-auto">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                            placeholder="Enter your startup name"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                            Tagline
-                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="tagline"
-                                            value={formData.tagline}
-                                            onChange={handleInputChange}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                            placeholder="Enter a catchy tagline"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                            Description
-                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                        </label>
-                                        <div className="flex items-center justify-end mb-1 w-auto">
-                                            <span className={`text-xs ${descriptionWordCount >= DESCRIPTION_WORD_LIMIT ? 'text-red-500' : 'text-gray-500'}`}>{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</span>
-                                            {descriptionWordCount >= DESCRIPTION_WORD_LIMIT && (
-                                                <span className="text-xs text-red-500 ml-2">Word limit reached</span>
-                                            )}
-                                        </div>
-                                        <textarea
-                                            name="description"
-                                            value={formData.description}
-                                            onChange={handleDescriptionChange}
-                                            rows={4}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                            placeholder="Describe your startup"
-                                        />
-                                    </div>
-                                    <section>
-                                        <label className="block font-semibold text-gray-700 mb-2">
-                                            Select Category / Industry
-                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                        </label>
-                                        <Select
-                                            options={categoryOptions}
-                                            isClearable={isClearable}
-                                            isSearchable={isSearchable}
-                                            value={selectedCategory}
-                                            onChange={setSelectedCategory}
-                                            className="max-w-md"
-                                        />
-                                    </section>
-                                </>
-                            )}
-                            {step === 2 && (
-                                <div className="space-y-4">
-                                    <label className="block text-lg font-semibold text-gray-700">Links</label>
-                                    {links.map((link, index) => {
-                                        const { label, icon } = getLinkType(link);
-                                        return (
-                                            <div key={index} className="flex items-center space-x-2">
-                                                <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
-                                                    <span>{icon}</span>
-                                                    <span>{label}</span>
-                                                </span>
-                                                <input
-                                                    type="url"
-                                                    value={link}
-                                                    onChange={e => updateLink(index, e.target.value)}
-                                                    placeholder={`Enter ${label} URL`}
-                                                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
-                                                />
-                                                {links.length > 1 && (
-                                                    <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600">
-                                                        <X className="w-5 h-5" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                    <button type="button" onClick={addLink} className="flex items-center text-blue-900">
-                                        <Plus className="w-5 h-5 mr-1" />
-                                        Add another link
-                                    </button>
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleDescriptionChange}
+                                        rows={4}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg"
+                                        placeholder="Describe your startup"
+                                    />
                                 </div>
-                            )}
-                            {step === 3 && (
-                                <>
-                                    <div className="space-y-6">
-                                        {/* Logo upload */}
-                                        <div>
-                                            <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                                Logo
-                                                <span className="text-red-500 ml-1">*</span>
-                                            </label>
-                                            <p className="text-sm text-gray-500 mb-2">
-                                                Recommended size: 240x240 | JPG, PNG, GIF. Max size: 2MB
-                                            </p>
+                                <section>
+                                    <label className="block font-semibold text-gray-700 mb-2">
+                                        Select Category / Industry
+                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                    </label>
+                                    <Select
+                                        options={categoryOptions}
+                                        isClearable={isClearable}
+                                        isSearchable={isSearchable}
+                                        value={selectedCategory}
+                                        onChange={setSelectedCategory}
+                                        className="max-w-md"
+                                    />
+                                </section>
+                            </>
+                        )}
+                        {step === 2 && (
+                            <div className="space-y-4">
+                                <label className="block text-lg font-semibold text-gray-700">Links</label>
+                                {links.map((link, index) => {
+                                    const { label, icon } = getLinkType(link);
+                                    return (
+                                        <div key={index} className="flex items-center space-x-2">
+                                            <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
+                                                <span>{icon}</span>
+                                                <span>{label}</span>
+                                            </span>
                                             <input
-                                                type="file"
-                                                accept="image/jpeg,image/png,image/gif"
-                                                onChange={handleLogoChange}
-                                                className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                type="url"
+                                                value={link}
+                                                onChange={e => updateLink(index, e.target.value)}
+                                                placeholder={`Enter ${label} URL`}
+                                                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
                                             />
-                                            {logoFile && (
-                                                <div className="mt-2">
-                                                    <img
-                                                        src={URL.createObjectURL(logoFile)}
-                                                        alt="Logo preview"
-                                                        className="w-24 h-24 object-contain rounded border"
-                                                    />
-                                                </div>
-                                            )}
-                                            {logoError && (
-                                                <p className="text-red-500 text-sm mt-1">{logoError}</p>
+                                            {links.length > 1 && (
+                                                <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600">
+                                                    <X className="w-5 h-5" />
+                                                </button>
                                             )}
                                         </div>
-                                        <div>
-                                            <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                                Upload Media
-                                                <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                            </label>
-                                            <p className="text-sm text-gray-500 mb-4">
-                                                Add images, logos, or other media files (max {formatBytes(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)
-                                            </p>
-                                            <div
-                                                {...getRootProps()}
-                                                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                        ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-                                            >
-                                                <input {...getInputProps()} />
-                                                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                                {isDragActive ? (
-                                                    <p className="text-blue-500">Drop the files here...</p>
-                                                ) : (
-                                                    <p className="text-gray-600">
-                                                        Drag & drop files here, or click to select files
-                                                    </p>
-                                                )}
+                                    );
+                                })}
+                                <button type="button" onClick={addLink} className="flex items-center text-blue-900">
+                                    <Plus className="w-5 h-5 mr-1" />
+                                    Add another link
+                                </button>
+                            </div>
+                        )}
+                        {step === 3 && (
+                            <form onSubmit={e => {
+                                e.preventDefault();
+                                const valid1 = validateStep1();
+                                const valid3 = validateStep3();
+                                const validLogo = validateLogo();
+                                if (valid1 && valid3 && validLogo) handleSubmit(e);
+                            }}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                    }
+                                }}
+                                className="space-y-6">
+                                <div className="space-y-6">
+                                    {/* Logo upload */}
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Logo
+                                            <span className="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <p className="text-sm text-gray-500 mb-2">
+                                            Recommended size: 240x240 | JPG, PNG, GIF. Max size: 2MB
+                                        </p>
+                                        {/* Show existing logo preview if editing and logo exists */}
+                                        {existingLogoUrl && (
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <img
+                                                    src={existingLogoUrl}
+                                                    alt="Logo preview"
+                                                    className="w-24 h-24 object-contain rounded border"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemoveExistingLogo}
+                                                    className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                                >
+                                                    Remove
+                                                </button>
                                             </div>
-                                            {files.length > 0 && (
-                                                <div className="mt-4 space-y-2">
-                                                    <h4 className="font-medium text-gray-700">Selected Files:</h4>
-                                                    {files.map((file, index) => (
-                                                        <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                                            <div className="flex items-center space-x-2">
-                                                                <span className="text-sm text-gray-600">{file.name}</span>
-                                                                <span className="text-xs text-gray-400">
-                                                                    ({(file.size / 1024 / 1024).toFixed(3)} MB)
-                                                                </span>
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeFile(index)}
-                                                                className="text-red-600 hover:text-red-700"
-                                                            >
-                                                                <X className="w-5 h-5" />
-                                                            </button>
-                                                        </div>
-                                                    ))}
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/gif"
+                                            onChange={handleLogoChange}
+                                            className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        />
+                                        {logoFile && (
+                                            <div className="mt-2">
+                                                <img
+                                                    src={URL.createObjectURL(logoFile)}
+                                                    alt="Logo preview"
+                                                    className="w-24 h-24 object-contain rounded border"
+                                                />
+                                            </div>
+                                        )}
+                                        {logoError && (
+                                            <p className="text-red-500 text-sm mt-1">{logoError}</p>
+                                        )}
+                                    </div>
+                                    {/* Media upload */}
+                                    {/* Show existing media previews if editing */}
+                                    {existingMediaUrls.length > 0 && (
+                                        <div className="mb-2 flex flex-wrap gap-4">
+                                            {existingMediaUrls.map((url, idx) => (
+                                                <div key={idx} className="relative group">
+                                                    {/* Show image or file icon */}
+                                                    {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                        <img src={url} alt="Media preview" className="w-24 h-24 object-cover rounded border" />
+                                                    ) : (
+                                                        <a href={url} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 bg-gray-100 rounded border flex items-center justify-center text-xs text-gray-600">File</a>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveExistingMedia(url)}
+                                                        className="absolute top-1 right-1 bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-xs opacity-80 group-hover:opacity-100"
+                                                    >
+                                                        ×
+                                                    </button>
                                                 </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
+                                            Upload Media
+                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
+                                        </label>
+                                        <p className="text-sm text-gray-500 mb-4">
+                                            Add images, logos, or other media files (max {formatBytes(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)
+                                        </p>
+                                        <div
+                                            {...getRootProps()}
+                                            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+                                    ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                                        >
+                                            <input {...getInputProps()} />
+                                            <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                            {isDragActive ? (
+                                                <p className="text-blue-500">Drop the files here...</p>
+                                            ) : (
+                                                <p className="text-gray-600">
+                                                    Drag & drop files here, or click to select files
+                                                </p>
                                             )}
                                         </div>
+                                        {files.length > 0 && (
+                                            <div className="mt-4 space-y-2">
+                                                <h4 className="font-medium text-gray-700">Selected Files:</h4>
+                                                {files.map((file, index) => (
+                                                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="text-sm text-gray-600">{file.name}</span>
+                                                            <span className="text-xs text-gray-400">
+                                                                ({(file.size / 1024 / 1024).toFixed(3)} MB)
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeFile(index)}
+                                                            className="text-red-600 hover:text-red-700"
+                                                        >
+                                                            <X className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                </>
-                            )}
+                                </div>
+                                <div className="flex justify-between mt-8 pt-4 border-t">
+                                    {step > 1 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setStep(step - 1)}
+                                            className="px-6 py-3 bg-gray-100 rounded-lg"
+                                        >
+                                            Previous
+                                        </button>
+                                    )}
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveDraft}
+                                            className="px-6 py-3 bg-yellow-500 text-white rounded-lg"
+                                        >
+                                            Save
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                        >
+                                            Submit
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        )}
+                        {step < 3 && (
                             <div className="flex justify-between mt-8 pt-4 border-t">
                                 {step > 1 && (
                                     <button
@@ -901,25 +1197,16 @@ const Register = () => {
                                     >
                                         Save
                                     </button>
-                                    {step < 3 ? (
-                                        <button
-                                            type="button"
-                                            onClick={handleNext}
-                                            className="px-6 py-3 bg-blue-900 text-white rounded-lg"
-                                        >
-                                            Next
-                                        </button>
-                                    ) : (
-                                        <button
-                                            type="submit"
-                                            className="px-6 py-3 bg-blue-900 text-white rounded-lg"
-                                        >
-                                            Submit
-                                        </button>
-                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={handleNext}
+                                        className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                    >
+                                        Next
+                                    </button>
                                 </div>
                             </div>
-                        </form>
+                        )}
                     </div>
                 </div>
             </div>

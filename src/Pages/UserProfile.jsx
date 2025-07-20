@@ -44,6 +44,10 @@ const UserProfile = () => {
                 // Check if logged-in user is the owner
                 const { data: { user: loggedInUser } } = await supabase.auth.getUser();
                 let userProjects = [];
+                // Set isOwner based on whether logged-in user matches profile owner
+                const isProfileOwner = loggedInUser && loggedInUser.id === data.id;
+                setIsOwner(isProfileOwner);
+
                 if (loggedInUser && loggedInUser.id === data.id) {
                     // Owner: fetch all projects (including drafts)
                     const { data: allProjects } = await supabase
@@ -86,7 +90,6 @@ const UserProfile = () => {
 
     // Edit handlers
     const handleEditClick = (project) => {
-        if (project.edit_count === 1) setEditWarning(true);
         setEditProject(project);
         setEditForm({ ...project });
     };
@@ -100,11 +103,6 @@ const UserProfile = () => {
     };
     const handleEditSave = async () => {
         try {
-            // Only allow if edit_count < 2
-            if (editProject.edit_count >= 2) {
-                setEditError('Edit limit reached.');
-                return;
-            }
             const { error } = await supabase
                 .from('projects')
                 .update({
@@ -166,275 +164,148 @@ const UserProfile = () => {
         );
     }
 
+    // Helper function to get time ago
+    const getTimeAgo = (dateString) => {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInMs = now - date;
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+
+        if (diffInMinutes < 1) return 'less than 1m';
+        if (diffInMinutes < 60) return `${diffInMinutes}m`;
+        if (diffInHours < 24) return `${diffInHours}h`;
+
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 30) return `${diffInDays}d`;
+
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) return `${diffInMonths}mo`;
+
+        const diffInYears = Math.floor(diffInMonths / 12);
+        return `${diffInYears}y`;
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 pt-16 px-6 md:px-12">
-            <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow border border-gray-200">
-                <div className="flex items-center gap-6 mb-8">
+        <div className="flex min-h-screen bg-gray-50">
+            {/* Custom Sidebar */}
+            <aside className="fixed top-0 left-0 w-64 h-screen bg-white border-r border-gray-200 p-8 flex-col gap-8 hidden md:flex z-10">
+                <div>
+                    <h2 className="text-xl font-bold mb-4 text-blue-900">My Launches</h2>
+                    <ul className="space-y-3 text-gray-700">
+                        <li className="flex items-center justify-between"><span>🌟 All</span><span className="font-semibold">{projects.length}</span></li>
+                        <li className="flex items-center justify-between"><span>📝 Drafts</span><span className="font-semibold">{projects.filter(p => p.status === 'draft').length}</span></li>
+                        <li className="flex items-center justify-between"><span>🚀 Launched</span><span className="font-semibold">{projects.filter(p => p.status !== 'draft').length}</span></li>
+                    </ul>
+                </div>
+                <div className="mt-8">
+                    <h3 className="font-semibold mb-2 text-blue-900">Help & Resources</h3>
+                    <ul className="space-y-2 text-blue-700">
+                        <li><a href="#" className="hover:underline">Launch Guide</a></li>
+                        <li><a href="#" className="hover:underline">FAQ</a></li>
+                        <li><a href="#" className="hover:underline">Support</a></li>
+                    </ul>
+                </div>
+            </aside>
+            {/* Main Content */}
+            <main className="w-full md:ml-64 flex-1 max-w-5xl mx-auto p-4 md:p-12 h-screen overflow-y-auto mt-4 md:mt-8 mb-4 md:mb-8">
+                {/* Profile Info */}
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-8 md:mb-10">
                     <img
                         src={profile.avatar_url || '/default-avatar.png'}
                         alt="Profile"
-                        className="w-24 h-24 rounded-full border object-cover shadow"
+                        className="w-16 h-16 md:w-20 md:h-20 rounded-full border object-cover shadow"
                     />
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">
-                            {profile.full_name || profile.username || 'Unnamed User'}
-                        </h1>
-                        {isOwner && (
-                            <p className="text-gray-500 text-sm">{profile.email || 'No email provided'}</p>
-                        )}
-                    </div>
-                </div>
-
-                <div className="space-y-6">
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-800 mb-2">Bio</h2>
-                        <p className="text-gray-700">{profile.bio || 'This user has not written a bio yet.'}</p>
-                    </div>
-
-                    <div>
-                        <h2 className="text-lg font-semibold text-gray-800 mb-2">Social Links</h2>
-                        <div className="space-y-2 text-blue-600">
-                            {profile.twitter && (
-                                <a href={profile.twitter} target="_blank" rel="noreferrer" className="block hover:underline">
-                                    Twitter
-                                </a>
-                            )}
-                            {profile.linkedin && (
-                                <a href={profile.linkedin} target="_blank" rel="noreferrer" className="block hover:underline">
-                                    LinkedIn
-                                </a>
-                            )}
-                            {profile.youtube && (
-                                <a href={profile.youtube} target="_blank" rel="noreferrer" className="block hover:underline">
-                                    YouTube
-                                </a>
-                            )}
-                            {profile.portfolio && (
-                                <a href={profile.portfolio} target="_blank" rel="noreferrer" className="block hover:underline">
-                                    Portfolio
-                                </a>
-                            )}
-                            {!profile.twitter && !profile.linkedin && !profile.youtube && !profile.portfolio && (
-                                <p className="text-gray-500">No social links provided.</p>
-                            )}
+                    <div className="flex-1 text-center md:text-left">
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-900">{profile.full_name || profile.username || 'Unnamed User'}</h1>
+                        <p className="text-gray-500 text-sm mb-1 md:mb-2">{profile.email || 'No email provided'}</p>
+                        <p className="text-gray-700 mb-1 md:mb-2">{profile.bio || 'This user has not written a bio yet.'}</p>
+                        <div className="flex flex-wrap justify-center md:justify-start gap-2 md:gap-4 text-blue-600 text-sm">
+                            {profile.twitter && <a href={profile.twitter} target="_blank" rel="noreferrer" className="hover:underline">Twitter</a>}
+                            {profile.linkedin && <a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:underline">LinkedIn</a>}
+                            {profile.youtube && <a href={profile.youtube} target="_blank" rel="noreferrer" className="hover:underline">YouTube</a>}
+                            {profile.portfolio && <a href={profile.portfolio} target="_blank" rel="noreferrer" className="hover:underline">Portfolio</a>}
                         </div>
                     </div>
                 </div>
-
-                <div className="mt-10">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-2">Projects Launched</h2>
-                    {projects.length === 0 ? (
-                        <p className="text-gray-500">No projects launched yet.</p>
-                    ) : (
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {projects.map((project) => (
-                                    <div
-                                        key={project.id}
-                                        className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 border-1 border-gray-300"
-                                        {...(project.status !== 'draft' && { onClick: () => window.location.href = `/launches/${project.slug}` })}
-                                        style={project.status === 'draft' ? { cursor: 'default', opacity: 0.9 } : { cursor: 'pointer' }}
-                                    >
-                                        <div className="p-4">
-                                            {project.status === 'draft' && (
-                                                <span className="inline-block bg-red-400 text-white text-sm px-2 py-1 rounded ml-2">!! Not Launched</span>
-                                            )}
-                                            <div className='flex items-center gap-2 mb-2 w-auto '>
-                                                <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
-                                                {project.status !== 'draft' && (
-                                                    <a
-                                                        href={project.website_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-blue-600 hover:text-blue-700 transition-colors"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </a>
-                                                )}
+                {/* Drafts Section */}
+                {isOwner && projects.filter(p => p.status === 'draft').length > 0 && (
+                    <div className="mb-10">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">In Progress</h3>
+                        <div className="space-y-4">
+                            {projects.filter(p => p.status === 'draft').map((project) => (
+                                <div key={project.id} className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        {project.logo_url ? (
+                                            <img src={project.logo_url} alt="Logo" className="w-12 h-12 object-contain rounded-full border bg-white" />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold border">
+                                                <span>{project.name.charAt(0).toUpperCase()}</span>
                                             </div>
-                                            {project.status === 'draft' ? (
-                                                <div>
-
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    {project.media_urls && project.media_urls.length > 0 && (
-                                                        <img
-                                                            src={project.media_urls[0]}
-                                                            alt='Image of Launch'
-                                                            className='w-full object-cover p-1'
-                                                        />
-                                                    )}
-                                                    <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
-                                                    <div className="space-y-2 mb-4">
-                                                        <div className="flex items-center text-sm ">
-                                                            <Tag className="w-4 h-4 mr-2 text-black" />
-                                                            <span className="capitalize">{project.category_type}</span>
-                                                        </div>
-                                                        <div className="flex items-center text-sm ">
-                                                            <Calendar className="w-4 h-4 mr-2 text-black" />
-                                                            <span className='text-gray-600'>{new Date(project.created_at).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                                        </div>
-                                                    </div>
-                                                </>
-                                            )}
-                                            {isOwner && (
-                                                <div className="flex gap-2 mt-2">
-                                                    <Button
-                                                        variant="outlined"
-                                                        color="primary"
-                                                        size="small"
-                                                        disabled={project.edit_count >= 2}
-                                                        onClick={(e) => { e.stopPropagation(); handleEditClick(project); }}
-                                                    >
-                                                        Edit
-                                                    </Button>
-                                                    <Button
-                                                        variant="outlined"
-                                                        color="error"
-                                                        size="small"
-                                                        onClick={(e) => { e.stopPropagation(); handleDeleteClick(project); }}
-                                                    >
-                                                        Delete
-                                                    </Button>
-                                                </div>
-                                            )}
-                                            {isOwner && project.edit_count === 1 && (
-                                                <Alert severity="warning" className="mt-2">
-                                                    You can only edit this project one more time!
-                                                </Alert>
-                                            )}
-                                            {isOwner && project.edit_count >= 2 && (
-                                                <Alert severity="error" className="mt-2">
-                                                    Edit limit reached. You cannot edit this project anymore.
-                                                </Alert>
-                                            )}
+                                        )}
+                                        <div>
+                                            <h4 className="text-lg font-semibold text-gray-900">{project.name}</h4>
+                                            <p className="text-xs text-gray-500">Created on {new Date(project.created_at).toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' })} ✍️</p>
+                                            <p className="text-xs text-gray-400">Last edited {getTimeAgo(project.updated_at || project.created_at)} ago</p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => navigate(`/submit?draft=${project.id}`)} className="px-4 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 hover:bg-gray-50">Continue editing</button>
+                                        <button onClick={() => handleDeleteClick(project)} className="p-2 border border-gray-300 rounded-lg bg-gray-100 hover:bg-gray-200">
+                                            <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    )}
-                </div>
-
-                {/* Edit Modal */}
-                <Dialog open={!!editProject} onClose={handleEditClose} maxWidth="sm" fullWidth>
-                    <DialogTitle>Edit Project</DialogTitle>
-                    <DialogContent>
-                        {editWarning && (
-                            <Alert severity="warning" className="mb-4">
-                                You can only edit this project one more time!
-                            </Alert>
-                        )}
-                        {editError && (
-                            <Alert severity="error" className="mb-4">{editError}</Alert>
-                        )}
-                        <TextField
-                            margin="dense"
-                            label="Name"
-                            name="name"
-                            value={editForm.name || ''}
-                            onChange={handleEditChange}
-                            fullWidth
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Tagline"
-                            name="tagline"
-                            value={editForm.tagline || ''}
-                            onChange={handleEditChange}
-                            fullWidth
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Website URL"
-                            name="website_url"
-                            value={editForm.website_url || ''}
-                            onChange={handleEditChange}
-                            fullWidth
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Category"
-                            name="category_type"
-                            value={editForm.category_type || ''}
-                            onChange={handleEditChange}
-                            fullWidth
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Description"
-                            name="description"
-                            value={editForm.description || ''}
-                            onChange={handleEditChange}
-                            fullWidth
-                            multiline
-                            minRows={3}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleEditClose}>Cancel</Button>
-                        <Button onClick={handleEditSave} color="primary" variant="contained">Save</Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Delete Confirmation Dialog */}
-                <Dialog open={!!deleteProject} onClose={handleDeleteCancel} maxWidth="xs" fullWidth>
-                    <DialogTitle>Confirm Delete</DialogTitle>
-                    <DialogContent>
-                        Are you sure you want to delete this project? This cannot be undone.
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleDeleteCancel}>Cancel</Button>
-                        <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
-                    </DialogActions>
-                </Dialog>
-
-                {/* Success Snackbars */}
-                <Snackbar open={editSuccess} autoHideDuration={4000} onClose={() => setEditSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
-                    <Alert onClose={() => setEditSuccess(false)} severity="success" sx={{ width: '100%' }}>
-                        Project updated successfully!
-                    </Alert>
-                </Snackbar>
-                <Snackbar open={deleteSuccess} autoHideDuration={4000} onClose={() => setDeleteSuccess(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
-                    <Alert onClose={() => setDeleteSuccess(false)} severity="success" sx={{ width: '100%' }}>
-                        Project deleted successfully!
-                    </Alert>
-                </Snackbar>
-
-                {isOwner && (
-                    <div className="mt-10">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5 text-blue-500" /> Your Comments on Your Projects
-                        </h2>
-                        {comments.length === 0 ? (
-                            <p className="text-gray-500">You haven't commented on your own projects yet.</p>
-                        ) : (
-                            <ul className="space-y-4">
-                                {comments.map(comment => (
-                                    <li key={comment.id} className="bg-gray-50 p-4 rounded-lg border">
-                                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                            <div>
-                                                <p className="text-gray-800 text-sm mb-1">{comment.content}</p>
-                                                <p className="text-xs text-gray-500">On project: <span className="font-medium">{comment.projects?.name || 'Unknown'}</span></p>
-                                            </div>
-                                            {comment.projects?.slug && (
-                                                <button
-                                                    className="text-blue-600 hover:underline text-xs font-medium"
-                                                    onClick={() => navigate(`/launches/${comment.projects.slug}`)}
-                                                >
-                                                    View Project
-                                                </button>
-                                            )}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
                     </div>
                 )}
-            </div>
+                {/* Launched Section */}
+                <div className="mb-10">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Launched</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {projects.filter(p => p.status !== 'draft').map((project) => (
+                            <div key={project.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-1 border-gray-300">
+                                <div className="p-4">
+                                    <div className='flex items-center gap-2 mb-2 w-auto'>
+                                        {project.logo_url ? (
+                                            <img src={project.logo_url} alt="Logo" className="w-10 h-10 object-contain rounded-full border bg-white" />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
+                                                <span>{project.name.charAt(0).toUpperCase()}</span>
+                                            </div>
+                                        )}
+                                        <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
+                                        <a href={project.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition-colors" onClick={e => e.stopPropagation()}>
+                                            <ExternalLink className="w-4 h-4" />
+                                        </a>
+                                    </div>
+                                    {project.media_urls && project.media_urls.length > 0 && (
+                                        <img src={project.media_urls[0]} alt='Image of Launch' className='w-full object-cover p-1' />
+                                    )}
+                                    <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex items-center text-sm">
+                                            <Tag className="w-4 h-4 mr-2 text-black" />
+                                            <span className="capitalize">{project.category_type}</span>
+                                        </div>
+                                        <div className="flex items-center text-sm">
+                                            <Calendar className="w-4 h-4 mr-2 text-black" />
+                                            <span className='text-gray-600'>{new Date(project.created_at).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                        </div>
+                                    </div>
+                                    {isOwner && (
+                                        <div className="flex gap-2 mt-2">
+                                            <Button variant="outlined" color="primary" size="small" onClick={e => { e.stopPropagation(); navigate(`/submit?edit=${project.id}`); }}>Edit</Button>
+                                            <Button variant="outlined" color="error" size="small" onClick={e => { e.stopPropagation(); handleDeleteClick(project); }}>Delete</Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </main>
         </div>
     );
 };
