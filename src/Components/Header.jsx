@@ -109,7 +109,7 @@ const Header = () => {
     };
 
     return (
-        <header className="fixed top-0 left-0 right-0 bg-blue-400 text-white z-50 shadow-lg">
+        <header className="fixed top-0 left-0 right-0 bg-blue-400 text-white z-50 shadow-lg ">
             <div className="max-w-7xl mx-auto px-4 h-16">
                 <div className="flex justify-between items-center h-full">
                     {/* Logo */}
@@ -119,7 +119,7 @@ const Header = () => {
                         </div>
                         <span className="text-xl font-bold tracking-wide">
                             <span className="text-black">Launch</span>
-                            <span className="text-blue-600">IT</span>
+                            <span className="text-gray-800">IT</span>
                         </span>
                     </Link>
 
@@ -159,7 +159,7 @@ const Header = () => {
                             </button>
 
                             {open && (
-                                <div className="absolute right-0 mt-2 w-60 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                                     {user ? (
                                         <>
                                             <div className="px-4 py-2 border-b border-gray-200">
@@ -283,57 +283,59 @@ const Header = () => {
             </div>
 
             {/* Mobile Menu */}
-            {mobileMenuOpen && (
-                <div className="md:hidden bg-blue-400 border-t border-blue-300">
-                    <div className="px-4 py-4 space-y-3">
-                        <Link
-                            to="/submit"
-                            className="flex items-center space-x-2 text-white/90 hover:text-white font-medium py-2"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <CirclePlus className="w-5 h-5" />
-                            <span>Submit Startup</span>
-                        </Link>
-
-                        {!user && (
+            {
+                mobileMenuOpen && (
+                    <div className="md:hidden bg-blue-400 border-t border-blue-300">
+                        <div className="px-4 py-4 space-y-3">
                             <Link
-                                to="/launchpage"
+                                to="/submit"
+                                className="flex items-center space-x-2 text-white/90 hover:text-white font-medium py-2"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <CirclePlus className="w-5 h-5" />
+                                <span>Submit Startup</span>
+                            </Link>
+
+                            {!user && (
+                                <Link
+                                    to="/launchpage"
+                                    className="block text-white/90 hover:text-white font-medium py-2"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    Get Started
+                                </Link>
+                            )}
+
+                            <Link
+                                to="/news"
                                 className="block text-white/90 hover:text-white font-medium py-2"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                Get Started
+                                News
                             </Link>
-                        )}
 
-                        <Link
-                            to="/news"
-                            className="block text-white/90 hover:text-white font-medium py-2"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            News
-                        </Link>
-
-                        <a
-                            href="https://startup.jobs/"
-                            className="block text-white/90 hover:text-white font-medium py-2"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            Jobs
-                        </a>
-
-                        {userRole === "admin" && (
-                            <Link
-                                to="/admin"
+                            <a
+                                href="https://startup.jobs/"
                                 className="block text-white/90 hover:text-white font-medium py-2"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
-                                Admin
-                            </Link>
-                        )}
+                                Jobs
+                            </a>
+
+                            {userRole === "admin" && (
+                                <Link
+                                    to="/admin"
+                                    className="block text-white/90 hover:text-white font-medium py-2"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    Admin
+                                </Link>
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
-        </header>
+                )
+            }
+        </header >
     );
 };
 

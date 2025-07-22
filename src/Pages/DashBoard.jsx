@@ -84,27 +84,38 @@ const Dashboard = () => {
     <>
       <div className="min-h-screen mt-20">
         <div className='flex items-center justify-center'>
-          <div className="relative justify-center w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Search for Launches, categories, or more..."
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-              <Search />
-            </span>
-            {search && (
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                onClick={() => setSearch('')}
-                aria-label="Clear search"
-              >
-                &#10005;
-              </button>
-            )}
+          <div className="text-center py-16 md:py-24">
+            <h1 className="text-6xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-6 tracking-tight">
+              Decode Limitless Growth.<br />
+
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+              Got an idea ready to explode? Stop waiting. Launch it here. Explore the innovations shaping tomorrow.
+            </p>
+
+            {/* Search Bar - Centralized and prominent */}
+            <div className="relative w-full max-w-2xl mx-auto">
+              <input
+                type="text"
+                placeholder="Search for startups, categories, features..."
+                className="w-full pl-14 pr-16 py-4 text-lg border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 placeholder-gray-500 text-gray-800"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <span className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Search className="w-6 h-6" />
+              </span>
+              {search && (
+                <button
+                  type="button"
+                  className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-xl"
+                  onClick={() => setSearch('')}
+                  aria-label="Clear search"
+                >
+                  &times;
+                </button>
+              )}
+            </div>
           </div>
         </div>
         {Object.keys(groupedProjects).length === 0 && (
@@ -128,10 +139,20 @@ const Dashboard = () => {
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border-1 border-gray-300"
+                    className="rounded-md shadow-md border border-gray-100 transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-xl hover:scale-[1.03]"
                     onClick={() => openProjectDetails(project)}
                   >
-                    <div className="p-4">
+
+                    <div className="p-1">
+                      {project.media_urls && project.media_urls.length > 0 && (
+                        <div className="w-full h-48 flex items-center justify-center bg-gray-50 rounded-md overflow-hidden mb-2">
+                          <img
+                            src={project.media_urls[0]}
+                            alt='Image of Launch'
+                            className='max-h-full  '
+                          />
+                        </div>
+                      )}
                       <div className='flex items-center justify-between'>
                         <div className="flex items-center gap-2 mb-2 w-auto ">
                           {project.logo_url ? (
@@ -158,22 +179,11 @@ const Dashboard = () => {
                         </div>
                         <Like projectId={project.id} />
                       </div>
-                      {project.media_urls && project.media_urls.length > 0 && (
-                        <img
-                          src={project.media_urls[0]}
-                          alt='Image of Launch'
-                          className='w-full object-cover p-1'
-                        />
-                      )}
-                      <p className="text-md text-gray-600 mb-4 line-clamp-2">{project.tagline}</p>
+                      <p className="text-md text-gray-600 mb-4 line-clamp-2 min-h-[48px]">{project.tagline}</p>
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center text-sm ">
                           <Tag className="w-4 h-4 mr-2 text-black" />
                           <span className="capitalize">{project.category_type}</span>
-                        </div>
-                        <div className="flex items-center text-sm ">
-                          <Calendar className="w-4 h-4 mr-2 text-black" />
-                          <span className='text-gray-600'>{formatDate(project.created_at)}</span>
                         </div>
                       </div>
                     </div>

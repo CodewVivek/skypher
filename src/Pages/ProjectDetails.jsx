@@ -10,11 +10,11 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
-const NextArrow = (props) => (
+const NextArrow = ({ onClick, style, ...rest }) => (
     <div
-        {...props}
+        onClick={onClick}
         style={{
-            ...props.style,
+            ...style,
             display: 'flex',
             background: 'gray',
             borderRadius: '50%',
@@ -33,15 +33,15 @@ const NextArrow = (props) => (
         onMouseEnter={e => (e.currentTarget.style.opacity = 1)}
         onMouseLeave={e => (e.currentTarget.style.opacity = 0.85)}
     >
-
+        {/* Optionally add an icon here */}
     </div>
 );
 
-const PrevArrow = (props) => (
+const PrevArrow = ({ onClick, style, ...rest }) => (
     <div
-        {...props}
+        onClick={onClick}
         style={{
-            ...props.style,
+            ...style,
             display: 'flex',
             background: 'gray',
             borderRadius: '50%',
@@ -60,6 +60,7 @@ const PrevArrow = (props) => (
         onMouseEnter={e => (e.currentTarget.style.opacity = 1)}
         onMouseLeave={e => (e.currentTarget.style.opacity = 0.85)}
     >
+        {/* Optionally add an icon here */}
     </div>
 );
 

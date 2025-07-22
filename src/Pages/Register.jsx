@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
 import { nanoid } from 'nanoid';
 import Snackbar from '@mui/material/Snackbar';
+import categoryOptions from '../Components/categoryOptions';
 
 function getLinkType(url) {
     if (!url) return { label: 'Website', icon: '🌐' };
@@ -52,214 +53,6 @@ const Register = () => {
     const [existingLogoUrl, setExistingLogoUrl] = useState('');
     const [editingLaunched, setEditingLaunched] = useState(false);
     const [projectLoaded, setProjectLoaded] = useState(false);
-    const categoryOptions = [
-        {
-            label: "💸 Finance & Fintech",
-            options: [
-                { value: "fintech", label: "💸 Fintech" },
-                { value: "accounting", label: "📊 Accounting Software" },
-                { value: "budgeting", label: "📉 Budgeting Apps" },
-                { value: "credit", label: "💳 Credit Score Tools" },
-                { value: "financial-planning", label: "📅 Financial Planning" },
-                { value: "fundraising", label: "🤝 Fundraising Resources" },
-                { value: "investing", label: "📈 Investing Platforms" },
-                { value: "invoicing", label: "🧾 Invoicing Tools" },
-                { value: "money-transfer", label: "💱 Money Transfer" },
-                { value: "neobanks", label: "🏦 Neobanks" },
-                { value: "online-banking", label: "🌐 Online Banking" },
-                { value: "payroll", label: "💼 Payroll Software" },
-                { value: "retirement", label: "👵 Retirement Planning" },
-                { value: "savings", label: "💰 Savings Apps" },
-                { value: "startup-finance", label: "🚀 Startup Financial Planning" },
-                { value: "startup-incorporation", label: "📜 Startup Incorporation" },
-                { value: "stock-trading", label: "📊 Stock Trading Platforms" },
-                { value: "tax-prep", label: "🧮 Tax Preparation" },
-                { value: "treasury", label: "🏛️ Treasury Management" },
-            ]
-        },
-        {
-            label: "☁️ SaaS & Platforms",
-            options: [
-                { value: "saas", label: "☁️ SaaS" },
-                { value: "platform-addons", label: "🧩 Product Add-ons" },
-            ]
-        },
-        {
-            label: "📈 Marketing & Sales",
-            options: [
-                { value: "adtech", label: "📈 AdTech" },
-                { value: "crm", label: "🧠 CRM Platforms" },
-                { value: "email-marketing", label: "📬 Email Marketing" },
-                { value: "ads", label: "📢 Ad Management" },
-                { value: "social-media-scheduling", label: "🗓️ Social Media Scheduling" },
-                { value: "seo", label: "🔍 SEO & Analytics" },
-                { value: "affiliate", label: "🔗 Affiliate Marketing" }
-            ]
-        },
-        {
-            label: "👥 Social & Community",
-            options: [
-                { value: "social", label: "👥 Social Media" },
-                { value: "community", label: "🌐 Online Communities" },
-                { value: "creatoreconomy", label: "🎨 Creator Economy Tools" },
-                { value: "community-management", label: "👩‍💻 Community Management" }
-            ]
-        },
-        {
-            label: "🧠 Artificial Intelligence",
-            options: [
-                { value: "ai", label: "🤖 AI" },
-                { value: "gen-ai", label: "🧠 Generative AI Tools" },
-                { value: "ai-coding", label: "💻 AI Coding Assistants" },
-                { value: "ai-writing", label: "✍️ AI Writing Tools" },
-                { value: "computer-vision", label: "👁️ Computer Vision" },
-                { value: "ai-platforms", label: "🧪 AI APIs & Hosting" }
-            ]
-        },
-        {
-            label: "🩺 Health & Fitness",
-            options: [
-                { value: "healthtech", label: "🏥 HealthTech" },
-                { value: "medtech", label: "💊 MedTech" },
-                { value: "biotech", label: "🧬 BioTech" },
-                { value: "fitness", label: "🏋️ Fitness Apps" },
-                { value: "mental-health", label: "🧘 Wellness & Mental Health" },
-                { value: "health-trackers", label: "📟 Health Data Trackers" },
-                { value: "femtech", label: "👩 FemTech" },
-                { value: "eldertech", label: "👵 ElderTech" }
-            ]
-        },
-        {
-            label: "🎨 Design & Creative",
-            options: [
-                { value: "design", label: "🎨 UI/UX Design Tools" },
-                { value: "graphic", label: "🖌️ Graphic Design Software" },
-                { value: "animation", label: "🎞️ Animation Tools" },
-                { value: "video-editing", label: "🎥 Video Editing" },
-                { value: "asset-management", label: "🗂️ Digital Asset Management" }
-            ]
-        },
-        {
-            label: "⚙️ Engineering & Development",
-            options: [
-                { value: "devtools", label: "⚙️ Dev Tools" },
-                { value: "code-collab", label: "👨‍💻 Code Collaboration" },
-                { value: "devops", label: "🔁 DevOps Platforms" },
-                { value: "ci-cd", label: "🧪 CI/CD Tools" },
-                { value: "api", label: "🔌 API Testing & Management" },
-                { value: "containers", label: "📦 Container Orchestration" },
-                { value: "cloud", label: "☁️ Cloud Platforms" },
-                { value: "iot", label: "📡 IoT" }
-            ]
-        },
-        {
-            label: "💼 Work & Productivity",
-            options: [
-                { value: "productivity", label: "✅ Productivity Tools" },
-                { value: "project-mgmt", label: "📋 Project Management" },
-                { value: "remote-workforce", label: "🧑‍💻 Remote Workforce Tools" },
-                { value: "team-collab", label: "👥 Team Collaboration" },
-                { value: "time-tracking", label: "⏱️ Time Tracking Tools" },
-                { value: "calendar", label: "📆 Scheduling & Calendar Apps" }
-            ]
-        },
-        {
-            label: "🌱 Sustainability & Climate",
-            options: [
-                { value: "greentech", label: "🌱 GreenTech" },
-                { value: "climatetech", label: "🌎 ClimateTech" }
-            ]
-        },
-        {
-            label: "🚚 Logistics & Mobility",
-            options: [
-                { value: "logistics", label: "🚚 Logistics" },
-                { value: "mobility", label: "🛴 Mobility" },
-                { value: "traveltech", label: "✈️ TravelTech" }
-            ]
-        },
-        {
-            label: "🛍️ Ecommerce & Retail",
-            options: [
-                { value: "ecommerce", label: "🛍️ E-commerce" },
-                { value: "store-builders", label: "🧱 Store Builders" },
-                { value: "checkout", label: "💳 Checkout & Payments" },
-                { value: "dropshipping", label: "📦 Dropshipping Tools" },
-                { value: "product-sourcing", label: "🔍 Product Sourcing" },
-                { value: "inventory", label: "📦 Inventory Management" }
-            ]
-        },
-        {
-            label: "🔒 Security & Infrastructure",
-            options: [
-                { value: "cybersecurity", label: "🔒 Cybersecurity" },
-                { value: "hardware", label: "🛠️ Hardware Startups" },
-                { value: "security", label: "🛡️ Security Tools" }
-            ]
-        },
-        {
-            label: "🎮 Entertainment & Media",
-            options: [
-                { value: "gaming", label: "🎮 Gaming" },
-                { value: "entertainment", label: "🎬 Entertainment" },
-                { value: "edutainment", label: "📚🎮 Edutainment" }
-            ]
-        },
-        {
-            label: "📚 Education",
-            options: [
-                { value: "edtech", label: "🎓 EdTech" }
-            ]
-        },
-        {
-            label: "🏛️ Legal & Professional Services",
-            options: [
-                { value: "legaltech", label: "⚖️ LegalTech" },
-                { value: "hrtech", label: "👔 HRTech" }
-            ]
-        },
-        {
-            label: "⛓️ Blockchain & Web3",
-            options: [
-                { value: "blockchain", label: "⛓️ Blockchain" },
-                { value: "web3", label: "🌐 Web3" },
-                { value: "decentralized", label: "🌀 Decentralized Tech" },
-                { value: "crypto-wallets", label: "💼 Crypto Wallets" },
-                { value: "nft", label: "🖼️ NFT Platforms" },
-                { value: "dao", label: "🗳️ DAO Tools" },
-                { value: "defi", label: "💹 DeFi Platforms" }
-            ]
-        },
-        {
-            label: "🌾 Agri & Industrial Tech",
-            options: [
-                { value: "agritech", label: "🌾 AgriTech" },
-                { value: "constructiontech", label: "🚧 ConstructionTech" },
-                { value: "spacetech", label: "🚀 SpaceTech" },
-                { value: "marinetech", label: "⚓ MarineTech" }
-            ]
-        },
-        {
-            label: "👗 Lifestyle & Consumer",
-            options: [
-                { value: "fashiontech", label: "👗 FashionTech" },
-                { value: "pettech", label: "🐶 PetTech" },
-                { value: "kids", label: "🧸 KidsTech" },
-                { value: "wellness", label: "🧘 WellnessTech" }
-            ]
-        },
-        {
-            label: "🧪 Emerging Technologies",
-            options: [
-                { value: "nanotech", label: "🔬 NanoTech" },
-                { value: "quantum", label: "⚛️ QuantumTech" },
-                { value: "regtech", label: "📜 RegTech" },
-                { value: "veterantech", label: "🎖️ VeteranTech" },
-                { value: "civictech", label: "🏛️ CivicTech" },
-                { value: "creatortech", label: "🎨 CreatorTech" },
-            ]
-        }
-    ];
 
     //validate wheather user entered url is url or not 
     const handleUrlBlur = (e) => {
@@ -308,6 +101,12 @@ const Register = () => {
         if (bytes < 1024) return `${bytes} bytes`;
         if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    // Utility to sanitize file names for Supabase Storage
+    function sanitizeFileName(name) {
+        // Replace all whitespace (including unicode) and special characters with underscores
+        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
     }
 
     const onDrop = useCallback((acceptedFiles) => {
@@ -385,6 +184,15 @@ const Register = () => {
             setFormData({ ...formData, description: limited });
             setDescriptionWordCount(DESCRIPTION_WORD_LIMIT);
         }
+    };
+
+    // Add taglineCharCount state
+    const [taglineCharCount, setTaglineCharCount] = useState(0);
+
+    // Update tagline input onChange handler in Step 1:
+    const handleTaglineChange = (e) => {
+        setFormData({ ...formData, tagline: e.target.value.slice(0, 60) });
+        setTaglineCharCount(e.target.value.length > 60 ? 60 : e.target.value.length);
     };
 
     //supabase 
@@ -572,7 +380,7 @@ const Register = () => {
             if (files.length > 0) {
                 const uploadPromises = files.map(async (file, index) => {
                     const uniqueTimestamp = Date.now() + index;
-                    const filePath = `${uniqueTimestamp}-${file.name}`;
+                    const filePath = `${uniqueTimestamp}-${sanitizeFileName(file.name)}`;
                     const { data, error } = await supabase.storage
                         .from('startup-media')
                         .upload(filePath, file);
@@ -587,7 +395,7 @@ const Register = () => {
             // Logo upload
             let logoUrl = existingLogoUrl;
             if (logoFile) {
-                const logoPath = `${Date.now()}-logo-${logoFile.name}`;
+                const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
                 const { data: logoData, error: logoErrorUpload } = await supabase.storage
                     .from('startup-media')
                     .upload(logoPath, logoFile);
@@ -891,101 +699,68 @@ const Register = () => {
                         </div>
                         {step === 1 && (
                             <>
-                                <div>
-                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                        Startup Name
-                                        <span className="text-red-500 ml-1 w-auto h-auto">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                        placeholder="Enter your startup name"
-                                        disabled={editingLaunched}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                        Website URL
-                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                    </label>
-                                    <div className='flex gap-1'>
+                                <h3 className="text-lg font-semibold mb-6">Tell us more about this launch</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Startup Name */}
+                                    <div>
+                                        <label className="block font-medium mb-1">Startup Name</label>
                                         <input
-                                            type="url"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                            maxLength={30}
+                                        />
+                                    </div>
+                                    {/* Website URL */}
+                                    <div>
+                                        <label className="block font-medium mb-1">Website URL</label>
+                                        <input
                                             name="websiteUrl"
                                             value={formData.websiteUrl}
                                             onChange={handleInputChange}
-                                            onBlur={handleUrlBlur}
-                                            className={`w-full px-4 py-3 border rounded-lg ${urlError ? 'border-red-500' : 'border-gray-300'}`}
-                                            placeholder="https://example.com"
-                                            required
-                                            disabled={editingLaunched}
+                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                            placeholder="https://yourproject.com"
                                         />
-                                        <button
-                                            type="button"
-                                            onClick={handleGenerateLaunchData}
-                                            className="px-4 py-2 bg-indigo-600 text-white text-lg rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                            disabled={!formData.websiteUrl || !isValidUrl(formData.websiteUrl)}
-                                        >
-                                            Generate
-                                        </button>
                                     </div>
-                                    {urlError && (
-                                        <p className="text-red-500 text-sm mt-1">
-                                            {urlError}
-                                        </p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                        Tagline
-                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="tagline"
-                                        value={formData.tagline}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                        placeholder="Enter a catchy tagline"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                        Description
-                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                    </label>
-                                    <div className="flex items-center justify-end mb-1 w-auto">
-                                        <span className={`text-xs ${descriptionWordCount >= DESCRIPTION_WORD_LIMIT ? 'text-red-500' : 'text-gray-500'}`}>{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</span>
-                                        {descriptionWordCount >= DESCRIPTION_WORD_LIMIT && (
-                                            <span className="text-xs text-red-500 ml-2">Word limit reached</span>
-                                        )}
+                                    {/* Tagline */}
+                                    <div>
+                                        <label className="block font-medium mb-1">Tagline</label>
+                                        <input
+                                            name="tagline"
+                                            value={formData.tagline}
+                                            onChange={handleTaglineChange}
+                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                            maxLength={60}
+                                        />
+                                        <div className="text-xs text-gray-400 text-right">{taglineCharCount} / 60</div>
                                     </div>
-                                    <textarea
-                                        name="description"
-                                        value={formData.description}
-                                        onChange={handleDescriptionChange}
-                                        rows={4}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                                        placeholder="Describe your startup"
-                                    />
+                                    {/* Category(ies) */}
+                                    <div>
+                                        <label className="block font-semibold mb-1">Category(ies)</label>
+                                        <Select
+                                            options={categoryOptions}
+                                            isClearable={isClearable}
+                                            isSearchable={isSearchable}
+                                            value={selectedCategory}
+                                            onChange={setSelectedCategory}
+                                            className="max-w-md"
+                                        />
+                                    </div>
+                                    {/* Description */}
+                                    <div className="md:col-span-2">
+                                        <label className="block font-semibold mb-1 mt-6">Description</label>
+                                        <textarea
+                                            name="description"
+                                            value={formData.description}
+                                            onChange={handleDescriptionChange}
+                                            rows={4}
+                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Describe your startup"
+                                        />
+                                        <div className="text-xs text-gray-400 text-right">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
+                                    </div>
                                 </div>
-                                <section>
-                                    <label className="block font-semibold text-gray-700 mb-2">
-                                        Select Category / Industry
-                                        <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                    </label>
-                                    <Select
-                                        options={categoryOptions}
-                                        isClearable={isClearable}
-                                        isSearchable={isSearchable}
-                                        value={selectedCategory}
-                                        onChange={setSelectedCategory}
-                                        className="max-w-md"
-                                    />
-                                </section>
                             </>
                         )}
                         {step === 2 && (
@@ -1111,10 +886,11 @@ const Register = () => {
                                         <p className="text-sm text-gray-500 mb-4">
                                             Add images, logos, or other media files (max {formatBytes(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)
                                         </p>
+                                        <p className="text-xs text-gray-500 mt-2">1270x760px or higher recommended. The first image will be used as preview.</p>
                                         <div
                                             {...getRootProps()}
                                             className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                    ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+                                        ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
                                         >
                                             <input {...getInputProps()} />
                                             <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />

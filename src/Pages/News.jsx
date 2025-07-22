@@ -45,79 +45,16 @@ const News = () => {
                 } catch (err) {
                     console.log('NewsData API failed, trying fallback...');
                 }
+
             }
-
-            // Fallback: Reddit + RSS Hybrid
-            const hybridNews = await fetchHybridNews();
-            setNews(hybridNews);
-            setSource('Reddit + RSS');
-
-        } catch (err) {
-            console.error('Error fetching news:', err);
-            setError('Unable to load news at this time. Please check your internet connection or try again later.');
             setNews([]);
+            // If no API key or API call fails, set an error
+            setError("Failed to fetch news. Please check your API key or try again later.");
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchHybridNews = async () => {
-        const sources = [
-            // Reddit sources
-            fetch('https://www.reddit.com/r/startups/hot.json?limit=10'),
-            fetch('https://www.reddit.com/r/technology/hot.json?limit=10'),
-            // RSS sources
-            fetch('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.feedburner.com/TechCrunch/'),
-            fetch('https://api.rss2json.com/v1/api.json?rss_url=https://www.theverge.com/rss/index.xml')
-        ];
-
-        try {
-            const responses = await Promise.all(sources);
-            const data = await Promise.all(responses.map(r => r.json()));
-
-            let allArticles = [];
-
-            // Process Reddit data
-            data.slice(0, 2).forEach((redditData, index) => {
-                if (redditData.data?.children) {
-                    const redditArticles = redditData.data.children
-                        .filter(post => !post.data.stickied && post.data.title)
-                        .slice(0, 3)
-                        .map(post => ({
-                            title: post.data.title,
-                            description: post.data.selftext?.substring(0, 200) + '...' || 'Reddit discussion about this topic.',
-                            url: `https://reddit.com${post.data.permalink}`,
-                            publishedAt: new Date(post.data.created_utc * 1000).toISOString(),
-                            source: { name: `r/${post.data.subreddit}` },
-                            image: null
-                        }));
-                    allArticles.push(...redditArticles);
-                }
-            });
-
-            // Process RSS data
-            data.slice(2).forEach((rssData, index) => {
-                if (rssData.items) {
-                    const rssArticles = rssData.items.slice(0, 3).map(item => ({
-                        title: item.title,
-                        description: item.description?.replace(/<[^>]*>/g, '').substring(0, 200) + '...' || 'Latest tech news.',
-                        url: item.link,
-                        publishedAt: item.pubDate,
-                        source: { name: rssData.feed?.title || 'Tech News' },
-                        image: item.thumbnail || null
-                    }));
-                    allArticles.push(...rssArticles);
-                }
-            });
-
-            // Shuffle and limit to 10
-            return allArticles.sort(() => Math.random() - 0.5).slice(0, 10);
-
-        } catch (error) {
-            console.error('Hybrid fetch failed:', error);
-            throw error;
-        }
-    };
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -149,29 +86,10 @@ const News = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-                <div className="max-w-6xl mx-auto py-12 px-4">
-                    <div className="text-center mb-12">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-                            <Newspaper className="w-8 h-8 text-white" />
-                        </div>
-                        <h1 className="text-4xl font-bold text-gray-900 mb-4">Latest News & Updates</h1>
-                        <p className="text-lg text-gray-600">Fetching the latest startup and tech news...</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse">
-                                <div className="h-4 bg-gray-200 rounded mb-3"></div>
-                                <div className="h-3 bg-gray-200 rounded mb-4 w-3/4"></div>
-                                <div className="h-3 bg-gray-200 rounded mb-4 w-1/2"></div>
-                                <div className="flex justify-between items-center">
-                                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                                    <div className="h-3 bg-gray-200 rounded w-1/6"></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mx-auto mb-4"></div>
+                    <h2 className="text-2xl font-semibold text-gray-700">Loading...</h2>
                 </div>
             </div>
         );
@@ -181,7 +99,7 @@ const News = () => {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <div className="max-w-6xl mx-auto py-12 px-4">
                 {/* Header Section */}
-                <div className="text-center mb-12">
+                <div className="text-center mb-12 mt-16">
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4 shadow-lg">
                         <Newspaper className="w-8 h-8 text-white" />
                     </div>
@@ -205,7 +123,6 @@ const News = () => {
                             </div>
                             <h3 className="text-xl font-semibold text-red-800">Unable to Load News</h3>
                         </div>
-                        <p className="text-red-700 mb-6">{error}</p>
                         <button
                             onClick={fetchNews}
                             className="inline-flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors shadow-sm"
@@ -215,8 +132,6 @@ const News = () => {
                         </button>
                     </div>
                 )}
-
-                {/* News Articles Section */}
                 {!error && news.length > 0 && (
                     <div>
                         <div className="flex items-center justify-between mb-8">
