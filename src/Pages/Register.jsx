@@ -8,6 +8,7 @@ import Alert from '@mui/material/Alert';
 import { nanoid } from 'nanoid';
 import Snackbar from '@mui/material/Snackbar';
 import categoryOptions from '../Components/categoryOptions';
+import BuiltWithSelect from '../Components/BuiltWithSelect';
 
 function getLinkType(url) {
     if (!url) return { label: 'Website', icon: '🌐' };
@@ -53,6 +54,7 @@ const Register = () => {
     const [existingLogoUrl, setExistingLogoUrl] = useState('');
     const [editingLaunched, setEditingLaunched] = useState(false);
     const [projectLoaded, setProjectLoaded] = useState(false);
+    const [builtWith, setBuiltWith] = useState([]);
 
     //validate wheather user entered url is url or not 
     const handleUrlBlur = (e) => {
@@ -145,26 +147,31 @@ const Register = () => {
         setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
     };
 
-    // Logo upload state
+    // Add state for logo, thumbnail, and cover images
     const [logoFile, setLogoFile] = useState(null);
-    const [logoError, setLogoError] = useState('');
+    const [thumbnailFile, setThumbnailFile] = useState(null);
+    const [coverFiles, setCoverFiles] = useState([null, null, null, null]);
 
-    // Logo upload handler
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-        if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
-            setLogoError('Logo must be JPG, PNG, or GIF.');
-            setLogoFile(null);
-            return;
+        if (file) setLogoFile(file);
+    };
+    const removeLogo = () => setLogoFile(null);
+
+    const handleThumbnailChange = (e) => {
+        const file = e.target.files[0];
+        if (file) setThumbnailFile(file);
+    };
+    const removeThumbnail = () => setThumbnailFile(null);
+
+    const handleCoverChange = (e, idx) => {
+        const file = e.target.files[0];
+        if (file) {
+            setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
         }
-        if (file.size > 2 * 1024 * 1024) {
-            setLogoError('Logo must be less than 2MB.');
-            setLogoFile(null);
-            return;
-        }
-        setLogoFile(file);
-        setLogoError('');
+    };
+    const removeCover = (idx) => {
+        setCoverFiles(prev => prev.map((f, i) => (i === idx ? null : f)));
     };
 
     // Description word count state
@@ -266,6 +273,10 @@ const Register = () => {
                         // Set existing media and logo URLs
                         setExistingMediaUrls(project.media_urls || []);
                         setExistingLogoUrl(project.logo_url || '');
+                        // When loading a draft or edit, set logoFile, thumbnailFile, and coverFiles to URLs from the DB if available
+                        setLogoFile(project.logo_url || null);
+                        setThumbnailFile(project.thumbnail_url || null);
+                        setCoverFiles(project.cover_urls || [null, null, null, null]);
                     }
                 } catch (error) {
                     console.error('Error loading project for editing:', error);
@@ -321,20 +332,12 @@ const Register = () => {
         setFormError('');
         return true;
     };
-    const validateStep3 = () => {
-        if (files.length === 0 && existingMediaUrls.length === 0) {
-            setUploadError('Please upload at least one media file (Step 3).');
-            return false;
-        }
-        setUploadError('');
-        return true;
-    };
     const validateLogo = () => {
         if (!logoFile && !existingLogoUrl) {
-            setLogoError('Please upload a logo (Step 3).');
+            setFormError('Please upload a logo (Step 3).');
             return false;
         }
-        setLogoError('');
+        setFormError('');
         return true;
     };
 
@@ -350,12 +353,25 @@ const Register = () => {
         setUploadError('');
         // Only validate on submit
         const valid1 = validateStep1();
-        const valid3 = validateStep3();
-        const validLogo = validateLogo();
-        if (!valid1 || !valid3 || !validLogo) return;
+        if (!valid1) return;
         if (!user) {
             setFormError('Please sign in to submit a project');
             navigate('/UserRegister');
+            return;
+        }
+        if (!formData.name || !formData.websiteUrl || !formData.tagline || !selectedCategory || !formData.description) {
+            setFormError('Please fill in all required fields in Main Info.');
+            return;
+        }
+        if (!thumbnailFile) {
+            setFormError('Please upload a thumbnail image for the dashboard.');
+            return;
+        }
+        // Logo and cover images: at least one must be present
+        const hasLogo = !!logoFile;
+        const hasCover = coverFiles && coverFiles.some(f => !!f);
+        if (!hasLogo && !hasCover) {
+            setFormError('Please upload at least a logo or one cover image.');
             return;
         }
         const submissionData = {
@@ -365,6 +381,7 @@ const Register = () => {
             description: formData.description,
             category_type: selectedCategory?.value,
             links: links.filter(link => link.trim() !== ''),
+            built_with: builtWith.map(item => item.value),
             created_at: new Date().toISOString(),
             user_id: user.id,
             updated_at: new Date().toISOString(),
@@ -394,7 +411,7 @@ const Register = () => {
             submissionData.media_urls = fileUrls;
             // Logo upload
             let logoUrl = existingLogoUrl;
-            if (logoFile) {
+            if (logoFile && typeof logoFile !== 'string') {
                 const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
                 const { data: logoData, error: logoErrorUpload } = await supabase.storage
                     .from('startup-media')
@@ -404,6 +421,25 @@ const Register = () => {
                 logoUrl = logoUrlData.publicUrl;
             }
             submissionData.logo_url = logoUrl;
+            // Cover images upload
+            let coverUrls = [];
+            if (coverFiles && coverFiles.length > 0) {
+                for (let i = 0; i < coverFiles.length; i++) {
+                    const file = coverFiles[i];
+                    if (file && typeof file !== 'string') {
+                        const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
+                        const { data: coverData, error: coverErrorUpload } = await supabase.storage
+                            .from('startup-media')
+                            .upload(coverPath, file);
+                        if (coverErrorUpload) throw coverErrorUpload;
+                        const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
+                        coverUrls.push(coverUrlData.publicUrl);
+                    } else if (typeof file === 'string') {
+                        coverUrls.push(file);
+                    }
+                }
+            }
+            submissionData.cover_urls = coverUrls;
 
             if (isEditing && editingProjectId) {
                 // Always update the existing project (draft or launched)
@@ -441,7 +477,6 @@ const Register = () => {
             setStep(1);
             setFormError('');
             setUploadError('');
-            setLogoError('');
             setIsEditing(false);
             setEditingProjectId(null);
             navigate('/');
@@ -668,13 +703,24 @@ const Register = () => {
                                 {formError || uploadError}
                             </Alert>
                         </Snackbar>
-                        {/* Snackbar for auto-save */}
-                        <Snackbar open={showAutoSave} autoHideDuration={1200} onClose={() => setShowAutoSave(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} sx={{ mt: '70px' }}>
+                        <Snackbar
+                            open={showAutoSave}
+                            autoHideDuration={1200}
+                            onClose={() => setShowAutoSave(false)}
+                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            sx={{ mt: '70px' }}>
                             <Alert severity="info" sx={{ width: '100%' }}>Progress auto-saved locally</Alert>
                         </Snackbar>
-                        {/* Snackbar for draft saved */}
-                        <Snackbar open={showDraftSaved} autoHideDuration={3000} onClose={() => setShowDraftSaved(false)} anchorOrigin={{ vertical: 'top', horizontal: 'right' }} sx={{ mt: '70px' }}>
-                            <Alert severity="success" sx={{ width: '100%' }}>Launch saved!</Alert>
+
+                        <Snackbar
+                            open={showDraftSaved}
+                            autoHideDuration={3000}
+                            onClose={() => setShowDraftSaved(false)}
+                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            sx={{ mt: '70px' }}>
+                            <Alert severity="success" sx={{ width: '100%' }}>
+                                Launch saved!
+                            </Alert>
                         </Snackbar>
                         <div className="mb-8">
                             <div className="flex justify-between items-center">
@@ -760,199 +806,133 @@ const Register = () => {
                                         />
                                         <div className="text-xs text-gray-400 text-right">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
                                     </div>
+
                                 </div>
                             </>
                         )}
                         {step === 2 && (
-                            <div className="space-y-4">
-                                <label className="block text-lg font-semibold text-gray-700">Links</label>
-                                {links.map((link, index) => {
-                                    const { label, icon } = getLinkType(link);
-                                    return (
-                                        <div key={index} className="flex items-center space-x-2">
-                                            <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
-                                                <span>{icon}</span>
-                                                <span>{label}</span>
-                                            </span>
-                                            <input
-                                                type="url"
-                                                value={link}
-                                                onChange={e => updateLink(index, e.target.value)}
-                                                placeholder={`Enter ${label} URL`}
-                                                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg"
-                                            />
-                                            {links.length > 1 && (
-                                                <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600">
-                                                    <X className="w-5 h-5" />
-                                                </button>
-                                            )}
+                            <div className="space-y-8">
+                                {/* Logo */}
+                                <div>
+                                    <label className="block font-semibold mb-2">Logo</label>
+                                    <div className="flex items-center">
+                                        {logoFile && (
+                                            <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 border">
+                                                <img
+                                                    src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)}
+                                                    alt="Logo"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <button
+                                                    onClick={removeLogo}
+                                                    className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
+                                                >✕</button>
+                                            </div>
+                                        )}
+                                        {!logoFile && (
+                                            <label className="w-24 h-24 flex items-center justify-center rounded-xl border-2 border-dashed bg-gray-50 cursor-pointer">
+                                                <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+                                                <span className="text-2xl text-gray-400">+</span>
+                                            </label>
+                                        )}
+                                        <div className="ml-6 text-sm text-gray-500">
+                                            Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
                                         </div>
-                                    );
-                                })}
-                                <button type="button" onClick={addLink} className="flex items-center text-blue-900">
-                                    <Plus className="w-5 h-5 mr-1" />
-                                    Add another link
-                                </button>
+                                    </div>
+                                </div>
+                                {/* Thumbnail */}
+                                <div>
+                                    <label className="block font-semibold mb-2">Thumbnail (Dashboard)</label>
+                                    <div className="flex items-center">
+                                        {thumbnailFile && (
+                                            <div className="relative w-40 h-28 rounded-lg overflow-hidden bg-gray-100 border">
+                                                <img
+                                                    src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)}
+                                                    alt="Thumbnail"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <button
+                                                    onClick={removeThumbnail}
+                                                    className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
+                                                >✕</button>
+                                            </div>
+                                        )}
+                                        {!thumbnailFile && (
+                                            <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 cursor-pointer">
+                                                <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
+                                                <span className="text-2xl text-gray-400">+</span>
+                                            </label>
+                                        )}
+                                        <div className="ml-6 text-sm text-gray-500">
+                                            Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Cover Images */}
+                                <div>
+                                    <label className="block font-semibold mb-2">Cover image(s)</label>
+                                    <div className="flex gap-4">
+                                        {[0, 1, 2, 3].map(idx => (
+                                            coverFiles[idx] ? (
+                                                <div key={idx} className="relative w-32 h-20 rounded-lg overflow-hidden bg-gray-100 border">
+                                                    <img
+                                                        src={typeof coverFiles[idx] === 'string' ? coverFiles[idx] : URL.createObjectURL(coverFiles[idx])}
+                                                        alt={`Cover ${idx + 1}`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                    <button
+                                                        onClick={() => removeCover(idx)}
+                                                        className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
+                                                    >✕</button>
+                                                </div>
+                                            ) : (
+                                                <label key={idx} className="w-32 h-20 flex items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 cursor-pointer">
+                                                    <input type="file" accept="image/*" onChange={e => handleCoverChange(e, idx)} className="hidden" />
+                                                    <span className="text-2xl text-gray-400">+</span>
+                                                </label>
+                                            )
+                                        ))}
+                                    </div>
+                                    <div className="text-sm text-gray-500 mt-2">
+                                        Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
+                                    </div>
+                                </div>
                             </div>
                         )}
                         {step === 3 && (
-                            <form onSubmit={e => {
-                                e.preventDefault();
-                                const valid1 = validateStep1();
-                                const valid3 = validateStep3();
-                                const validLogo = validateLogo();
-                                if (valid1 && valid3 && validLogo) handleSubmit(e);
-                            }}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
-                                className="space-y-6">
-                                <div className="space-y-6">
-                                    {/* Logo upload */}
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                            Logo
-                                            <span className="text-red-500 ml-1">*</span>
-                                        </label>
-                                        <p className="text-sm text-gray-500 mb-2">
-                                            Recommended size: 240x240 | JPG, PNG, GIF. Max size: 2MB
-                                        </p>
-                                        {/* Show existing logo preview if editing and logo exists */}
-                                        {existingLogoUrl && (
-                                            <div className="mt-2 flex items-center gap-2">
-                                                <img
-                                                    src={existingLogoUrl}
-                                                    alt="Logo preview"
-                                                    className="w-24 h-24 object-contain rounded border"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={handleRemoveExistingLogo}
-                                                    className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200"
-                                                >
-                                                    Remove
-                                                </button>
+                            <div className="space-y-8">
+                                {/* Links */}
+                                <div>
+                                    <label className="block font-semibold mb-2">Links</label>
+                                    {links.map((link, index) => {
+                                        const { label, icon } = getLinkType(link);
+                                        return (
+                                            <div key={index} className="flex items-center space-x-2 mb-2">
+                                                <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
+                                                    <span>{icon}</span>
+                                                    <span>{label}</span>
+                                                </span>
+                                                <input type="url" value={link} onChange={e => updateLink(index, e.target.value)} placeholder={`Enter ${label} URL`} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg" />
+                                                {links.length > 1 && (
+                                                    <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600"><X className="w-5 h-5" /></button>
+                                                )}
                                             </div>
-                                        )}
-                                        <input
-                                            type="file"
-                                            accept="image/jpeg,image/png,image/gif"
-                                            onChange={handleLogoChange}
-                                            className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                        />
-                                        {logoFile && (
-                                            <div className="mt-2">
-                                                <img
-                                                    src={URL.createObjectURL(logoFile)}
-                                                    alt="Logo preview"
-                                                    className="w-24 h-24 object-contain rounded border"
-                                                />
-                                            </div>
-                                        )}
-                                        {logoError && (
-                                            <p className="text-red-500 text-sm mt-1">{logoError}</p>
-                                        )}
-                                    </div>
-                                    {/* Media upload */}
-                                    {/* Show existing media previews if editing */}
-                                    {existingMediaUrls.length > 0 && (
-                                        <div className="mb-2 flex flex-wrap gap-4">
-                                            {existingMediaUrls.map((url, idx) => (
-                                                <div key={idx} className="relative group">
-                                                    {/* Show image or file icon */}
-                                                    {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                                                        <img src={url} alt="Media preview" className="w-24 h-24 object-cover rounded border" />
-                                                    ) : (
-                                                        <a href={url} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 bg-gray-100 rounded border flex items-center justify-center text-xs text-gray-600">File</a>
-                                                    )}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveExistingMedia(url)}
-                                                        className="absolute top-1 right-1 bg-red-100 text-red-700 rounded-full px-2 py-0.5 text-xs opacity-80 group-hover:opacity-100"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <div>
-                                        <label className="block text-lg font-semibold text-gray-700 mb-2">
-                                            Upload Media
-                                            <span className="text-red-500 ml-1  w-auto h-auto">*</span>
-                                        </label>
-                                        <p className="text-sm text-gray-500 mb-4">
-                                            Add images, logos, or other media files (max {formatBytes(MAX_FILE_SIZE)} each, up to {MAX_FILES} files)
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-2">1270x760px or higher recommended. The first image will be used as preview.</p>
-                                        <div
-                                            {...getRootProps()}
-                                            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                        ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-                                        >
-                                            <input {...getInputProps()} />
-                                            <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                            {isDragActive ? (
-                                                <p className="text-blue-500">Drop the files here...</p>
-                                            ) : (
-                                                <p className="text-gray-600">
-                                                    Drag & drop files here, or click to select files
-                                                </p>
-                                            )}
-                                        </div>
-                                        {files.length > 0 && (
-                                            <div className="mt-4 space-y-2">
-                                                <h4 className="font-medium text-gray-700">Selected Files:</h4>
-                                                {files.map((file, index) => (
-                                                    <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                                        <div className="flex items-center space-x-2">
-                                                            <span className="text-sm text-gray-600">{file.name}</span>
-                                                            <span className="text-xs text-gray-400">
-                                                                ({(file.size / 1024 / 1024).toFixed(3)} MB)
-                                                            </span>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeFile(index)}
-                                                            className="text-red-600 hover:text-red-700"
-                                                        >
-                                                            <X className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                        );
+                                    })}
+                                    <button type="button" onClick={addLink} className="flex items-center text-blue-900 mt-1"><Plus className="w-5 h-5 mr-1" />Add another link</button>
                                 </div>
-                                <div className="flex justify-between mt-8 pt-4 border-t">
-                                    {step > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setStep(step - 1)}
-                                            className="px-6 py-3 bg-gray-100 rounded-lg"
-                                        >
-                                            Previous
-                                        </button>
-                                    )}
-                                    <div className="flex gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={handleSaveDraft}
-                                            className="px-6 py-3 bg-yellow-500 text-white rounded-lg"
-                                        >
-                                            Save
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            className="px-6 py-3 bg-blue-900 text-white rounded-lg"
-                                        >
-                                            Submit
-                                        </button>
-                                    </div>
+                                {/* Built With (optional) */}
+                                <div>
+                                    <BuiltWithSelect value={builtWith} onChange={setBuiltWith} />
                                 </div>
-                            </form>
+                                {/* Team/Collaborators (optional) */}
+                                {/* Add your team/collaborators input fields here if needed */}
+                                {/* Any other extras */}
+                                <div className="flex justify-between mt-8">
+                                    <button type="button" onClick={() => setStep(2)} className="px-6 py-3 bg-gray-100 rounded-lg font-semibold">Previous</button>
+                                    <button type="button" onClick={handleSubmit} className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold ml-auto">Submit</button>
+                                </div>
+                            </div>
                         )}
                         {step < 3 && (
                             <div className="flex justify-between mt-8 pt-4 border-t">

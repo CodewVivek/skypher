@@ -4,6 +4,15 @@ import { supabase } from '../supabaseClient';
 import { ExternalLink, Calendar, Tag, MessageCircle, Rss, Star, Edit3, Trash2, HelpCircle, Menu, X, Briefcase, Link as LinkIcon, Twitter, Linkedin, Youtube } from 'lucide-react';
 import Like from '../Components/Like';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert, TextField } from '@mui/material';
+import SortByDateFilter from '../Components/SortByDateFilter';
+
+function sortProjectsByDate(projects, dateField = 'created_at', order = 'newest') {
+    return [...projects].sort((a, b) => {
+        const dateA = new Date(a[dateField]);
+        const dateB = new Date(b[dateField]);
+        return order === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+}
 
 const UserProfileSidebar = ({ projects, comments, activeTab, setActiveTab, projectFilter, setProjectFilter, isOpen, onClose }) => {
     return (
@@ -79,6 +88,7 @@ const UserProfile = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('projects');
     const [projectFilter, setProjectFilter] = useState('all');
+    const [sortOrder, setSortOrder] = useState('newest');
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -257,6 +267,8 @@ const UserProfile = () => {
         return true;
     });
 
+    const sortedProjects = sortProjectsByDate(filteredProjects, 'created_at', sortOrder);
+
     return (
         <div className="flex bg-gray-50 min-h-screen font-sans">
             {isOwner && <UserProfileSidebar projects={projects} comments={comments} activeTab={activeTab} setActiveTab={setActiveTab} projectFilter={projectFilter} setProjectFilter={setProjectFilter} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
@@ -330,11 +342,14 @@ const UserProfile = () => {
                             </div>
                         )}
                         {/* Launched Section */}
-                        {projectFilter !== 'draft' && filteredProjects.filter(p => p.status !== 'draft').length > 0 && (
+                        {projectFilter !== 'draft' && sortedProjects.filter(p => p.status !== 'draft').length > 0 && (
                             <div className="mb-10">
-                                <h3 className="text-xl font-bold text-gray-800 mb-5">Launched Projects</h3>
+                                <div className="flex items-center justify-between mb-5">
+                                    <h3 className="text-xl font-bold text-gray-800">Launched Projects</h3>
+                                    <SortByDateFilter value={sortOrder} onChange={setSortOrder} />
+                                </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {filteredProjects.filter(p => p.status !== 'draft').map((project) => (
+                                    {sortedProjects.filter(p => p.status !== 'draft').map((project) => (
                                         <div key={project.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col" onClick={() => navigate(`/launches/${project.slug}`)}>
                                             <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
                                                 {project.media_urls && project.media_urls.length > 0 ? (

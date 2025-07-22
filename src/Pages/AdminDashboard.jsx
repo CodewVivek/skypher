@@ -4,6 +4,15 @@ import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
 import { Eye, AlertTriangle, ExternalLink, Trash2, Package, Flag, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SortByDateFilter from '../Components/SortByDateFilter';
+
+function sortProjectsByDate(projects, dateField = 'created_at', order = 'newest') {
+    return [...projects].sort((a, b) => {
+        const dateA = new Date(a[dateField]);
+        const dateB = new Date(b[dateField]);
+        return order === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+}
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -19,6 +28,7 @@ const AdminDashboard = () => {
     const [projectCount, setProjectCount] = useState(0);
     const [commentCount, setCommentCount] = useState(0);
     const [reportCount, setReportCount] = useState(0);
+    const [sortOrder, setSortOrder] = useState('newest');
 
     useEffect(() => {
         const checkAccess = async () => {
@@ -256,6 +266,8 @@ const AdminDashboard = () => {
         );
     }
 
+    const sortedProjects = sortProjectsByDate(projects, 'created_at', sortOrder);
+
     return (
         <div className="min-h-screen bg-white p-8">
             <div className="max-w-7xl mx-auto">
@@ -316,8 +328,9 @@ const AdminDashboard = () => {
                 {/* Projects Tab */}
                 {activeTab === 'projects' && (
                     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200">
+                        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                             <h2 className="text-lg font-semibold text-gray-800">All Projects ({projects.length})</h2>
+                            <SortByDateFilter value={sortOrder} onChange={setSortOrder} />
                         </div>
 
                         {loadingProjects ? (
@@ -353,7 +366,7 @@ const AdminDashboard = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {projects.map((project) => (
+                                        {sortedProjects.map((project) => (
                                             <tr key={project.id} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4">
                                                     <div>
