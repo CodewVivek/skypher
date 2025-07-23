@@ -4,9 +4,9 @@ import { Rocket, Twitter, Linkedin, Github, Mail } from 'lucide-react';
 
 const Footer = () => {
     return (
-        <footer className="bg-white border-t border-gray-200 mt-auto">
-            <div className="max-w-7xl mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <footer className="bg-white border-t border-gray-200 mt-auto text-sm">
+            <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+                <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4 mb-8">
                     {/* Brand Section */}
                     <div className="lg:col-span-1">
                         <Link to="/" className="flex items-center gap-2 mb-4 group">
@@ -121,8 +121,8 @@ const Footer = () => {
                 </div>
 
                 {/* Copyright Section */}
-                <div className="border-t border-gray-200 pt-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                <div className="border-t border-gray-200 pt-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 text-xs">
                         <div className="flex items-center text-sm text-gray-500">
                             <span>© {new Date().getFullYear()} Launch It. All rights reserved.</span>
                         </div>

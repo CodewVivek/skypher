@@ -12,6 +12,7 @@ const Settings = () => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
+        full_name: '',
         bio: '',
         twitter: '',
         linkedin: '',
@@ -52,8 +53,9 @@ const Settings = () => {
                 .single();
 
             if (profileData) {
-            setProfile(profileData);
+                setProfile(profileData);
                 setFormData({
+                    full_name: profileData.full_name || '',
                     bio: profileData.bio || '',
                     twitter: profileData.twitter || '',
                     linkedin: profileData.linkedin || '',
@@ -77,12 +79,23 @@ const Settings = () => {
     const handleSave = async () => {
         if (!profile) return;
         setSaving(true);
+        console.log('Saving profile with id:', profile.id);
+        console.log('Form data:', formData);
         const { error } = await supabase
             .from('profiles')
-            .update({ ...formData })
+            .update({
+                full_name: formData.full_name,
+                bio: formData.bio,
+                twitter: formData.twitter,
+                linkedin: formData.linkedin,
+                portfolio: formData.portfolio,
+                youtube: formData.youtube,
+                avatar_url: avatarUrl, // Only if changed
+            })
             .eq('id', profile.id);
         setSaving(false);
         if (error) {
+            console.log('Supabase update error:', error);
             setSnackbar({ open: true, message: 'Failed to save changes', severity: 'error' });
         } else {
             setSnackbar({ open: true, message: 'Profile updated successfully', severity: 'success' });
@@ -101,14 +114,27 @@ const Settings = () => {
             return;
         }
 
-        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
 
-        const { error: updateError } = await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id);
+        const { error: updateError } = await supabase.from('profiles')
+            .update({ avatar_url: publicUrl })
+            .eq('id', profile.id);
+
         if (updateError) {
-            setSnackbar({ open: true, message: 'Failed to update avatar URL', severity: 'error' });
+            setSnackbar({
+                open: true,
+                message: 'Failed to update avatar URL',
+                severity: 'error'
+            });
         } else {
             setAvatarUrl(publicUrl);
-            setSnackbar({ open: true, message: 'Profile picture updated!', severity: 'success' });
+            setSnackbar({
+                open: true,
+                message: 'Profile picture updated!',
+                severity: 'success'
+            });
         }
     };
 
@@ -148,7 +174,13 @@ const Settings = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                                    <input type="text" value={profile?.full_name || 'no name'} className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 cursor-not-allowed" readOnly />
+                                    <input
+                                        type="text"
+                                        name="full_name"
+                                        value={formData.full_name}
+                                        onChange={handleFormChange}
+                                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500"
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
@@ -239,16 +271,16 @@ const Settings = () => {
                             <div className="shadow sm:rounded-md sm:overflow-hidden">
                                 <div className="bg-white py-6 px-4 space-y-6 sm:p-6">
                                     {renderContent()}
-                    </div>
+                                </div>
                                 <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                    <button
+                                    <button
                                         type="submit"
                                         className="bg-blue-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    disabled={saving}
-                >
-                    {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-            </div>
+                                        disabled={saving}
+                                    >
+                                        {saving ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -258,7 +290,7 @@ const Settings = () => {
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all">
-                            <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-3">
                                 <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0">
                                     <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -267,8 +299,8 @@ const Settings = () => {
                             </div>
                             <button onClick={() => setShowDeleteModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-5 h-5" />
-                                </button>
-                            </div>
+                            </button>
+                        </div>
                         <p className="text-gray-600 mb-6">Are you sure you want to delete your account? All of your data will be permanently removed. This action cannot be undone.</p>
                         <div className="flex justify-end space-x-3">
                             <button onClick={() => setShowDeleteModal(false)} className="px-5 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-sm transition-all">Cancel</button>

@@ -421,6 +421,18 @@ const Register = () => {
                 logoUrl = logoUrlData.publicUrl;
             }
             submissionData.logo_url = logoUrl;
+            // Thumbnail upload
+            let thumbnailUrl = typeof thumbnailFile === 'string' ? thumbnailFile : '';
+            if (thumbnailFile && typeof thumbnailFile !== 'string') {
+                const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
+                const { data: thumbData, error: thumbError } = await supabase.storage
+                    .from('startup-media')
+                    .upload(thumbPath, thumbnailFile);
+                if (thumbError) throw thumbError;
+                const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
+                thumbnailUrl = thumbUrlData.publicUrl;
+            }
+            submissionData.thumbnail_url = thumbnailUrl;
             // Cover images upload
             let coverUrls = [];
             if (coverFiles && coverFiles.length > 0) {
@@ -544,6 +556,20 @@ const Register = () => {
             setFormError('Please enter a project name before saving.');
             return;
         }
+        // Check for existing draft with same name and user
+        let draftId = editingProjectId;
+        if (!isEditing) {
+            const { data: existingDraft } = await supabase
+                .from('projects')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('name', formData.name)
+                .eq('status', 'draft')
+                .maybeSingle();
+            if (existingDraft && existingDraft.id) {
+                draftId = existingDraft.id;
+            }
+        }
         const draftData = {
             name: formData.name,
             website_url: formData.websiteUrl || '',
@@ -555,14 +581,17 @@ const Register = () => {
             user_id: user.id,
             status: 'draft',
             slug: slugify(formData.name) + '-' + nanoid(6),
-            media_urls: [] // Optionally save media if you want
+            media_urls: [...existingMediaUrls],
         };
         console.log('Saving draft:', draftData);
         try {
-            const { error } = await supabase
-                .from('projects')
-                .insert([draftData]);
-            if (error) throw error;
+            if (draftId) {
+                // Update existing draft
+                await supabase.from('projects').update(draftData).eq('id', draftId);
+            } else {
+                // Insert new draft
+                await supabase.from('projects').insert([draftData]);
+            }
             setShowDraftSaved(true);
         } catch (error) {
             setFormError('Failed to save draft. Please try again.');
@@ -673,9 +702,9 @@ const Register = () => {
 
     return (
         <>
-            <div className="container-custom py-12">
-                <div className="max-w-2xl mx-auto mt-15">
-                    <div className="bg-white rounded-xl shadow-lg p-8">
+            <div className="container-custom py-8 sm:py-12">
+                <div className="max-w-2xl mx-auto mt-10 sm:mt-15">
+                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
                         {isEditing && (
                             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <h3 className="text-lg font-semibold text-blue-800 mb-2">

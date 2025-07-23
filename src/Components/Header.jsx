@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 const Header = () => {
     const [user, setUser] = useState(null);
     const [userRole, setUserRole] = useState(null);
+    const [profile, setProfile] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
@@ -20,14 +21,15 @@ const Header = () => {
             setUser(user);
 
             if (user) {
-                const { data: profile, error: profileError } = await supabase
+                // Fetch full_name and role from profiles
+                const { data: profileData, error: profileError } = await supabase
                     .from("profiles")
-                    .select("role")
+                    .select("full_name, role")
                     .eq("id", user.id)
                     .single();
-
-                if (!profileError && profile?.role) {
-                    setUserRole(profile.role);
+                if (!profileError && profileData) {
+                    setProfile(profileData);
+                    if (profileData.role) setUserRole(profileData.role);
                 }
             }
         };
@@ -41,17 +43,20 @@ const Header = () => {
             if (newUser) {
                 supabase
                     .from("profiles")
-                    .select("role")
+                    .select("full_name, role")
                     .eq("id", newUser.id)
                     .single()
                     .then(({ data, error }) => {
-                        if (!error && data?.role) {
-                            setUserRole(data.role);
+                        if (!error && data) {
+                            setProfile(data);
+                            if (data.role) setUserRole(data.role);
                         } else {
+                            setProfile(null);
                             setUserRole(null);
                         }
                     });
             } else {
+                setProfile(null);
                 setUserRole(null);
             }
         });
@@ -110,21 +115,19 @@ const Header = () => {
 
     return (
         <header className="fixed top-0 left-0 right-0 bg-blue-400 text-white z-50 shadow-lg ">
-            <div className="max-w-7xl mx-auto px-4 h-16">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 h-16">
                 <div className="flex justify-between items-center h-full">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center space-x-2 group">
-                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                            <Rocket className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-xl font-bold tracking-wide">
+                    <Link to="/" className="flex items-center space-x-2 group min-w-0">
+                        <img src="/images/r6.png" alt="LaunchIT Logo" className="w-10 h-10 rounded-full object-cover" />
+                        <span className="text-lg sm:text-xl font-bold tracking-wide truncate">
                             <span className="text-black">Launch</span>
                             <span className="text-gray-800">IT</span>
                         </span>
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center space-x-6">
+                    <nav className="hidden md:flex items-center space-x-4 sm:space-x-6">
                         <Link to="/submit" className="text-white/90 hover:text-white font-medium flex items-center gap-2">
                             <CirclePlus className="w-4 h-4" />
                             Submit
@@ -160,6 +163,7 @@ const Header = () => {
 
                             {open && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+
                                     {user ? (
                                         <>
                                             <div className="px-4 py-2 border-b border-gray-200">
@@ -170,7 +174,7 @@ const Header = () => {
                                                         className="w-6 h-6 rounded-full"
                                                     />
                                                     <p className="text-sm font-semibold text-gray-700">
-                                                        {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
+                                                        {profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
                                                     </p>
                                                 </div>
                                                 <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
@@ -235,7 +239,7 @@ const Header = () => {
                                                         className="w-6 h-6 rounded-full"
                                                     />
                                                     <p className="text-sm font-semibold text-gray-700">
-                                                        {user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
+                                                        {profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "No Name"}
                                                     </p>
                                                 </div>
                                                 <p className="text-sm text-gray-500 mt-1 truncate max-w-[160px] block">{user.email}</p>
@@ -286,7 +290,7 @@ const Header = () => {
             {
                 mobileMenuOpen && (
                     <div className="md:hidden bg-blue-400 border-t border-blue-300">
-                        <div className="px-4 py-4 space-y-3">
+                        <div className="px-2 py-4 space-y-2">
                             <Link
                                 to="/submit"
                                 className="flex items-center space-x-2 text-white/90 hover:text-white font-medium py-2"

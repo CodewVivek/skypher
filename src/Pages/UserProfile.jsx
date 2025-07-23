@@ -90,6 +90,15 @@ const UserProfile = () => {
     const [projectFilter, setProjectFilter] = useState('all');
     const [sortOrder, setSortOrder] = useState('newest');
 
+    // Add a function to fetch projects for the current profile
+    const fetchUserProjects = async (profileId) => {
+        const { data: userProjects } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('user_id', profileId);
+        setProjects(userProjects || []);
+    };
+
     useEffect(() => {
         const fetchProfile = async () => {
             if (!username) {
@@ -157,6 +166,14 @@ const UserProfile = () => {
         fetchProfile();
     }, [username]);
 
+    // Add a useEffect to refetch projects when returning from editing/launching a project
+    useEffect(() => {
+        if (profile && profile.id) {
+            fetchUserProjects(profile.id);
+        }
+        // eslint-disable-next-line
+    }, [profile?.id]);
+
     // Edit handlers
     const handleEditClick = (project) => {
         setEditProject(project);
@@ -170,6 +187,7 @@ const UserProfile = () => {
     const handleEditChange = (e) => {
         setEditForm({ ...editForm, [e.target.name]: e.target.value });
     };
+    // In handleEditSave, after updating the project, refetch the latest projects from Supabase
     const handleEditSave = async () => {
         try {
             const { error } = await supabase
@@ -184,11 +202,8 @@ const UserProfile = () => {
             setEditProject(null);
             setEditWarning(false);
 
-            const { data: userProjects } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('user_id', profile.id);
-            setProjects(userProjects);
+            // Refetch projects after edit!
+            await fetchUserProjects(profile.id);
         } catch (err) {
             setEditError(err.message || 'Failed to update project.');
         }
@@ -197,6 +212,7 @@ const UserProfile = () => {
     // Delete handlers
     const handleDeleteClick = (project) => setDeleteProject(project);
     const handleDeleteCancel = () => setDeleteProject(null);
+    // In handleDeleteConfirm, after deleting the project, refetch the latest projects
     const handleDeleteConfirm = async () => {
         try {
             const { error } = await supabase
@@ -207,11 +223,7 @@ const UserProfile = () => {
             setDeleteSuccess(true);
             setDeleteProject(null);
             // Refetch projects
-            const { data: userProjects } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('user_id', profile.id);
-            setProjects(userProjects);
+            await fetchUserProjects(profile.id);
         } catch (err) {
             setEditError(err.message || 'Failed to delete project.');
         }
@@ -255,14 +267,15 @@ const UserProfile = () => {
         return `${diffInYears}y ago`;
     };
 
-    const isDraftIncomplete = (project) => {
-        // Required fields: name, tagline, description, website_url, category_type
-        return !project.name || !project.tagline || !project.description || !project.website_url || !project.category_type;
+    // Add a helper to check if a draft has at least one required field filled
+    const isDraftStarted = (project) => {
+        return !!(project.name || project.tagline || project.description || project.website_url || project.category_type);
     };
 
+    // Update the filteredProjects logic for drafts
     const filteredProjects = projects.filter(project => {
         if (projectFilter === 'all') return true;
-        if (projectFilter === 'draft') return project.status === 'draft' && isDraftIncomplete(project);
+        if (projectFilter === 'draft') return project.status === 'draft' && isDraftStarted(project);
         if (projectFilter === 'launched') return project.status !== 'draft';
         return true;
     });
@@ -318,11 +331,11 @@ const UserProfile = () => {
                                     {filteredProjects.filter(p => p.status === 'draft').map((project) => (
                                         <div key={project.id} className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                                             <div className="flex items-center gap-4">
-                                                {project.logo_url ? (
-                                                    <img src={project.logo_url} alt="Logo" className="w-12 h-12 object-contain rounded-lg border bg-gray-50" loading="lazy" />
+                                                {project.thumbnail_url ? (
+                                                    <img src={project.thumbnail_url} alt="Thumbnail" className="w-12 h-12 object-cover rounded-lg border bg-gray-50" loading="lazy" />
                                                 ) : (
                                                     <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border">
-                                                        <span>{project.name.charAt(0).toUpperCase()}</span>
+                                                        <span>No Thumbnail</span>
                                                     </div>
                                                 )}
                                                 <div>
@@ -350,12 +363,15 @@ const UserProfile = () => {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {sortedProjects.filter(p => p.status !== 'draft').map((project) => (
-                                        <div key={project.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col" onClick={() => navigate(`/launches/${project.slug}`)}>
+                                        <div
+                                            key={project.id}
+                                            className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col"
+                                            onClick={() => navigate(`/launches/${project.slug}`)}>
                                             <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
-                                                {project.media_urls && project.media_urls.length > 0 ? (
-                                                    <img src={project.media_urls[0]} alt={`${project.name} preview`} className='absolute top-0 left-0 w-full h-full object-cover' loading="lazy" />
+                                                {project.thumbnail_url ? (
+                                                    <img src={project.thumbnail_url} alt={`${project.name} thumbnail`} className='absolute top-0 left-0 w-full h-full object-cover' loading="lazy" />
                                                 ) : (
-                                                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+                                                    <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">Nt</div>
                                                 )}
                                             </div>
                                             <div className="p-5 flex-grow flex flex-col">
@@ -451,15 +467,48 @@ const UserProfile = () => {
             <Dialog open={!!editProject} onClose={handleEditClose} maxWidth="sm" fullWidth>
                 <DialogTitle>Edit {editForm.name}</DialogTitle>
                 <DialogContent>
-                    <TextField label="Name" name="name" value={editForm.name || ''} onChange={handleEditChange} fullWidth margin="dense" />
-                    <TextField label="Tagline" name="tagline" value={editForm.tagline || ''} onChange={handleEditChange} fullWidth margin="dense" />
-                    <TextField label="Website URL" name="website_url" value={editForm.website_url || ''} onChange={handleEditChange} fullWidth margin="dense" />
-                    <TextField label="Description" name="description" value={editForm.description || ''} onChange={handleEditChange} fullWidth margin="dense" multiline rows={4} />
+                    <TextField
+                        label="Name"
+                        name="name"
+                        value={editForm.name || ''}
+                        onChange={handleEditChange}
+                        fullWidth
+                        margin="dense" />
+
+                    <TextField
+                        label="Tagline"
+                        name="tagline"
+                        value={editForm.tagline || ''}
+                        onChange={handleEditChange}
+                        fullWidth
+                        margin="dense" />
+
+                    <TextField
+                        label="Website URL"
+                        name="website_url"
+                        value={editForm.website_url || ''}
+                        onChange={handleEditChange}
+                        fullWidth
+                        margin="dense" />
+
+                    <TextField
+                        label="Description"
+                        name="description"
+                        value={editForm.description || ''}
+                        onChange={handleEditChange}
+                        fullWidth
+                        margin="dense"
+                        multiline rows={4} />
                     {editError && <Alert severity="error" className="mt-4">{editError}</Alert>}
                 </DialogContent>
                 <DialogActions>
+
                     <Button onClick={handleEditClose}>Cancel</Button>
-                    <Button onClick={handleEditSave} color="primary" variant="contained">Save Changes</Button>
+                    <Button onClick={handleEditSave}
+                        color="primary"
+                        variant="contained">
+                        Save Changes
+                    </Button>
                 </DialogActions>
             </Dialog>
 
@@ -475,13 +524,25 @@ const UserProfile = () => {
                 </DialogActions>
             </Dialog>
 
-            <Snackbar open={editSuccess} autoHideDuration={4000} onClose={() => setEditSuccess(false)}>
-                <Alert onClose={() => setEditSuccess(false)} severity="success" sx={{ width: '100%' }}>
+            <Snackbar
+                open={editSuccess}
+                autoHideDuration={4000}
+                onClose={() => setEditSuccess(false)}>
+                <Alert
+                    onClose={() => setEditSuccess(false)}
+                    severity="success"
+                    sx={{ width: '100%' }}>
                     Project updated successfully!
                 </Alert>
             </Snackbar>
-            <Snackbar open={deleteSuccess} autoHideDuration={4000} onClose={() => setDeleteSuccess(false)}>
-                <Alert onClose={() => setDeleteSuccess(false)} severity="success" sx={{ width: '100%' }}>
+            <Snackbar
+                open={deleteSuccess}
+                autoHideDuration={4000}
+                onClose={() => setDeleteSuccess(false)}>
+                <Alert
+                    onClose={() => setDeleteSuccess(false)}
+                    severity="success"
+                    sx={{ width: '100%' }}>
                     Project deleted successfully!
                 </Alert>
             </Snackbar>

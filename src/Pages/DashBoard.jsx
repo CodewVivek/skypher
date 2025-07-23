@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { ExternalLink, Calendar, Tag, Search } from 'lucide-react';
+import { ExternalLink, Calendar, Tag, Search, Rocket } from 'lucide-react';
 import Like from '../Components/Like';
 import { useNavigate } from 'react-router-dom';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -82,33 +82,31 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen mt-20">
+      <div className="min-h-screen mt-20 bg-white">
         <div className='flex items-center justify-center'>
-          <div className="text-center py-16 md:py-24">
-            <h1 className="text-6xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-6 tracking-tight">
+          <div className="text-center py-10 sm:py-16 md:py-24 px-2 sm:px-0">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-4 sm:mb-6 tracking-tight">
               Decode Limitless Growth.<br />
-
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-10 leading-relaxed">
               Got an idea ready to explode? Stop waiting. Launch it here. Explore the innovations shaping tomorrow.
             </p>
-
-            {/* Search Bar - Centralized and prominent */}
+            {/* Search Bar */}
             <div className="relative w-full max-w-2xl mx-auto">
               <input
                 type="text"
                 placeholder="Search for startups, categories, features..."
-                className="w-full pl-14 pr-16 py-4 text-lg border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 placeholder-gray-500 text-gray-800"
+                className="w-full pl-12 pr-12 py-3 sm:py-4 text-base sm:text-lg border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 placeholder-gray-500 text-gray-800"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <span className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Search className="w-6 h-6" />
+              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Search className="w-5 h-5 sm:w-6 sm:h-6" />
               </span>
               {search && (
                 <button
                   type="button"
-                  className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-xl"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg sm:text-xl"
                   onClick={() => setSearch('')}
                   aria-label="Clear search"
                 >
@@ -133,67 +131,68 @@ const Dashboard = () => {
         )}
         {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
           <div key={dateLabel}>
-            <h3 className="text-2xl font-bold my-6 m-10">{dateLabel}</h3>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10">{dateLabel}</h3>
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="rounded-md shadow-md border border-gray-100 transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-xl hover:scale-[1.03]"
+                    className="bg-white flex flex-col p-0 rounded-none shadow-none border-none cursor-pointer"
                     onClick={() => openProjectDetails(project)}
                   >
 
-                    <div className="p-1">
-                      {project.media_urls && project.media_urls.length > 0 && (
-                        <div className="w-full h-48 flex items-center justify-center bg-gray-50 rounded-md overflow-hidden mb-2">
-                          <img
-                            src={project.media_urls[0]}
-                            alt='Image of Launch'
-                            className='max-h-full  '
-                          />
+                    <div className="w-full aspect-square bg-gray-100 overflow-hidden flex items-center justify-center">
+                      {project.thumbnail_url ? (
+                        <img
+                          src={project.thumbnail_url}
+                          alt="Thumbnail"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-3xl">No Image</span>
+                      )}
+                    </div>
+                    {/* Logo + Company Name */}
+                    <div className="flex items-center gap-2 mt-4 ml-1">
+                      {project.logo_url ? (
+                        <img
+                          src={project.logo_url}
+                          alt="Logo"
+                          className="w-7 h-7 object-contain rounded-full border bg-white"
+                        />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
+                          <Rocket className="w-5 h-5" />
                         </div>
                       )}
-                      <div className='flex items-center justify-between'>
-                        <div className="flex items-center gap-2 mb-2 w-auto ">
-                          {project.logo_url ? (
-                            <img
-                              src={project.logo_url}
-                              alt="Logo"
-                              className="w-10 h-10 object-contain rounded-full border bg-white"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
-                              <span>L</span>
-                            </div>
-                          )}
-                          <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
-                          <a
-                            href={project.website_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        </div>
-                        <Like projectId={project.id} />
+                      <h2 className="text-base font-semibold text-black truncate">{project.name}</h2>
+                      <a
+                        href={project.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                    {/* Tagline */}
+                    <p className="text-sm text-black mt-1 ml-1 truncate">{project.tagline}</p>
+                    {/* Category + Like */}
+                    <div className="flex items-center justify-between mt-2 ml-1 mr-1 mb-2">
+                      <div className="flex items-center text-xs gap-1 text-black">
+                        <Tag className="w-4 h-4" />
+                        <span className="capitalize">{project.category_type}</span>
                       </div>
-                      <p className="text-md text-gray-600 mb-4 line-clamp-2 min-h-[48px]">{project.tagline}</p>
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm ">
-                          <Tag className="w-4 h-4 mr-2 text-black" />
-                          <span className="capitalize">{project.category_type}</span>
-                        </div>
-                      </div>
+                      <Like projectId={project.id} iconOnly={true} />
                     </div>
                   </div>
                 ))}
-              </div >
-            </div >
-          </div >
+              </div>
+            </div>
+          </div>
         ))}
-      </div>
+      </div >
     </>
   );
 };
