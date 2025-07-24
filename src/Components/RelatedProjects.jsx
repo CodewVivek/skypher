@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Like from '../Components/Like';
-import { ExternalLink, Tag } from 'lucide-react';
+import { ExternalLink, Tag, Rocket } from 'lucide-react';
 
 const RelatedProjects = ({ categoryType, excludeProjectId }) => {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [fallbackProjects, setFallbackProjects] = useState([]);
 
     useEffect(() => {
         const fetchRelated = async () => {
@@ -20,71 +21,86 @@ const RelatedProjects = ({ categoryType, excludeProjectId }) => {
                 .neq('status', 'draft')
                 .limit(6);
             setProjects(data || []);
+            // If no related, fetch fallback
+            if (!data || data.length === 0) {
+                const { data: fallback, error: fallbackError } = await supabase
+                    .from('projects')
+                    .select('*')
+                    .neq('id', excludeProjectId)
+                    .neq('status', 'draft')
+                    .limit(6);
+                setFallbackProjects(fallback || []);
+            } else {
+                setFallbackProjects([]);
+            }
             setLoading(false);
         };
         if (categoryType && excludeProjectId) fetchRelated();
     }, [categoryType, excludeProjectId]);
 
     if (loading) return <div className="text-gray-400 py-4">Loading related projects...</div>;
-    if (!projects.length) return <div className="text-gray-400 py-4">No related projects found.</div>;
+    if (!projects.length && !fallbackProjects.length) return null;
 
     return (
         <div className="mt-10">
-            <h3 className="text-lg font-bold mb-4 text-gray-800">Related Projects</h3>
+            {(projects.length || fallbackProjects.length) > 0 && (
+                <h3 className="text-lg font-bold mb-4 text-gray-800">Related Projects</h3>
+            )}
+            {!projects.length && fallbackProjects.length > 0 && (
+                <div className="mb-4 text-blue-700 font-semibold">Explore More</div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {projects.map(project => (
+                {(projects.length ? projects : fallbackProjects).map(project => (
                     <div
                         key={project.id}
-                        className="rounded-md shadow-md border border-gray-100 transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-xl hover:scale-[1.03]"
+                        className="bg-white flex flex-col p-0 rounded-none shadow-none border-none cursor-pointer"
                         onClick={() => navigate(`/launches/${project.slug}`)}
                     >
-                        <div className="p-1">
+                        {/* Thumbnail with fixed 1:1 aspect ratio */}
+                        <div className="w-full aspect-square bg-gray-100 overflow-hidden flex items-center justify-center">
                             {project.thumbnail_url ? (
-                                <div className="w-full h-48 flex items-center justify-center bg-gray-50 rounded-md overflow-hidden mb-2">
-                                    <img
-                                        src={project.thumbnail_url}
-                                        alt="Thumbnail"
-                                        className="w-full h-full"
-                                    />
-                                </div>
+                                <img
+                                    src={project.thumbnail_url}
+                                    alt="Thumbnail"
+                                    className="w-full h-full object-cover"
+                                />
                             ) : (
-                                <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-md overflow-hidden mb-2 text-gray-400 text-2xl font-bold">
-                                    No Thumbnail
+                                <span className="text-gray-400 text-3xl">No Image</span>
+                            )}
+                        </div>
+                        {/* Logo + Company Name + External Link */}
+                        <div className="flex items-center gap-2 mt-4 ml-1">
+                            {project.logo_url ? (
+                                <img
+                                    src={project.logo_url}
+                                    alt="Logo"
+                                    className="w-7 h-7 object-contain rounded-full border bg-white"
+                                />
+                            ) : (
+                                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
+                                    <Rocket className="w-5 h-5" />
                                 </div>
                             )}
-                            <div className='flex items-center justify-between'>
-                                <div className="flex items-center gap-2 mb-2 w-auto ">
-                                    {project.logo_url ? (
-                                        <img
-                                            src={project.logo_url}
-                                            alt="Logo"
-                                            className="w-10 h-10 object-contain rounded-full border bg-white"
-                                        />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
-                                            <span>L</span>
-                                        </div>
-                                    )}
-                                    <h2 className="text-2xl font-semibold text-gray-900 w-auto">{project.name}</h2>
-                                    <a
-                                        href={project.website_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-700 transition-colors"
-                                        onClick={e => e.stopPropagation()}
-                                    >
-                                        <ExternalLink className="w-4 h-4" />
-                                    </a>
-                                </div>
-                                <Like projectId={project.id} />
+                            <h2 className="text-base font-semibold text-black truncate">{project.name}</h2>
+                            <a
+                                href={project.website_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700 transition-colors"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                            </a>
+                        </div>
+                        {/* Tagline */}
+                        <p className="text-sm text-black mt-1 ml-1 truncate">{project.tagline}</p>
+                        {/* Category + Like */}
+                        <div className="flex items-center justify-between mt-2 ml-1 mr-1 mb-2">
+                            <div className="flex items-center text-xs gap-1 text-black">
+                                <Tag className="w-4 h-4" />
+                                <span className="capitalize">{project.category_type}</span>
                             </div>
-                            <p className="text-md text-gray-600 mb-4 line-clamp-2 min-h-[48px]">{project.tagline}</p>
-                            <div className="space-y-2 mb-4">
-                                <div className="flex items-center text-sm ">
-                                    <Tag className="w-4 h-4 mr-2 text-black" />
-                                    <span className="capitalize">{project.category_type}</span>
-                                </div>
-                            </div>
+                            <Like projectId={project.id} iconOnly={true} />
                         </div>
                     </div>
                 ))}

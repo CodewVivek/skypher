@@ -54,12 +54,14 @@ const TrendingProjects = ({ limit = 5, by = 'likes' }) => {
 
     return (
         <div className="mt-10">
-            <h3 className="text-lg font-bold mb-4 text-gray-800">Trending Projects</h3>
+            <div className='font-semibold text-md mb-5'>
+                Trending Launches
+            </div>
             <div className="flex flex-col gap-4">
                 {projects.map(project => (
                     <div
                         key={project.id}
-                        className="bg-white rounded-xl shadow border border-gray-100 p-4 flex gap-3 items-center cursor-pointer hover:shadow-md transition"
+                        className=" rounded-xl  border border-gray-300 p-1 flex gap-3 items-center cursor-pointer hover:shadow-md transition"
                         onClick={() => navigate(`/launches/${project.slug}`)}
                     >
                         {project.logo_url ? (
@@ -73,7 +75,7 @@ const TrendingProjects = ({ limit = 5, by = 'likes' }) => {
                             <h4 className="text-md font-semibold text-gray-900 truncate">{project.name}</h4>
                             <p className="text-xs text-gray-500 truncate">{project.tagline}</p>
                             <div className="flex gap-3 mt-1 text-xs text-gray-500">
-                                <span>👍 {project.likesCount}</span>
+                                <span>🚀 {project.likesCount}</span>
                                 <span>💬 {project.commentsCount}</span>
                             </div>
                         </div>

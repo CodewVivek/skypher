@@ -157,26 +157,38 @@ const ProjectDetails = () => {
 
     return (
         <div className="min-h-screen bg-white/100">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 md:gap-8 py-6 px-2 sm:px-4 md:px-6 mt-20">
-                {/* Left/Main Section */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
-                        {project.logo_url ? (
-                            <img src={project.logo_url} alt="Logo" className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border bg-white object-contain" />
-                        ) : (
-                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl border bg-gray-100 flex items-center justify-center text-xl sm:text-2xl font-bold text-gray-400">L</div>
-                        )}
-                        <div className="flex-1 min-w-0 text-center sm:text-left">
-                            <h1 className="text-2xl sm:text-3xl font-bold truncate">{project.name}</h1>
-                            <p className="text-gray-500 truncate">{project.tagline}</p>
+            <div className="w-full flex items-center justify-center min-h-[260px]  bg-gradient-to-b from-gray-100 to-white ">
+                <div className="flex flex-col items-center justify-center w-full max-w-2xl px-4 py-12 text-center m-10">
+                    {project.logo_url && (
+                        <img
+                            src={project.logo_url}
+                            alt={`${project.name} logo`}
+                            className="w-16 h-16 rounded-2xl border-4 border-white shadow-lg object-contain mb-4 mx-auto"
+                        />
+                    )}
+                    <h1 className="text-5xl font-extrabold text-gray-900 mb-2">{project.name}</h1>
+                    <p className="text-xl text-gray-700 font-medium mb-2">{project.tagline}</p>
+                    <p className="text-lg text-gray-600 mb-6 max-w-2xl">{project.description}</p>
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                        <a
+                            href={project.website_url}
+                            target="_blank" rel="noopener"
+                            className="px-8 py-3 bg-blue-600 text-white font-bold rounded-full shadow hover:bg-blue-700 transition text-lg flex items-center gap-2">
+                            <ExternalLink className="w-5 h-5" />
+                            Launch {project.name}
+                        </a>
+
+                        <div className="bg-white rounded-full px-3 py-2 shadow-sm hover:shadow-md border border-gray-200 transition-all duration-300 inline-flex items-center justify-center">
+                            <Like projectId={project.id} />
                         </div>
-                        <a href={project.website_url} target="_blank" rel="noopener" className="px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 whitespace-nowrap text-sm sm:text-base">Visit Website</a>
-                        <Like projectId={project.id} />
+
                     </div>
-                    <p className="text-base sm:text-lg text-gray-700 mb-4 sm:mb-6 whitespace-pre-line">{project.description}</p>
-                    {/* Images */}
+                </div>
+            </div>
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 md:gap-8 py-6 px-2 md:px-6">
+                <div className="flex-1 min-w-0">
                     {project.cover_urls && project.cover_urls.length > 0 && (
-                        <div className="mb-6 sm:mb-8 relative">
+                        <div className="mb-8 relative">
                             <Slider
                                 dots={true}
                                 infinite={project.cover_urls.length > 1}
@@ -191,7 +203,7 @@ const ProjectDetails = () => {
                                 {project.cover_urls.map((url, idx) => (
                                     <div
                                         key={idx}
-                                        className="flex justify-center items-center w-full h-48 sm:h-[350px] rounded-lg overflow-hidden relative cursor-pointer"
+                                        className="flex justify-center items-center w-full h-[350px] rounded-lg overflow-hidden relative cursor-pointer"
                                         onClick={() => openModal(idx)}
                                     >
                                         <img
@@ -239,7 +251,6 @@ const ProjectDetails = () => {
                     )}
                     {/* Comments */}
                     <div className="bg-white rounded-xl shadow p-6 border border-gray-100 mb-10">
-                        <h2 className="text-lg font-bold mb-4">Comments</h2>
                         <Comments projectId={project.id} className="mt-10" />
                     </div>
                     {/* Related Projects */}
@@ -257,84 +268,117 @@ const ProjectDetails = () => {
                     <ReportModal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} projectId={project.id} projectName={project.name} />
                 </div>
                 {/* Sidebar - stack below on mobile */}
-                <aside className="w-full md:w-80 flex-shrink-0 mt-8 md:mt-0">
-                    <div className="bg-white rounded-xl shadow p-6 mb-6 border border-gray-100">
+                <aside className="w-full md:w-80 flex-shrink-0 mt-10 md:mt-0">
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-400 p-6 space-y-6 transition-all hover:shadow-2xl duration-300">
+
                         {/* Company Info */}
-                        <h2 className="text-lg font-bold mb-4">Company Info</h2>
-                        <div className="flex items-center gap-2 mb-2">
-                            <ExternalLink className="w-4 h-4" />
-                            <a href={project.website_url} target="_blank" rel="noopener" className="text-blue-700 hover:underline truncate">{project.website_url}</a>
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800 mb-4">Company Info</h2>
+                            <div className="flex items-center gap-2 mb-3 text-sm text-gray-700">
+                                <ExternalLink className="w-4 h-4 text-blue-500" />
+                                <a
+                                    href={project.website_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:underline truncate"
+                                >
+                                    {project.website_url}
+                                </a>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Calendar className="w-4 h-4 text-blue-400" />
+                                <span>Launched on {formatDate(project.created_at)}</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <Calendar className="w-4 h-4" />
-                            <span>Launched on {formatDate(project.created_at)}</span>
-                        </div>
+
                         {/* Share */}
-                        <div className="mb-4">
+                        <div>
                             <Share projectSlug={project.slug} projectName={project.name} />
                         </div>
+
                         {/* Launcher */}
-                        <div className="mb-4">
-                            <h3 className="font-semibold text-gray-700 mb-2">Launcher</h3>
-                            {creator && (
-                                <Link to={`/profile/${creator.username}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition">
+                        {creator && (
+                            <div>
+                                <h3 className="font-semibold text-gray-700 mb-2">🚀 Launcher</h3>
+                                <Link
+                                    to={`/profile/${creator.username}`}
+                                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition"
+                                >
                                     <img
                                         src={creator.avatar_url || '/default-avatar.png'}
                                         alt="creator avatar"
-                                        className="w-10 h-10 rounded-full border object-cover"
+                                        className="w-11 h-11 rounded-full object-cover border shadow-sm"
                                     />
                                     <div>
-                                        <p className="text-sm font-semibold text-gray-800">
+                                        <p className="text-sm font-semibold text-gray-900">
                                             {creator.full_name || 'Anonymous'}
                                         </p>
                                         <p className="text-xs text-gray-500">View profile</p>
                                     </div>
                                 </Link>
-                            )}
-                        </div>
+                            </div>
+                        )}
+
                         {/* Built With */}
-                        {project.built_with && project.built_with.length > 0 && (
-                            <div className="mb-4">
-                                <span className="font-semibold">Built With:</span>
-                                <div className="flex flex-wrap gap-2 mt-1">
+                        {project.built_with?.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold text-gray-700 mb-1">🛠️ Built With:</h3>
+                                <div className="flex flex-wrap gap-2">
                                     {project.built_with.map((tech, idx) => (
-                                        <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{tech}</span>
+                                        <span
+                                            key={idx}
+                                            className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium"
+                                        >
+                                            {tech}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
                         )}
+
                         {/* Links */}
-                        {project.links && project.links.length > 0 && (
-                            <div className="mb-4">
-                                <span className="font-semibold">Links:</span>
-                                <ul className="mt-1 space-y-1">
+                        {project.links?.length > 0 && (
+                            <div>
+                                <h3 className="font-semibold text-gray-700 mb-1">🔗 Links</h3>
+                                <ul className="space-y-1 text-sm text-gray-700">
                                     {project.links.map((link, idx) => (
-                                        <li key={idx} className="flex items-center gap-2">
-                                            <Link className="w-4 h-4 text-gray-500" />
-                                            <a href={link} target="_blank" rel="noopener" className="text-blue-700 hover:underline break-all">{getLinkLabel(link)}</a>
+                                        <li key={idx} className="flex items-start gap-2">
+                                            <Link className="w-4 h-4 mt-1 text-gray-500" />
+                                            <a
+                                                href={link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline break-all"
+                                            >
+                                                {getLinkLabel(link)}
+                                            </a>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
+
                         {/* Report */}
-                        <div className="mb-4">
+                        <div>
                             <button
                                 onClick={() => setIsReportModalOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200 font-medium w-full justify-center"
-                                title="Report this project"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-all duration-200 font-medium text-sm"
                             >
                                 <Flag className="w-4 h-4" />
-                                Report
+                                Report this project
                             </button>
                         </div>
-                        {/* Trending Launches */}
-                        <TrendingProjects limit={5} by="likes" />
+
+                        {/* Trending Projects */}
+                        <div>
+                            <h3 className="font-semibold text-gray-700 mb-2">🔥 Trending Launches</h3>
+                            <TrendingProjects limit={5} by="likes" />
+                        </div>
+
                     </div>
                 </aside>
+
             </div>
-
-
         </div>
     );
 };

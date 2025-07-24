@@ -115,24 +115,24 @@ const Settings = () => {
         }
 
         const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(filePath);
+        .from('avatars')
+        .getPublicUrl(filePath);
 
         const { error: updateError } = await supabase.from('profiles')
             .update({ avatar_url: publicUrl })
             .eq('id', profile.id);
 
         if (updateError) {
-            setSnackbar({
-                open: true,
-                message: 'Failed to update avatar URL',
+            setSnackbar({ 
+                open: true, 
+                message: 'Failed to update avatar URL', 
                 severity: 'error'
             });
         } else {
             setAvatarUrl(publicUrl);
             setSnackbar({
                 open: true,
-                message: 'Profile picture updated!',
+                 message: 'Profile picture updated!', 
                 severity: 'success'
             });
         }

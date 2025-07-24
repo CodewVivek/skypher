@@ -129,96 +129,160 @@ const Comments = ({ projectId }) => {
         setOpenReplies(prev => ({ ...prev, [commentId]: !prev[commentId] }));
     };
 
-    const renderComments = (comments, level = 0) => (
+    const renderComments = (comments, level = 0) =>
         comments.map(comment => {
             const hasReplies = comment.replies && comment.replies.length > 0;
             const repliesOpen = openReplies[comment.id];
             const isDeleted = comment.deleted;
+
             return (
-                <div key={comment.id} className={`mb-2 ${level > 0 ? 'pl-8 border-l-2 border-blue-100' : ''}`} style={{ marginLeft: level > 0 ? `${level * 12}px` : 0 }}>
-                    <div className="flex items-start gap-3 group relative">
-                        <img src={comment.profiles?.avatar_url || '/default-avatar.png'} alt="avatar" className="w-8 h-8 rounded-full object-cover mt-1" />
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-0.5">
-                                <span className="font-semibold text-gray-800 text-sm">{comment.profiles?.full_name || 'User'}</span>
-                                <span className="text-xs text-gray-400">{getRelativeTime(comment.created_at)}</span>
+                <div
+                    key={comment.id}
+                    className={`mb-4 ${level > 0 ? 'pl-6 border-l-4 border-blue-100' : ''} transition-all`}
+                    style={{ marginLeft: level > 0 ? `${level * 12}px` : 0 }}
+                >
+                    <div className="flex items-start gap-4 group relative">
+                        <img
+                            src={comment.profiles?.avatar_url || '/default-avatar.png'}
+                            alt="avatar"
+                            className="w-8 h-8 rounded-full object-cover mt-1 shadow"
+                        />
+
+                        <div className="flex-1 bg-gray-50 p-3 rounded-xl shadow-sm border border-gray-100">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-gray-800 text-sm">
+                                        {comment.profiles?.full_name || 'User'}
+                                    </span>
+                                    <span className="text-xs text-gray-400">
+                                        {getRelativeTime(comment.created_at)}
+                                    </span>
+                                </div>
                             </div>
+
                             {isDeleted ? (
-                                <p className="italic text-gray-400 text-sm mb-1">This comment was deleted.</p>
+                                <p className="italic text-gray-400 text-sm mb-1">
+                                    This comment was deleted.
+                                </p>
                             ) : (
-                                <p className="text-gray-800 text-sm mb-1 break-words whitespace-pre-line">{comment.content}</p>
+                                <p className="text-gray-800 text-sm mb-2 whitespace-pre-line break-words leading-relaxed">
+                                    {comment.content}
+                                </p>
                             )}
-                            <div className="flex gap-3 items-center text-xs">
+
+                            <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500 font-medium">
                                 {!isDeleted && user && (
-                                    <button className="text-blue-500 font-medium hover:underline" onClick={() => setReplyTo(comment.id)}>
+                                    <button
+                                        className="hover:text-blue-500 transition"
+                                        onClick={() => setReplyTo(comment.id)}
+                                    >
                                         Reply
                                     </button>
                                 )}
                                 {!isDeleted && user && (user.id === comment.user_id || userRole === 'admin') && (
-                                    <button className="text-red-500 font-medium hover:underline" onClick={() => (userRole === 'admin' ? handleAdminDelete(comment) : handleDelete(comment))}>
+                                    <button
+                                        className="hover:text-red-500 transition"
+                                        onClick={() =>
+                                            userRole === 'admin'
+                                                ? handleAdminDelete(comment)
+                                                : handleDelete(comment)
+                                        }
+                                    >
                                         Delete
                                     </button>
                                 )}
                                 {!isDeleted && user && user.id !== comment.user_id && (
-                                    <button className="text-yellow-600 font-medium hover:underline" onClick={() => { setReportCommentId(comment.id); setIsReportModalOpen(true); }}>
+                                    <button
+                                        className="hover:text-yellow-600 transition"
+                                        onClick={() => {
+                                            setReportCommentId(comment.id);
+                                            setIsReportModalOpen(true);
+                                        }}
+                                    >
                                         Report
                                     </button>
                                 )}
                                 {hasReplies && (
                                     <button
-                                        className="text-gray-500 font-medium hover:underline ml-2"
+                                        className="hover:text-blue-500 transition"
                                         onClick={() => toggleReplies(comment.id)}
                                     >
-                                        {repliesOpen ? `Hide replies (${comment.replies.length})` : `Show replies (${comment.replies.length})`}
+                                        {repliesOpen
+                                            ? `Hide replies (${comment.replies.length})`
+                                            : `Show replies (${comment.replies.length})`}
                                     </button>
                                 )}
                             </div>
+
                             {replyTo === comment.id && !isDeleted && (
-                                <form onSubmit={e => { e.preventDefault(); handleReply(comment.id); }} className="mt-2 flex gap-2 items-center">
+                                <form
+                                    onSubmit={e => {
+                                        e.preventDefault();
+                                        handleReply(comment.id);
+                                    }}
+                                    className="mt-3 flex items-center gap-2"
+                                >
                                     <input
                                         type="text"
                                         value={replyContent}
                                         onChange={e => setReplyContent(e.target.value)}
                                         placeholder="Write a reply..."
-                                        className="border rounded px-2 py-1 w-64 focus:ring-2 focus:ring-blue-400 text-sm"
+                                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     />
-                                    <button type="submit" className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs">Reply</button>
-                                    <button type="button" className="text-xs text-gray-500 hover:underline" onClick={() => setReplyTo(null)}>Cancel</button>
+                                    <button
+                                        type="submit"
+                                        className="bg-blue-500 text-white text-xs px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                                    >
+                                        Reply
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="text-xs text-gray-400 hover:underline"
+                                        onClick={() => setReplyTo(null)}
+                                    >
+                                        Cancel
+                                    </button>
                                 </form>
                             )}
+
                             {hasReplies && repliesOpen && (
-                                <div className="mt-2">
+                                <div className="mt-3">
                                     {renderComments(comment.replies, level + 1)}
                                 </div>
                             )}
                         </div>
                     </div>
-                    <div className="border-b border-gray-100 mt-2" />
                 </div>
             );
-        })
-    );
+        });
 
     return (
         <div className="">
-            <h3 className="text-xl font-bold mb-4 text-gray-800">Comments</h3>
+            <h3 className="text-xl font-bold mb-4 text-gray-800">Join the Conversation</h3>
             {user ? (
                 <form onSubmit={handleAddComment} className="mb-6 flex gap-2 items-center">
-                    <img src={user?.user_metadata?.avatar_url || '/default-avatar.png'} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
-                    <input
-                        type="text"
-                        value={newComment}
-                        onChange={e => setNewComment(e.target.value)}
-                        placeholder="Add a comment..."
-                        className="border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-400 text-sm"
-                    />
-                    <button type="submit" className="px-5 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Post</button>
+
+                    <div className="flex items-center w-full bg-white border border-gray-200 rounded-2xl shadow-sm px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-300 hover:shadow-md h-20">
+                        <input
+                            type="text"
+                            value={newComment}
+                            onChange={e => setNewComment(e.target.value)}
+                            placeholder="💡 Share your thoughts, they might spark something big!"
+                            className="flex-1 bg-transparent text-base placeholder-gray-500 focus:outline-none pr-3"
+                        />
+                        <button
+                            type="submit"
+                            className="bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl hover:bg-blue-600 transition-all text-sm">
+                            Post
+                        </button>
+                    </div>
+
                 </form>
             ) : (
                 <p className="text-sm text-gray-500 mb-6">Sign in to comment.</p>
             )}
             <div>
-                {loading ? <div className="text-gray-400">Loading comments...</div> : (
+                {loading ? <div className="text-gray-400 ">Loading comments...</div> : (
                     renderComments(nestComments(comments))
                 )}
             </div>

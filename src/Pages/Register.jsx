@@ -453,22 +453,33 @@ const Register = () => {
             }
             submissionData.cover_urls = coverUrls;
 
-            if (isEditing && editingProjectId) {
-                // Always update the existing project (draft or launched)
+            // --- FIX: Always update the draft if it exists ---
+            let draftId = editingProjectId;
+            if (!isEditing) {
+                // Check for an existing draft with same name/user
+                const { data: existingDraft } = await supabase
+                    .from('projects')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('name', formData.name)
+                    .eq('status', 'draft')
+                    .maybeSingle();
+                if (existingDraft && existingDraft.id) {
+                    draftId = existingDraft.id;
+                }
+            }
+            if (draftId) {
+                // Update the draft row to launched
                 submissionData.status = 'launched';
                 const { data, error } = await supabase
                     .from('projects')
                     .update(submissionData)
-                    .eq('id', editingProjectId);
+                    .eq('id', draftId);
                 if (error) throw error;
-                console.log('Project updated:', data);
-                if (data && data[0]) {
-                    console.log('Updated project status:', data[0].status);
-                }
                 navigate('/');
                 return;
             } else {
-                // Only for brand new projects
+                // Only for truly new projects
                 submissionData.status = 'launched';
                 const { data, error } = await supabase
                     .from('projects')
@@ -784,7 +795,7 @@ const Register = () => {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                            maxLength={30}
+                                            maxLength={60}
                                         />
                                     </div>
                                     {/* Website URL */}
