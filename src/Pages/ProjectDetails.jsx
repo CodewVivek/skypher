@@ -42,7 +42,7 @@ const PrevArrow = ({ onClick, style, ...rest }) => (
   </button>
 );
 
-// Helper to get link label
+
 function getLinkLabel(url) {
   if (!url) return "Website";
   if (url.includes("twitter.com") || url.includes("x.com")) return "Twitter";
@@ -58,13 +58,11 @@ function getLinkLabel(url) {
 
 const ProjectDetails = () => {
   const { slug } = useParams();
-
   const [project, setProject] = useState(null);
   const [creator, setCreator] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  // Modal state for image lightbox
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
 
@@ -182,9 +180,7 @@ const ProjectDetails = () => {
           <p className="text-xl text-gray-700 dark:text-gray-300 font-medium mb-2">
             {project.tagline}
           </p>
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-6 max-w-2xl">
-            {project.description}
-          </p>
+
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <a
               href={project.website_url}
@@ -204,6 +200,9 @@ const ProjectDetails = () => {
       </div>
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 md:gap-8 py-6 px-2 md:px-6">
         <div className="flex-1 min-w-0">
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-6 max-w-2xl ">
+            {project.description}
+          </p>
           {project.cover_urls && project.cover_urls.length > 0 && (
             <div className="mb-8 relative">
               <Slider
@@ -231,7 +230,7 @@ const ProjectDetails = () => {
                   </div>
                 ))}
               </Slider>
-              {/* Modal/Lightbox for images */}
+
               {modalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
                   <button
@@ -270,16 +269,16 @@ const ProjectDetails = () => {
               )}
             </div>
           )}
-          {/* Comments */}
+
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-6 border border-gray-100 dark:border-gray-700 mb-10 transition-colors duration-300">
             <Comments projectId={project.id} className="mt-10" />
           </div>
-          {/* Related Projects */}
+
           <RelatedProjects
             categoryType={project.category_type}
             excludeProjectId={project.id}
           />
-          {/* Thumbnail (if not already shown in covers) */}
+
           {project.thumbnail_url &&
             (!project.cover_urls || project.cover_urls.length === 0) && (
               <div className="mb-8">
@@ -297,10 +296,10 @@ const ProjectDetails = () => {
             projectName={project.name}
           />
         </div>
-        {/* Sidebar - stack below on mobile */}
+
         <aside className="w-full md:w-80 flex-shrink-0 mt-10 md:mt-0">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-400 dark:border-gray-600 p-6 space-y-6 transition-all hover:shadow-2xl duration-300">
-            {/* Company Info */}
+
             <div>
               <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
                 Company Info
@@ -322,12 +321,12 @@ const ProjectDetails = () => {
               </div>
             </div>
 
-            {/* Share */}
+
             <div>
               <Share projectSlug={project.slug} projectName={project.name} />
             </div>
 
-            {/* Launcher */}
+
             {creator && (
               <div>
                 <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -354,7 +353,7 @@ const ProjectDetails = () => {
               </div>
             )}
 
-            {/* Built With */}
+
             {project.built_with?.length > 0 && (
               <div>
                 <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -373,7 +372,7 @@ const ProjectDetails = () => {
               </div>
             )}
 
-            {/* Links */}
+
             {project.links?.length > 0 && (
               <div>
                 <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -397,7 +396,7 @@ const ProjectDetails = () => {
               </div>
             )}
 
-            {/* Report */}
+
             <div>
               <button
                 onClick={() => setIsReportModalOpen(true)}
@@ -408,7 +407,7 @@ const ProjectDetails = () => {
               </button>
             </div>
 
-            {/* Trending Projects */}
+
             <div>
               <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 🔥 Trending Launches

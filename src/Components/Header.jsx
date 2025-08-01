@@ -146,7 +146,13 @@ const Header = () => {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 bg-blue-400 dark:bg-gray-800 text-white z-50 shadow-lg transition-colors duration-300">
+            <header className="
+  fixed top-0 left-0 right-0
+  bg-blue-500/60 dark:bg-gray-900/60
+  backdrop-blur-md
+  border-b border-blue-400 dark:border-gray-800
+  z-50 shadow transition-colors duration-300
+">
                 <div className="max-w-7xl mx-auto px-2 sm:px-4 h-16">
                     <div className="flex justify-between items-center h-full">
                         <Link to="/" className="flex items-center space-x-2 group min-w-0">
@@ -175,7 +181,7 @@ const Header = () => {
                                         to="/upload-pitch"
                                         className="px-4 py-2 bg-blue-600 text-white rounded-full font-semibold shadow hover:bg-blue-700 transition"
                                     >
-                                        
+
                                         Add Pitch
                                     </Link>
                                 </div>
@@ -239,7 +245,7 @@ const Header = () => {
                                                         onClick={handleProfileClick}
                                                         className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                                                     >
-                                                        
+
                                                         <User className="w-4 h-4 mr-2" />
                                                         Profile
                                                     </button>
@@ -250,7 +256,7 @@ const Header = () => {
                                                         }}
                                                         className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                                                     >
-                                                        
+
                                                         <Settings className="w-4 h-4 mr-2" /> Settings
                                                     </button>
                                                     <button
@@ -260,14 +266,14 @@ const Header = () => {
                                                         }}
                                                         className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                     >
-                                                        
+
                                                         <LogOut className="w-4 h-4 mr-2" /> Sign Out
                                                     </button>
                                                 </div>
                                             </>
                                         ) : (
                                             <div className="py-1">
-                                                
+
                                                 <button
                                                     onClick={() => {
                                                         handleClose();
@@ -275,7 +281,7 @@ const Header = () => {
                                                     }}
                                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                                 >
-                                                    
+
                                                     <CircleUserRound className="w-4 h-4 mr-2" /> Sign
                                                     In
                                                 </button>
@@ -308,14 +314,14 @@ const Header = () => {
                                 </button>
                                 {open && (
                                     <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-                                        
+
                                         {user ? (
                                             <>
-                                                
+
                                                 <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                                                    
+
                                                     <div className="flex items-center gap-3">
-                                                        
+
                                                         <img
                                                             src={
                                                                 user.user_metadata?.avatar_url ||
@@ -325,7 +331,7 @@ const Header = () => {
                                                             className="w-6 h-6 rounded-full"
                                                         />
                                                         <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                                                            
+
                                                             {profile?.full_name ||
                                                                 user.user_metadata?.full_name ||
                                                                 user.user_metadata?.name ||
@@ -333,17 +339,17 @@ const Header = () => {
                                                         </p>
                                                     </div>
                                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate max-w-[160px] block">
-                                                        
+
                                                         {user.email}
                                                     </p>
                                                 </div>
                                                 <div className="py-1">
-                                                    
+
                                                     <button
                                                         onClick={handleProfileClick}
                                                         className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                                                     >
-                                                        
+
                                                         <User className="w-4 h-4 mr-2" /> Profile
                                                     </button>
                                                     <button
@@ -353,7 +359,7 @@ const Header = () => {
                                                         }}
                                                         className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                                                     >
-                                                        
+
                                                         <Settings className="w-4 h-4 mr-2" /> Settings
                                                     </button>
                                                     <button
@@ -363,14 +369,14 @@ const Header = () => {
                                                         }}
                                                         className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                                                     >
-                                                        
+
                                                         <LogOut className="w-4 h-4 mr-2" /> Sign Out
                                                     </button>
                                                 </div>
                                             </>
                                         ) : (
                                             <div className="py-1">
-                                                
+
                                                 <button
                                                     onClick={() => {
                                                         handleClose();
@@ -378,7 +384,7 @@ const Header = () => {
                                                     }}
                                                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                                                 >
-                                                    
+
                                                     <CircleUserRound className="w-4 h-4 mr-2" /> Sign
                                                     In
                                                 </button>
@@ -391,7 +397,7 @@ const Header = () => {
                                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                                 className="p-2 rounded-lg hover:bg-white/20 text-white"
                             >
-                                
+
                                 {mobileMenuOpen ? (
                                     <X className="w-6 h-6" />
                                 ) : (
@@ -422,7 +428,7 @@ const Header = () => {
                                     className="block text-white/90 hover:text-white font-medium py-2"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
-                                    
+
                                     Get Started
                                 </Link>
                             )}
@@ -432,7 +438,7 @@ const Header = () => {
                                     className="block text-white/90 hover:text-white font-medium py-2"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
-                                    
+
                                     Add Pitch
                                 </Link>
                             )}
@@ -442,7 +448,7 @@ const Header = () => {
                                     className="block text-white/90 hover:text-white font-medium py-2"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
-                                    
+
                                     Admin
                                 </Link>
                             )}
@@ -460,7 +466,7 @@ const Header = () => {
                     })
                 }
             >
-                
+
                 <Alert
                     onClose={() =>
                         setSnackbar({
@@ -473,7 +479,7 @@ const Header = () => {
                         width: "100%",
                     }}
                 >
-                    
+
                     {snackbar.message}
                 </Alert>
             </Snackbar>

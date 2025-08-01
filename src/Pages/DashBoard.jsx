@@ -99,7 +99,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen mt-20 bg-blue-200 dark:bg-gray-900 transition-colors duration-300">
+      <div className="min-h-screen  bg-blue-200 dark:bg-gray-900 transition-colors duration-300">
         <div className="flex items-center justify-center">
           <div className="text-center py-10 sm:py-16 md:py-24 px-2 sm:px-0">
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-gray-900 dark:text-white leading-tight mb-4 sm:mb-6 tracking-tight">
@@ -107,7 +107,7 @@ const Dashboard = () => {
               <br />
             </h1>
             <p className="text-base sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-6 sm:mb-10 leading-relaxed">
-              Got an idea ready to explode? Stop waiting. Launch it here.
+              Stop waiting. Launch it here.
               Explore the innovations shaping tomorrow.
             </p>
             {/* Search Bar */}

@@ -1,11 +1,6 @@
 import React from "react";
 
-/**
- * SortByDateFilter - Dropdown for sorting by date order.
- * @param {string} value - Current sort order ('newest' or 'oldest').
- * @param {function} onChange - Handler for sort order change.
- * @param {string} [className] - Optional extra className.
- */
+
 export default function SortByDateFilter({ value, onChange, className = "" }) {
   return (
     <div className={`inline-block ${className}`}>
