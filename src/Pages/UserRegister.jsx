@@ -23,7 +23,7 @@ const UserRegister = () => {
 
       if (error) {
         console.error("Google sign in error:", error);
-        setError(error.message);
+        setError("Failed to register. Please try again.");
         setLoading(false);
       }
     } catch (error) {

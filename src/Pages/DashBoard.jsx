@@ -22,7 +22,7 @@ const Dashboard = () => {
         .neq("status", "draft");
       if (error) {
         console.error("Error fetching project data", error);
-        setError(error.message);
+        setError("Failed to load projects. Please try again.");
       } else {
         setProjects(data);
       }
@@ -99,14 +99,14 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="min-h-screen  bg-blue-200 dark:bg-gray-900 transition-colors duration-300">
+      <div className="min-h-screen bg-white transition-colors duration-300">
         <div className="flex items-center justify-center">
           <div className="text-center py-10 sm:py-16 md:py-24 px-2 sm:px-0">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-gray-900 dark:text-white leading-tight mb-4 sm:mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-4 sm:mb-6 tracking-tight">
               Decode Limitless Growth.
               <br />
             </h1>
-            <p className="text-base sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-6 sm:mb-10 leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-10 leading-relaxed">
               Stop waiting. Launch it here.
               Explore the innovations shaping tomorrow.
             </p>
@@ -115,7 +115,7 @@ const Dashboard = () => {
               <input
                 type="text"
                 placeholder="Search for startups, categories, features..."
-                className="w-full pl-12 pr-12 py-3 sm:py-4 text-base sm:text-lg border border-gray-300 dark:border-gray-600 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-600 transition-all duration-300 placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white bg-white dark:bg-gray-800"
+                className="w-full pl-12 pr-12 py-3 sm:py-4 text-base sm:text-lg border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 placeholder-gray-500 text-gray-800 bg-white"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -138,10 +138,10 @@ const Dashboard = () => {
         {Object.keys(groupedProjects).length === 0 && (
           <div className="flex justify-center items-center min-h-[60vh] sm:min-h-[70vh]">
             <div className="flex flex-col justify-center items-center text-center">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-650 dark:text-gray-300 mb-4">
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-650 mb-4">
                 No Launches Available
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
+              <p className="text-lg text-gray-600">
                 Currently, there are no launches scheduled or listed.
                 <br />
                 We are continuously updating our records; please revisit shortly
@@ -152,7 +152,7 @@ const Dashboard = () => {
         )}
         {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
           <div key={dateLabel}>
-            <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-900 dark:text-white">
+            <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-900">
               {dateLabel}
             </h3>
             <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 ">
@@ -160,10 +160,10 @@ const Dashboard = () => {
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="bg-white dark:bg-gray-800 flex flex-col p-0 rounded-md cursor-pointer shadow-md dark:shadow-gray-900/50 transition-colors duration-300"
+                    className="bg-white flex flex-col p-0 rounded-md cursor-pointer shadow-md transition-colors duration-300"
                     onClick={() => openProjectDetails(project)}
                   >
-                    <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
+                    <div className="w-full aspect-square bg-gray-100 overflow-hidden flex items-center justify-center">
                       {project.thumbnail_url ? (
                         <img
                           src={project.thumbnail_url}
@@ -171,7 +171,7 @@ const Dashboard = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-gray-400 dark:text-gray-500 text-3xl">
+                        <span className="text-gray-400 text-3xl">
                           No Image
                         </span>
                       )}
@@ -182,33 +182,33 @@ const Dashboard = () => {
                         <img
                           src={project.logo_url}
                           alt="Logo"
-                          className="w-7 h-7 object-contain rounded-full border bg-white dark:bg-gray-800"
+                          className="w-7 h-7 object-contain rounded-full border bg-white"
                         />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 font-bold border">
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
                           <Rocket className="w-5 h-5" />
                         </div>
                       )}
-                      <h2 className="text-base font-semibold text-black dark:text-white truncate">
+                      <h2 className="text-base font-semibold text-black truncate">
                         {project.name}
                       </h2>
                       <a
                         href={project.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                        className="text-blue-600 hover:text-blue-700 transition-colors"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     </div>
                     {/* Tagline */}
-                    <p className="text-sm text-black dark:text-gray-300 mt-1 ml-1 truncate">
+                    <p className="text-sm text-black mt-1 ml-1 truncate">
                       {project.tagline}
                     </p>
                     {/* Category + Like */}
                     <div className="flex items-center justify-between mt-2 ml-1 mr-1 mb-2">
-                      <div className="flex items-center text-xs gap-1 text-black dark:text-gray-300">
+                      <div className="flex items-center text-xs gap-1 text-black">
                         <Tag className="w-4 h-4" />
                         <span className="capitalize">
                           {project.category_type}

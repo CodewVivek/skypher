@@ -18,14 +18,13 @@ import LaunchItGuide from "./Pages/LaunchItGuide.jsx";
 import ScrollToTop from "./Components/ScrollToTop";
 import { AnimatePresence, motion } from "framer-motion";
 import PitchUpload from "./Pages/PitchUpload.jsx";
-import { DarkModeProvider } from "./contexts/DarkModeContext";
 
 function AppRoutes() {
   const location = useLocation();
   const hideHeaderFooter = location.pathname === "/launchpage";
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div className="flex flex-col min-h-screen bg-white transition-colors duration-300">
       {!hideHeaderFooter && <Header />}
       <main className="flex-grow">
         <AnimatePresence mode="wait">
@@ -167,12 +166,10 @@ function PageFade({ children }) {
 
 function App() {
   return (
-    <DarkModeProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <AppRoutes />
-      </BrowserRouter>
-    </DarkModeProvider>
+    <BrowserRouter>
+      <ScrollToTop />
+      <AppRoutes />
+    </BrowserRouter>
   );
 }
 

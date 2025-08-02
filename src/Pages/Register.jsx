@@ -1,44 +1,38 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { Plus, X, Upload, User, Star } from "lucide-react";
-import { useDropzone } from "react-dropzone";
-import Select from "react-select";
-import { supabase } from "../supabaseClient";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import Alert from "@mui/material/Alert";
-import { nanoid } from "nanoid";
-import Snackbar from "@mui/material/Snackbar";
-import categoryOptions from "../Components/categoryOptions";
-import BuiltWithSelect from "../Components/BuiltWithSelect";
+import React, { useState, useCallback, useEffect } from 'react';
+import { Plus, X, Upload, User, Star } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import Select from 'react-select';
+import { supabase } from '../supabaseClient';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import Alert from '@mui/material/Alert';
+import { nanoid } from 'nanoid';
+import Snackbar from '@mui/material/Snackbar';
+import categoryOptions from '../Components/categoryOptions';
+import BuiltWithSelect from '../Components/BuiltWithSelect';
 
 function getLinkType(url) {
-    if (!url) return { label: "Website", icon: "🌐" };
-    if (url.includes("youtube.com") || url.includes("youtu.be"))
-        return { label: "YouTube", icon: "▶️" };
-    if (url.includes("instagram.com")) return { label: "Instagram", icon: "📸" };
-    if (url.includes("play.google.com"))
-        return { label: "Play Store", icon: "🤖" };
-    if (url.includes("apps.apple.com")) return { label: "App Store", icon: "🍎" };
-    if (url.includes("linkedin.com")) return { label: "LinkedIn", icon: "💼" };
-    if (url.includes("twitter.com") || url.includes("x.com"))
-        return { label: "Twitter/X", icon: "🐦" };
-    if (url.includes("facebook.com")) return { label: "Facebook", icon: "📘" };
-    return { label: "Website", icon: "🌐" };
+    if (!url) return { label: 'Website', icon: '🌐' };
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return { label: 'YouTube', icon: '▶️' };
+    if (url.includes('instagram.com')) return { label: 'Instagram', icon: '📸' };
+    if (url.includes('play.google.com')) return { label: 'Play Store', icon: '🤖' };
+    if (url.includes('apps.apple.com')) return { label: 'App Store', icon: '🍎' };
+    if (url.includes('linkedin.com')) return { label: 'LinkedIn', icon: '💼' };
+    if (url.includes('twitter.com') || url.includes('x.com')) return { label: 'Twitter/X', icon: '🐦' };
+    if (url.includes('facebook.com')) return { label: 'Facebook', icon: '📘' };
+    return { label: 'Website', icon: '🌐' };
 }
 
 const isValidUrl = (string) => {
     try {
         const url = new URL(string);
-        return url.protocol === "http:" || url.protocol === "https:";
+        return url.protocol === 'http:' || url.protocol === 'https:';
     } catch (_) {
         return false;
     }
 };
 
 const slugify = (text) =>
-    text
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w-]+/g, "");
+    text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
 const Register = () => {
     const [step, setStep] = useState(1);
@@ -48,81 +42,33 @@ const Register = () => {
     const [isClearable, setIsClearable] = useState(true);
     const [isSearchable, setIsSearchable] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [formError, setFormError] = useState("");
-    const [uploadError, setUploadError] = useState("");
-    const [urlError, setUrlError] = useState("");
+    const [formError, setFormError] = useState('');
+    const [uploadError, setUploadError] = useState('');
+    const [urlError, setUrlError] = useState('');
     const [showAutoSave, setShowAutoSave] = useState(false);
     const [showDraftSaved, setShowDraftSaved] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingProjectId, setEditingProjectId] = useState(null);
     const [loadingProject, setLoadingProject] = useState(false);
     const [existingMediaUrls, setExistingMediaUrls] = useState([]);
-    const [existingLogoUrl, setExistingLogoUrl] = useState("");
+    const [existingLogoUrl, setExistingLogoUrl] = useState('');
     const [editingLaunched, setEditingLaunched] = useState(false);
     const [projectLoaded, setProjectLoaded] = useState(false);
     const [builtWith, setBuiltWith] = useState([]);
 
-    // Optimized file size limits
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB (reduced from 5MB)
-    const MAX_FILES = 3;
-
-    // Image compression utilities
-    const compressImage = async (file, maxWidth, maxHeight, quality = 0.8) => {
-        return new Promise((resolve) => {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            const img = new Image();
-
-            img.onload = () => {
-                // Calculate new dimensions
-                let { width, height } = img;
-                if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
-                    width = maxWidth;
-                }
-                if (height > maxHeight) {
-                    width = (width * maxHeight) / height;
-                    height = maxHeight;
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Convert to blob with compression
-                canvas.toBlob(resolve, "image/jpeg", quality);
-            };
-
-            img.src = URL.createObjectURL(file);
-        });
-    };
-
-    // Specific compression for different image types
-    const compressLogo = async (file) => {
-        return await compressImage(file, 240, 240, 0.85); // Logo: 240x240, 85% quality
-    };
-
-    const compressThumbnail = async (file) => {
-        return await compressImage(file, 500, 500, 0.85); // Thumbnail: 500x500, 85% quality
-    };
-
-    const compressCover = async (file) => {
-        return await compressImage(file, 1270, 760, 0.8); // Cover: 1270x760, 80% quality
-    };
-
-    //validate wheather user entered url is url or not
+    //validate wheather user entered url is url or not 
     const handleUrlBlur = (e) => {
         const { value } = e.target;
         if (value && !isValidUrl(value)) {
-            setUrlError("Please enter a valid URL (e.g., https://example.com)");
+            setUrlError('Please enter a valid URL (e.g., https://example.com)');
         } else {
-            setUrlError("");
+            setUrlError('');
         }
     };
 
     //links of launches (optional step)
-    const [links, setLinks] = useState([""]);
-    const addLink = () => setLinks([...links, ""]);
+    const [links, setLinks] = useState(['']);
+    const addLink = () => setLinks([...links, '']);
     const updateLink = (index, value) => {
         const newLinks = [...links];
         newLinks[index] = value;
@@ -133,23 +79,25 @@ const Register = () => {
     };
 
     const [formData, setFormData] = useState({
-        name: "",
-        websiteUrl: "",
-        description: "",
-        tagline: "",
-        categoryOptions: "",
+        name: '',
+        websiteUrl: '',
+        description: '',
+        tagline: '',
+        categoryOptions: '',
     });
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData({
             ...formData,
-            [name]: type === "checkbox" ? checked : value,
+            [name]: type === 'checkbox' ? checked : value,
         });
-        setFormError("");
+        setFormError('');
     };
 
     //media code
     const [files, setFiles] = useState([]);
+    const MAX_FILE_SIZE = 5242880; // 5 MB in bytes
+    const MAX_FILES = 3;
 
     function formatBytes(bytes) {
         if (bytes < 1024) return `${bytes} bytes`;
@@ -157,99 +105,29 @@ const Register = () => {
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     }
 
-    // Component to display file size with optimization info
-    const FileSizeDisplay = ({ file, originalSize, label }) => {
-        if (!file) return null;
-
-        const currentSize = file.size || originalSize;
-        const isCompressed = originalSize && currentSize < originalSize;
-
-        return (
-            <div className="text-xs text-gray-500 mt-1">
-                <span>{formatBytes(currentSize)}</span>
-                {isCompressed && (
-                    <span className="text-green-600 ml-1">
-                        (optimized from {formatBytes(originalSize)})
-                    </span>
-                )}
-                {label && <span className="ml-1">• {label}</span>}
-            </div>
-        );
-    };
-
-    // Component to show total storage usage
-    const StorageUsageSummary = () => {
-        const getFileSize = (file) => (file ? file.size : 0);
-
-        const totalSize =
-            getFileSize(logoFile) +
-            getFileSize(thumbnailFile) +
-            coverFiles.reduce((sum, file) => sum + getFileSize(file), 0) +
-            files.reduce((sum, file) => sum + getFileSize(file), 0);
-
-        const totalOriginalSize =
-            (originalSizes.logo || 0) +
-            (originalSizes.thumbnail || 0) +
-            originalSizes.covers.reduce((sum, size) => sum + (size || 0), 0);
-
-        const savedSpace = totalOriginalSize - totalSize;
-        const isOptimized = savedSpace > 0;
-
-        return (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-                <div className="flex justify-between items-center text-sm">
-                    <span className="font-medium text-blue-800">Storage Usage:</span>
-                    <span className="text-blue-600">{formatBytes(totalSize)}</span>
-                </div>
-                {isOptimized && (
-                    <div className="text-xs text-green-600 mt-1">
-                        Saved {formatBytes(savedSpace)} through optimization
-                    </div>
-                )}
-                <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-                    <div
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{
-                            width: `${Math.min((totalSize / (2 * 1024 * 1024)) * 100, 100)}%`,
-                        }}
-                    ></div>
-                </div>
-                <div className="text-xs text-blue-600 mt-1">
-                    {formatBytes(totalSize)} / 2MB limit
-                </div>
-            </div>
-        );
-    };
-
     // Utility to sanitize file names for Supabase Storage
     function sanitizeFileName(name) {
-        if (!name || typeof name !== "string") {
-            // fallback to a random string if name is not valid
-            return `file_${Date.now()}`;
-        }
         // Replace all whitespace (including unicode) and special characters with underscores
-        return name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
     }
 
     const onDrop = useCallback((acceptedFiles) => {
-        setFiles((prevFiles) => [...prevFiles, ...acceptedFiles]);
-        setUploadError("");
+        setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
+        setUploadError('');
     }, []);
 
     const onDropRejected = (fileRejections) => {
-        let message = "";
-        fileRejections.forEach((rejection) => {
-            rejection.errors.forEach((err) => {
+        let message = '';
+        fileRejections.forEach(rejection => {
+            rejection.errors.forEach(err => {
                 if (err.code === "file-too-large") {
-                    message =
-                        "Each file must be smaller than 2.0 MB. Large files will be automatically compressed.";
+                    message = "Each file must be smaller than 5.0 MB.";
                 }
                 if (err.code === "too-many-files") {
                     message = "You can only upload up to 3 files.";
                 }
                 if (err.code === "file-invalid-type") {
-                    message =
-                        "Invalid file type. Please upload images (PNG, JPG, JPEG) only.";
+                    message = "Invalid file type. Please upload images or PDFs only.";
                 }
             });
         });
@@ -259,14 +137,14 @@ const Register = () => {
         onDrop,
         onDropRejected,
         accept: {
-            "image/*": [".png", ".jpg", ".jpeg", ".gif"],
-            "application/pdf": [".pdf"],
+            'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
+            'application/pdf': ['.pdf']
         },
         maxSize: MAX_FILE_SIZE,
-        maxFiles: MAX_FILES,
+        maxFiles: MAX_FILES
     });
     const removeFile = (index) => {
-        setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+        setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
     };
 
     // Add state for logo, thumbnail, and cover images
@@ -274,84 +152,26 @@ const Register = () => {
     const [thumbnailFile, setThumbnailFile] = useState(null);
     const [coverFiles, setCoverFiles] = useState([null, null, null, null]);
 
-    // Track original file sizes for compression feedback
-    const [originalSizes, setOriginalSizes] = useState({
-        logo: null,
-        thumbnail: null,
-        covers: [null, null, null, null],
-    });
-
-    const handleLogoChange = async (e) => {
+    const handleLogoChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            if (file.size > MAX_FILE_SIZE) {
-                setUploadError(
-                    "Logo file is too large. Please select a smaller image (max 2MB).",
-                );
-                return;
-            }
-            try {
-                const compressedFile = await compressLogo(file);
-                setLogoFile(compressedFile);
-                setOriginalSizes((prev) => ({ ...prev, logo: file.size }));
-                setUploadError(""); // Clear any previous errors
-            } catch (error) {
-                console.error("Logo compression failed:", error);
-                setLogoFile(file); // Fallback to original file
-            }
-        }
+        if (file) setLogoFile(file);
     };
     const removeLogo = () => setLogoFile(null);
 
-    const handleThumbnailChange = async (e) => {
+    const handleThumbnailChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            if (file.size > MAX_FILE_SIZE) {
-                setUploadError(
-                    "Thumbnail file is too large. Please select a smaller image (max 2MB).",
-                );
-                return;
-            }
-            try {
-                const compressedFile = await compressThumbnail(file);
-                setThumbnailFile(compressedFile);
-                setOriginalSizes((prev) => ({ ...prev, thumbnail: file.size }));
-                setUploadError(""); // Clear any previous errors
-            } catch (error) {
-                console.error("Thumbnail compression failed:", error);
-                setThumbnailFile(file); // Fallback to original file
-            }
-        }
+        if (file) setThumbnailFile(file);
     };
     const removeThumbnail = () => setThumbnailFile(null);
 
-    const handleCoverChange = async (e, idx) => {
+    const handleCoverChange = (e, idx) => {
         const file = e.target.files[0];
         if (file) {
-            if (file.size > MAX_FILE_SIZE) {
-                setUploadError(
-                    `Cover image ${idx + 1} is too large. Please select a smaller image (max 2MB).`,
-                );
-                return;
-            }
-            try {
-                const compressedFile = await compressCover(file);
-                setCoverFiles((prev) =>
-                    prev.map((f, i) => (i === idx ? compressedFile : f)),
-                );
-                setOriginalSizes((prev) => ({
-                    ...prev,
-                    covers: prev.covers.map((size, i) => (i === idx ? file.size : size)),
-                }));
-                setUploadError(""); // Clear any previous errors
-            } catch (error) {
-                console.error("Cover compression failed:", error);
-                setCoverFiles((prev) => prev.map((f, i) => (i === idx ? file : f))); // Fallback
-            }
+            setCoverFiles(prev => prev.map((f, i) => (i === idx ? file : f)));
         }
     };
     const removeCover = (idx) => {
-        setCoverFiles((prev) => prev.map((f, i) => (i === idx ? null : f)));
+        setCoverFiles(prev => prev.map((f, i) => (i === idx ? null : f)));
     };
 
     // Description word count state
@@ -367,7 +187,7 @@ const Register = () => {
             setDescriptionWordCount(words.length);
         } else {
             // Only allow up to the word limit
-            const limited = words.slice(0, DESCRIPTION_WORD_LIMIT).join(" ");
+            const limited = words.slice(0, DESCRIPTION_WORD_LIMIT).join(' ');
             setFormData({ ...formData, description: limited });
             setDescriptionWordCount(DESCRIPTION_WORD_LIMIT);
         }
@@ -379,21 +199,16 @@ const Register = () => {
     // Update tagline input onChange handler in Step 1:
     const handleTaglineChange = (e) => {
         setFormData({ ...formData, tagline: e.target.value.slice(0, 60) });
-        setTaglineCharCount(
-            e.target.value.length > 60 ? 60 : e.target.value.length,
-        );
+        setTaglineCharCount(e.target.value.length > 60 ? 60 : e.target.value.length);
     };
 
-    //supabase
+    //supabase 
     useEffect(() => {
         const checkUser = async () => {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser(); //get user from supabase
-            if (!user) {
-                //if not signed up then make them to sign up
-                setFormError("Please sign in to submit a project");
-                navigate("/UserRegister");
+            const { data: { user } } = await supabase.auth.getUser(); //get user from supabase
+            if (!user) { //if not signed up then make them to sign up
+                setFormError('Please sign in to submit a project');
+                navigate('/UserRegister');
                 return;
             }
             setUser(user);
@@ -404,8 +219,8 @@ const Register = () => {
     // Load existing project data for editing
     useEffect(() => {
         const loadProjectForEditing = async () => {
-            const editId = searchParams.get("edit");
-            const draftId = searchParams.get("draft");
+            const editId = searchParams.get('edit');
+            const draftId = searchParams.get('draft');
             const projectId = editId || draftId;
 
             if (projectId && user && !projectLoaded) {
@@ -415,59 +230,52 @@ const Register = () => {
 
                 try {
                     const { data: project, error } = await supabase
-                        .from("projects")
-                        .select("*")
-                        .eq("id", projectId)
-                        .eq("user_id", user.id) // Ensure user owns the project
+                        .from('projects')
+                        .select('*')
+                        .eq('id', projectId)
+                        .eq('user_id', user.id) // Ensure user owns the project
                         .single();
 
                     if (error) {
-                        console.error("Error loading project:", error);
-                        setFormError("Project not found or access denied.");
+                        console.error('Error loading project:', error);
+                        setFormError('Project not found or access denied.');
                         return;
                     }
 
                     if (project) {
-                        setEditingLaunched(project.status !== "draft");
+                        setEditingLaunched(project.status !== 'draft');
                         // Pre-fill form with existing data
                         setFormData({
-                            name: project.name || "",
-                            websiteUrl: project.website_url || "",
-                            description: project.description || "",
-                            tagline: project.tagline || "",
+                            name: project.name || '',
+                            websiteUrl: project.website_url || '',
+                            description: project.description || '',
+                            tagline: project.tagline || '',
                         });
                         // Set category if it exists
                         if (project.category_type) {
-                            const categoryOption = categoryOptions
-                                .flatMap((group) => group.options)
-                                .find((option) => option.value === project.category_type);
+                            const categoryOption = categoryOptions.flatMap(group => group.options).find(option => option.value === project.category_type);
                             setSelectedCategory(categoryOption || null);
                         }
                         // Set links if they exist
                         if (project.links && project.links.length > 0) {
                             setLinks(project.links);
                         } else {
-                            setLinks([""]);
+                            setLinks(['']);
                         }
                         // Always start on step 1 for editing, just like new project
                         setStep(1);
-                        if (project.media_urls && project.media_urls.length > 0) {
-                            console.log("Project has existing media:", project.media_urls);
-                        }
-                        if (project.logo_url) {
-                            console.log("Project has existing logo:", project.logo_url);
-                        }
+                        // Project has existing media and logo
                         // Set existing media and logo URLs
                         setExistingMediaUrls(project.media_urls || []);
-                        setExistingLogoUrl(project.logo_url || "");
+                        setExistingLogoUrl(project.logo_url || '');
                         // When loading a draft or edit, set logoFile, thumbnailFile, and coverFiles to URLs from the DB if available
                         setLogoFile(project.logo_url || null);
                         setThumbnailFile(project.thumbnail_url || null);
                         setCoverFiles(project.cover_urls || [null, null, null, null]);
                     }
                 } catch (error) {
-                    console.error("Error loading project for editing:", error);
-                    setFormError("Failed to load project for editing.");
+                    console.error('Error loading project for editing:', error);
+                    setFormError('Failed to load project for editing.');
                 } finally {
                     setLoadingProject(false);
                     setProjectLoaded(true);
@@ -482,13 +290,13 @@ const Register = () => {
     // Auto-save to localStorage
     useEffect(() => {
         if (!isEditing) {
-            const savedDraft = localStorage.getItem("launch_draft");
+            const savedDraft = localStorage.getItem('launch_draft');
             if (savedDraft) {
                 try {
                     const draft = JSON.parse(savedDraft);
                     setFormData(draft.formData || {});
                     setSelectedCategory(draft.selectedCategory || null);
-                    setLinks(draft.links || [""]);
+                    setLinks(draft.links || ['']);
                     setStep(draft.step || 1);
                 } catch { }
             }
@@ -501,80 +309,64 @@ const Register = () => {
             formData,
             selectedCategory,
             links,
-            step,
+            step
         };
-        localStorage.setItem("launch_draft", JSON.stringify(draft));
+        localStorage.setItem('launch_draft', JSON.stringify(draft));
     }, [formData, selectedCategory, links, step]);
 
     // Validation functions for submit only
     const validateStep1 = () => {
         if (!editingLaunched && (!formData.name || !formData.websiteUrl)) {
-            setFormError(
-                "Please fill in all required fields in Basic Info (Step 1).",
-            );
+            setFormError('Please fill in all required fields in Basic Info (Step 1).');
             return false;
         }
         if (!formData.description || !formData.tagline || !selectedCategory) {
-            setFormError(
-                "Please fill in all required fields in Basic Info (Step 1).",
-            );
+            setFormError('Please fill in all required fields in Basic Info (Step 1).');
             return false;
         }
-        setFormError("");
+        setFormError('');
         return true;
     };
     const validateLogo = () => {
         if (!logoFile && !existingLogoUrl) {
-            setFormError("Please upload a logo (Step 3).");
+            setFormError('Please upload a logo (Step 3).');
             return false;
         }
-        setFormError("");
+        setFormError('');
         return true;
     };
 
     // Utility: Check if form is empty (no required fields filled)
     const isFormEmpty = () => {
-        return (
-            !formData.name &&
-            !formData.tagline &&
-            !formData.description &&
-            !formData.websiteUrl &&
-            !selectedCategory
-        );
+        return !formData.name && !formData.tagline && !formData.description && !formData.websiteUrl && !selectedCategory;
     };
 
     //submission handle with media and all other form data
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFormError("");
-        setUploadError("");
+        setFormError('');
+        setUploadError('');
         // Only validate on submit
         const valid1 = validateStep1();
         if (!valid1) return;
         if (!user) {
-            setFormError("Please sign in to submit a project");
-            navigate("/UserRegister");
+            setFormError('Please sign in to submit a project');
+            navigate('/UserRegister');
             return;
         }
-        if (
-            !formData.name ||
-            !formData.websiteUrl ||
-            !formData.tagline ||
-            !selectedCategory ||
-            !formData.description
-        ) {
-            setFormError("Please fill in all required fields in Main Info.");
+        if (!formData.name || !formData.websiteUrl || !formData.tagline || !selectedCategory || !formData.description) {
+            setFormError('Please fill in all required fields in Main Info.');
             return;
         }
         if (!thumbnailFile) {
-            setFormError("Please upload a thumbnail image for the dashboard.");
+            setFormError('Please upload a thumbnail image for the dashboard.');
             return;
         }
         // Logo and cover images: at least one must be present
         const hasLogo = !!logoFile;
-        const hasCover = coverFiles && coverFiles.some((f) => !!f);
+        const hasCover = coverFiles && coverFiles.some(f => !!f);
         if (!hasLogo && !hasCover) {
-            setFormError("Please upload at least a logo or one cover image.");
+            setFormError('Please upload at least a logo or one cover image.');
             return;
         }
         const submissionData = {
@@ -583,31 +375,29 @@ const Register = () => {
             tagline: formData.tagline,
             description: formData.description,
             category_type: selectedCategory?.value,
-            links: links.filter((link) => link.trim() !== ""),
-            built_with: builtWith.map((item) => item.value),
+            links: links.filter(link => link.trim() !== ''),
+            built_with: builtWith.map(item => item.value),
             created_at: new Date().toISOString(),
             user_id: user.id,
             updated_at: new Date().toISOString(),
-            status: "launched",
+            status: 'launched',
         };
         // Generate unique slug
         const baseSlug = slugify(formData.name);
         const uniqueSlug = `${baseSlug}-${nanoid(6)}`;
         submissionData.slug = uniqueSlug;
-        //media into supabase bucket
+        //media into supabase bucket 
         try {
             let fileUrls = [...existingMediaUrls]; // Start with existing media
             if (files.length > 0) {
                 const uploadPromises = files.map(async (file, index) => {
                     const uniqueTimestamp = Date.now() + index;
-                    const filePath = `${uniqueTimestamp}-${sanitizeFileName(file.name || "file")}`;
+                    const filePath = `${uniqueTimestamp}-${sanitizeFileName(file.name)}`;
                     const { data, error } = await supabase.storage
-                        .from("startup-media")
+                        .from('startup-media')
                         .upload(filePath, file);
                     if (error) throw error;
-                    const { data: urlData } = supabase.storage
-                        .from("startup-media")
-                        .getPublicUrl(filePath);
+                    const { data: urlData } = supabase.storage.from('startup-media').getPublicUrl(filePath);
                     return urlData.publicUrl;
                 });
                 const newFileUrls = await Promise.all(uploadPromises);
@@ -616,32 +406,25 @@ const Register = () => {
             submissionData.media_urls = fileUrls;
             // Logo upload
             let logoUrl = existingLogoUrl;
-            if (logoFile && typeof logoFile !== "string") {
-                const compressedLogo = await compressLogo(logoFile);
-                const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name || "file")}`;
-                const { data: logoData, error: logoErrorUpload } =
-                    await supabase.storage
-                        .from("startup-media")
-                        .upload(logoPath, compressedLogo);
+            if (logoFile && typeof logoFile !== 'string') {
+                const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
+                const { data: logoData, error: logoErrorUpload } = await supabase.storage
+                    .from('startup-media')
+                    .upload(logoPath, logoFile);
                 if (logoErrorUpload) throw logoErrorUpload;
-                const { data: logoUrlData } = supabase.storage
-                    .from("startup-media")
-                    .getPublicUrl(logoPath);
+                const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                 logoUrl = logoUrlData.publicUrl;
             }
             submissionData.logo_url = logoUrl;
             // Thumbnail upload
-            let thumbnailUrl = typeof thumbnailFile === "string" ? thumbnailFile : "";
-            if (thumbnailFile && typeof thumbnailFile !== "string") {
-                const compressedThumbnail = await compressThumbnail(thumbnailFile);
-                const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name || "file")}`;
+            let thumbnailUrl = typeof thumbnailFile === 'string' ? thumbnailFile : '';
+            if (thumbnailFile && typeof thumbnailFile !== 'string') {
+                const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
                 const { data: thumbData, error: thumbError } = await supabase.storage
-                    .from("startup-media")
-                    .upload(thumbPath, compressedThumbnail);
+                    .from('startup-media')
+                    .upload(thumbPath, thumbnailFile);
                 if (thumbError) throw thumbError;
-                const { data: thumbUrlData } = supabase.storage
-                    .from("startup-media")
-                    .getPublicUrl(thumbPath);
+                const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                 thumbnailUrl = thumbUrlData.publicUrl;
             }
             submissionData.thumbnail_url = thumbnailUrl;
@@ -650,78 +433,60 @@ const Register = () => {
             if (coverFiles && coverFiles.length > 0) {
                 for (let i = 0; i < coverFiles.length; i++) {
                     const file = coverFiles[i];
-                    if (file && typeof file !== "string") {
-                        const compressedCover = await compressCover(file);
-                        const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name || "file")}`;
-                        const { data: coverData, error: coverErrorUpload } =
-                            await supabase.storage
-                                .from("startup-media")
-                                .upload(coverPath, compressedCover);
+                    if (file && typeof file !== 'string') {
+                        const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
+                        const { data: coverData, error: coverErrorUpload } = await supabase.storage
+                            .from('startup-media')
+                            .upload(coverPath, file);
                         if (coverErrorUpload) throw coverErrorUpload;
-                        const { data: coverUrlData } = supabase.storage
-                            .from("startup-media")
-                            .getPublicUrl(coverPath);
+                        const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                         coverUrls.push(coverUrlData.publicUrl);
-                    } else if (typeof file === "string") {
+                    } else if (typeof file === 'string') {
                         coverUrls.push(file);
                     }
                 }
             }
             submissionData.cover_urls = coverUrls;
 
-            // --- FIX: Always update the draft if it exists ---
-            let draftId = editingProjectId;
-            if (!isEditing) {
-                // Check for an existing draft with same name/user
-                const { data: existingDraft } = await supabase
-                    .from("projects")
-                    .select("id")
-                    .eq("user_id", user.id)
-                    .eq("name", formData.name)
-                    .eq("status", "draft")
-                    .maybeSingle();
-                if (existingDraft && existingDraft.id) {
-                    draftId = existingDraft.id;
-                }
-            }
-            if (draftId) {
-                // Update the draft row to launched
-                submissionData.status = "launched";
+            if (isEditing && editingProjectId) {
+                // Always update the existing project (draft or launched)
+                submissionData.status = 'launched';
                 const { data, error } = await supabase
-                    .from("projects")
+                    .from('projects')
                     .update(submissionData)
-                    .eq("id", draftId);
+                    .eq('id', editingProjectId);
                 if (error) throw error;
-                navigate("/");
+                // Project updated successfully
+                navigate('/');
                 return;
             } else {
-                // Only for truly new projects
-                submissionData.status = "launched";
+                // Only for brand new projects
+                submissionData.status = 'launched';
                 const { data, error } = await supabase
-                    .from("projects")
+                    .from('projects')
                     .insert([submissionData]);
                 if (error) throw error;
             }
 
             setFormData({
-                name: "",
-                websiteUrl: "",
-                description: "",
-                tagline: "",
+                name: '',
+                websiteUrl: '',
+                description: '',
+                tagline: '',
             });
             setSelectedCategory(null);
-            setLinks([""]);
+            setLinks(['']);
             setFiles([]);
             setLogoFile(null);
             setStep(1);
-            setFormError("");
-            setUploadError("");
+            setFormError('');
+            setUploadError('');
             setIsEditing(false);
             setEditingProjectId(null);
-            navigate("/");
+            navigate('/');
         } catch (error) {
-            console.error("Error submitting form:", error);
-            setFormError("Failed to register startup. Please try again.");
+            console.error('Error submitting form:', error);
+            setFormError('Failed to register startup. Please try again.');
         }
     };
 
@@ -734,17 +499,14 @@ const Register = () => {
         try {
             const { data: userData } = await supabase.auth.getUser();
             const user_id = userData?.user?.id;
-            const res = await fetch(
-                import.meta.env.VITE_API_URL + "/generatelaunchdata",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        url: formData.websiteUrl,
-                        user_id,
-                    }),
-                },
-            );
+            const res = await fetch(import.meta.env.VITE_API_URL + "/generatelaunchdata", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url: formData.websiteUrl,
+                    user_id,
+                }),
+            });
             const gptData = await res.json();
             if (gptData.err) throw new Error(gptData.message);
             setFormData((prev) => ({
@@ -754,46 +516,47 @@ const Register = () => {
                 tagline: gptData.tagline,
                 description: gptData.description,
             }));
-            if (gptData.links?.length) setLinks(gptData.links);
+            if (gptData.links?.length) setLinks(gptData.links)
 
-            setFormError("");
-        } catch (error) {
+            setFormError('');
+        }
+        catch (error) {
             console.error("Auto Generate failed :", error);
             setFormError("AI failed to extract startup info...");
         }
-    };
+    }
 
     // Save as Draft handler
     const handleSaveDraft = async () => {
-        setFormError("");
+        setFormError('');
         if (!user) {
-            setFormError("Please sign in to save");
-            navigate("/UserRegister");
+            setFormError('Please sign in to save');
+            navigate('/UserRegister');
             return;
         }
         // Do not save if form is empty
         if (isFormEmpty()) {
-            setFormError("Cannot save an empty draft.");
+            setFormError('Cannot save an empty draft.');
             return;
         }
         // Do not save as draft if editing a launched project
         if (isEditing && editingLaunched) {
-            setFormError("Cannot save launched project as draft.");
+            setFormError('Cannot save launched project as draft.');
             return;
         }
         if (!formData.name) {
-            setFormError("Please enter a project name before saving.");
+            setFormError('Please enter a project name before saving.');
             return;
         }
         // Check for existing draft with same name and user
         let draftId = editingProjectId;
         if (!isEditing) {
             const { data: existingDraft } = await supabase
-                .from("projects")
-                .select("id")
-                .eq("user_id", user.id)
-                .eq("name", formData.name)
-                .eq("status", "draft")
+                .from('projects')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('name', formData.name)
+                .eq('status', 'draft')
                 .maybeSingle();
             if (existingDraft && existingDraft.id) {
                 draftId = existingDraft.id;
@@ -801,30 +564,30 @@ const Register = () => {
         }
         const draftData = {
             name: formData.name,
-            website_url: formData.websiteUrl || "",
-            tagline: formData.tagline || "",
-            description: formData.description || "",
-            category_type: selectedCategory?.value || "",
-            links: links.filter((link) => link.trim() !== ""),
+            website_url: formData.websiteUrl || '',
+            tagline: formData.tagline || '',
+            description: formData.description || '',
+            category_type: selectedCategory?.value || '',
+            links: links.filter(link => link.trim() !== ''),
             created_at: new Date().toISOString(),
             user_id: user.id,
-            status: "draft",
-            slug: slugify(formData.name) + "-" + nanoid(6),
+            status: 'draft',
+            slug: slugify(formData.name) + '-' + nanoid(6),
             media_urls: [...existingMediaUrls],
         };
-        console.log("Saving draft:", draftData);
+        // Saving draft
         try {
             if (draftId) {
                 // Update existing draft
-                await supabase.from("projects").update(draftData).eq("id", draftId);
+                await supabase.from('projects').update(draftData).eq('id', draftId);
             } else {
                 // Insert new draft
-                await supabase.from("projects").insert([draftData]);
+                await supabase.from('projects').insert([draftData]);
             }
             setShowDraftSaved(true);
         } catch (error) {
-            setFormError("Failed to save draft. Please try again.");
-            console.error("Supabase error:", error);
+            setFormError('Failed to save draft. Please try again.');
+            console.error('Supabase error:', error);
         }
     };
 
@@ -844,14 +607,14 @@ const Register = () => {
             try {
                 const draftData = {
                     name: formData.name,
-                    website_url: formData.websiteUrl || "",
-                    tagline: formData.tagline || "",
-                    description: formData.description || "",
-                    category_type: selectedCategory?.value || "",
-                    links: links.filter((link) => link.trim() !== ""),
+                    website_url: formData.websiteUrl || '',
+                    tagline: formData.tagline || '',
+                    description: formData.description || '',
+                    category_type: selectedCategory?.value || '',
+                    links: links.filter(link => link.trim() !== ''),
                     created_at: new Date().toISOString(),
                     user_id: user.id,
-                    status: "draft",
+                    status: 'draft',
                     updated_at: new Date().toISOString(),
                     media_urls: [...existingMediaUrls],
                 };
@@ -859,14 +622,14 @@ const Register = () => {
                 // If not editing, check for an existing draft with same name and user
                 if (!isEditing) {
                     const { data: existingDraft, error: findError } = await supabase
-                        .from("projects")
-                        .select("id")
-                        .eq("user_id", user.id)
-                        .eq("name", formData.name)
-                        .eq("status", "draft")
+                        .from('projects')
+                        .select('id')
+                        .eq('user_id', user.id)
+                        .eq('name', formData.name)
+                        .eq('status', 'draft')
                         .maybeSingle();
                     if (findError) {
-                        console.error("Error checking for existing draft:", findError);
+                        console.error('Error checking for existing draft:', findError);
                     }
                     if (existingDraft && existingDraft.id) {
                         draftId = existingDraft.id;
@@ -875,37 +638,39 @@ const Register = () => {
                 if (isEditing && editingProjectId && !editingLaunched) {
                     // Update existing draft
                     const { error } = await supabase
-                        .from("projects")
+                        .from('projects')
                         .update(draftData)
-                        .eq("id", editingProjectId);
+                        .eq('id', editingProjectId);
                     if (error) {
-                        console.error("Error updating draft:", error);
+                        console.error('Error updating draft:', error);
                     } else {
                         setShowDraftSaved(true);
                     }
                 } else if (draftId) {
                     // Update found draft
                     const { error } = await supabase
-                        .from("projects")
+                        .from('projects')
                         .update(draftData)
-                        .eq("id", draftId);
+                        .eq('id', draftId);
                     if (error) {
-                        console.error("Error updating draft:", error);
+                        console.error('Error updating draft:', error);
                     } else {
                         setShowDraftSaved(true);
                     }
                 } else {
                     // Insert new draft
-                    draftData.slug = slugify(formData.name) + "-" + nanoid(6);
-                    const { error } = await supabase.from("projects").insert([draftData]);
+                    draftData.slug = slugify(formData.name) + '-' + nanoid(6);
+                    const { error } = await supabase
+                        .from('projects')
+                        .insert([draftData]);
                     if (error) {
-                        console.error("Error saving draft:", error);
+                        console.error('Error saving draft:', error);
                     } else {
                         setShowDraftSaved(true);
                     }
                 }
             } catch (error) {
-                console.error("Error saving draft:", error);
+                console.error('Error saving draft:', error);
             }
         }
         setStep(step + 1);
@@ -913,10 +678,10 @@ const Register = () => {
 
     // Remove existing media/logo handlers
     const handleRemoveExistingMedia = (url) => {
-        setExistingMediaUrls(existingMediaUrls.filter((u) => u !== url));
+        setExistingMediaUrls(existingMediaUrls.filter(u => u !== url));
     };
     const handleRemoveExistingLogo = () => {
-        setExistingLogoUrl("");
+        setExistingLogoUrl('');
     };
 
     if (loadingProject) {
@@ -929,40 +694,32 @@ const Register = () => {
 
     return (
         <>
-            <div className="container-custom py-8 sm:py-12">
-                <div className="max-w-2xl mx-auto mt-10 sm:mt-15">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 transition-colors duration-300">
+            <div className="container-custom py-12">
+                <div className="max-w-2xl mx-auto mt-15">
+                    <div className="bg-white rounded-xl shadow-lg p-8">
                         {isEditing && (
                             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                                    {searchParams.get("draft")
-                                        ? "Continue Editing Draft"
-                                        : "Editing Project"}
+                                    {searchParams.get('draft') ? 'Continue Editing Draft' : 'Editing Project'}
                                 </h3>
                                 <p className="text-blue-600 text-sm">
-                                    {searchParams.get("draft")
-                                        ? "Complete your draft and submit it to launch your project."
-                                        : "Make changes to your launched project."}
+                                    {searchParams.get('draft')
+                                        ? 'Complete your draft and submit it to launch your project.'
+                                        : 'Make changes to your launched project.'}
                                 </p>
                             </div>
                         )}
                         <Snackbar
                             open={!!(formError || uploadError)}
                             autoHideDuration={4000}
-                            onClose={() => {
-                                setFormError("");
-                                setUploadError("");
-                            }}
-                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                            sx={{ mt: "70px" }}
+                            onClose={() => { setFormError(''); setUploadError(''); }}
+                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            sx={{ mt: '70px' }}
                         >
                             <Alert
-                                onClose={() => {
-                                    setFormError("");
-                                    setUploadError("");
-                                }}
+                                onClose={() => { setFormError(''); setUploadError(''); }}
                                 severity="warning"
-                                sx={{ width: "100%" }}
+                                sx={{ width: '100%' }}
                             >
                                 {formError || uploadError}
                             </Alert>
@@ -971,22 +728,18 @@ const Register = () => {
                             open={showAutoSave}
                             autoHideDuration={1200}
                             onClose={() => setShowAutoSave(false)}
-                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                            sx={{ mt: "70px" }}
-                        >
-                            <Alert severity="info" sx={{ width: "100%" }}>
-                                Progress auto-saved locally
-                            </Alert>
+                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            sx={{ mt: '70px' }}>
+                            <Alert severity="info" sx={{ width: '100%' }}>Progress auto-saved locally</Alert>
                         </Snackbar>
 
                         <Snackbar
                             open={showDraftSaved}
                             autoHideDuration={3000}
                             onClose={() => setShowDraftSaved(false)}
-                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                            sx={{ mt: "70px" }}
-                        >
-                            <Alert severity="success" sx={{ width: "100%" }}>
+                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            sx={{ mt: '70px' }}>
+                            <Alert severity="success" sx={{ width: '100%' }}>
                                 Launch saved!
                             </Alert>
                         </Snackbar>
@@ -996,54 +749,39 @@ const Register = () => {
                                     <div key={stepNumber} className="flex flex-col items-center">
                                         <div
                                             className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
-                      ${step >= stepNumber ? "border-blue-900 bg-blue-50 text-blue-900" : "border-gray-300 text-gray-400"}`}
+                      ${step >= stepNumber ? 'border-blue-900 bg-blue-50 text-blue-900' : 'border-gray-300 text-gray-400'}`}
                                         >
                                             {stepNumber}
                                         </div>
-                                        <span
-                                            className={`mt-2 text-sm ${step >= stepNumber ? "text-blue-900" : "text-gray-400"}`}
-                                        >
-                                            {stepNumber === 1
-                                                ? "Basic Info"
-                                                : stepNumber === 2
-                                                    ? "Details"
-                                                    : "Media"}
+                                        <span className={`mt-2 text-sm ${step >= stepNumber ? 'text-blue-900' : 'text-gray-400'}`}>
+                                            {stepNumber === 1 ? 'Basic Info' : stepNumber === 2 ? 'Details' : 'Media'}
                                         </span>
                                     </div>
                                 ))}
                             </div>
                             <div className="relative mt-4">
-                                <div
-                                    className="absolute top-0 left-0 h-1 bg-blue-900"
-                                    style={{ width: `${((step - 1) / 3) * 100}%` }}
-                                />
+                                <div className="absolute top-0 left-0 h-1 bg-blue-900" style={{ width: `${((step - 1) / 3) * 100}%` }} />
                                 <div className="h-1 bg-gray-200 w-full" />
                             </div>
                         </div>
                         {step === 1 && (
                             <>
-                                <h3 className="text-lg font-semibold mb-6">
-                                    Tell us more about this launch
-                                </h3>
+                                <h3 className="text-lg font-semibold mb-6">Tell us more about this launch</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Startup Name */}
                                     <div>
-                                        <label className="block font-medium mb-1">
-                                            Startup Name
-                                        </label>
+                                        <label className="block font-medium mb-1">Startup Name</label>
                                         <input
                                             name="name"
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                            maxLength={60}
+                                            maxLength={30}
                                         />
                                     </div>
                                     {/* Website URL */}
                                     <div>
-                                        <label className="block font-medium mb-1">
-                                            Website URL
-                                        </label>
+                                        <label className="block font-medium mb-1">Website URL</label>
                                         <input
                                             name="websiteUrl"
                                             value={formData.websiteUrl}
@@ -1062,15 +800,11 @@ const Register = () => {
                                             className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
                                             maxLength={60}
                                         />
-                                        <div className="text-xs text-gray-400 text-right">
-                                            {taglineCharCount} / 60
-                                        </div>
+                                        <div className="text-xs text-gray-400 text-right">{taglineCharCount} / 60</div>
                                     </div>
                                     {/* Category(ies) */}
                                     <div>
-                                        <label className="block font-semibold mb-1">
-                                            Category(ies)
-                                        </label>
+                                        <label className="block font-semibold mb-1">Category(ies)</label>
                                         <Select
                                             options={categoryOptions}
                                             isClearable={isClearable}
@@ -1082,9 +816,7 @@ const Register = () => {
                                     </div>
                                     {/* Description */}
                                     <div className="md:col-span-2">
-                                        <label className="block font-semibold mb-1 mt-6">
-                                            Description
-                                        </label>
+                                        <label className="block font-semibold mb-1 mt-6">Description</label>
                                         <textarea
                                             name="description"
                                             value={formData.description}
@@ -1093,10 +825,9 @@ const Register = () => {
                                             className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
                                             placeholder="Describe your startup"
                                         />
-                                        <div className="text-xs text-gray-400 text-right">
-                                            {descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}
-                                        </div>
+                                        <div className="text-xs text-gray-400 text-right">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
                                     </div>
+
                                 </div>
                             </>
                         )}
@@ -1109,30 +840,19 @@ const Register = () => {
                                         {logoFile && (
                                             <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 border">
                                                 <img
-                                                    src={
-                                                        typeof logoFile === "string"
-                                                            ? logoFile
-                                                            : URL.createObjectURL(logoFile)
-                                                    }
+                                                    src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)}
                                                     alt="Logo"
                                                     className="w-full h-full object-cover"
                                                 />
                                                 <button
                                                     onClick={removeLogo}
                                                     className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
-                                                >
-                                                    ✕
-                                                </button>
+                                                >✕</button>
                                             </div>
                                         )}
                                         {!logoFile && (
                                             <label className="w-24 h-24 flex items-center justify-center rounded-xl border-2 border-dashed bg-gray-50 cursor-pointer">
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleLogoChange}
-                                                    className="hidden"
-                                                />
+                                                <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
                                                 <span className="text-2xl text-gray-400">+</span>
                                             </label>
                                         )}
@@ -1143,90 +863,56 @@ const Register = () => {
                                 </div>
                                 {/* Thumbnail */}
                                 <div>
-                                    <label className="block font-semibold mb-2">
-                                        Thumbnail (Dashboard)
-                                    </label>
+                                    <label className="block font-semibold mb-2">Thumbnail (Dashboard)</label>
                                     <div className="flex items-center">
                                         {thumbnailFile && (
                                             <div className="relative w-40 h-28 rounded-lg overflow-hidden bg-gray-100 border">
                                                 <img
-                                                    src={
-                                                        typeof thumbnailFile === "string"
-                                                            ? thumbnailFile
-                                                            : URL.createObjectURL(thumbnailFile)
-                                                    }
+                                                    src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)}
                                                     alt="Thumbnail"
                                                     className="w-full h-full object-cover"
                                                 />
                                                 <button
                                                     onClick={removeThumbnail}
                                                     className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
-                                                >
-                                                    ✕
-                                                </button>
+                                                >✕</button>
                                             </div>
                                         )}
                                         {!thumbnailFile && (
                                             <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 cursor-pointer">
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={handleThumbnailChange}
-                                                    className="hidden"
-                                                />
+                                                <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
                                                 <span className="text-2xl text-gray-400">+</span>
                                             </label>
                                         )}
                                         <div className="ml-6 text-sm text-gray-500">
-                                            Recommended: 500x500px or 600x400px. Max 2MB.
-                                            <br />
-                                            This will be shown in the dashboard.
+                                            Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
                                         </div>
                                     </div>
                                 </div>
                                 {/* Cover Images */}
                                 <div>
-                                    <label className="block font-semibold mb-2">
-                                        Cover image(s)
-                                    </label>
+                                    <label className="block font-semibold mb-2">Cover image(s)</label>
                                     <div className="flex gap-4">
-                                        {[0, 1, 2, 3].map((idx) =>
+                                        {[0, 1, 2, 3].map(idx => (
                                             coverFiles[idx] ? (
-                                                <div
-                                                    key={idx}
-                                                    className="relative w-32 h-20 rounded-lg overflow-hidden bg-gray-100 border"
-                                                >
+                                                <div key={idx} className="relative w-32 h-20 rounded-lg overflow-hidden bg-gray-100 border">
                                                     <img
-                                                        src={
-                                                            typeof coverFiles[idx] === "string"
-                                                                ? coverFiles[idx]
-                                                                : URL.createObjectURL(coverFiles[idx])
-                                                        }
+                                                        src={typeof coverFiles[idx] === 'string' ? coverFiles[idx] : URL.createObjectURL(coverFiles[idx])}
                                                         alt={`Cover ${idx + 1}`}
                                                         className="w-full h-full object-cover"
                                                     />
                                                     <button
                                                         onClick={() => removeCover(idx)}
                                                         className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
-                                                    >
-                                                        ✕
-                                                    </button>
+                                                    >✕</button>
                                                 </div>
                                             ) : (
-                                                <label
-                                                    key={idx}
-                                                    className="w-32 h-20 flex items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 cursor-pointer"
-                                                >
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => handleCoverChange(e, idx)}
-                                                        className="hidden"
-                                                    />
+                                                <label key={idx} className="w-32 h-20 flex items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 cursor-pointer">
+                                                    <input type="file" accept="image/*" onChange={e => handleCoverChange(e, idx)} className="hidden" />
                                                     <span className="text-2xl text-gray-400">+</span>
                                                 </label>
-                                            ),
-                                        )}
+                                            )
+                                        ))}
                                     </div>
                                     <div className="text-sm text-gray-500 mt-2">
                                         Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
@@ -1242,41 +928,19 @@ const Register = () => {
                                     {links.map((link, index) => {
                                         const { label, icon } = getLinkType(link);
                                         return (
-                                            <div
-                                                key={index}
-                                                className="flex items-center space-x-2 mb-2"
-                                            >
+                                            <div key={index} className="flex items-center space-x-2 mb-2">
                                                 <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
                                                     <span>{icon}</span>
                                                     <span>{label}</span>
                                                 </span>
-                                                <input
-                                                    type="url"
-                                                    value={link}
-                                                    onChange={(e) => updateLink(index, e.target.value)}
-                                                    placeholder={`Enter ${label} URL`}
-                                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
-                                                />
+                                                <input type="url" value={link} onChange={e => updateLink(index, e.target.value)} placeholder={`Enter ${label} URL`} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg" />
                                                 {links.length > 1 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeLink(index)}
-                                                        className="p-2 text-red-600"
-                                                    >
-                                                        <X className="w-5 h-5" />
-                                                    </button>
+                                                    <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600"><X className="w-5 h-5" /></button>
                                                 )}
                                             </div>
                                         );
                                     })}
-                                    <button
-                                        type="button"
-                                        onClick={addLink}
-                                        className="flex items-center text-blue-900 mt-1"
-                                    >
-                                        <Plus className="w-5 h-5 mr-1" />
-                                        Add another link
-                                    </button>
+                                    <button type="button" onClick={addLink} className="flex items-center text-blue-900 mt-1"><Plus className="w-5 h-5 mr-1" />Add another link</button>
                                 </div>
                                 {/* Built With (optional) */}
                                 <div>
@@ -1286,20 +950,8 @@ const Register = () => {
                                 {/* Add your team/collaborators input fields here if needed */}
                                 {/* Any other extras */}
                                 <div className="flex justify-between mt-8">
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(2)}
-                                        className="px-6 py-3 bg-gray-100 rounded-lg font-semibold"
-                                    >
-                                        Previous
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleSubmit}
-                                        className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold ml-auto"
-                                    >
-                                        Submit
-                                    </button>
+                                    <button type="button" onClick={() => setStep(2)} className="px-6 py-3 bg-gray-100 rounded-lg font-semibold">Previous</button>
+                                    <button type="button" onClick={handleSubmit} className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold ml-auto">Submit</button>
                                 </div>
                             </div>
                         )}

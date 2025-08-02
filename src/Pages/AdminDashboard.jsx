@@ -176,7 +176,7 @@ const AdminDashboard = () => {
 
   const fetchProjects = async () => {
     try {
-      console.log("Fetching projects..."); // Debug log
+      // Fetching projects...
 
       const { data, error } = await supabase
         .from("projects")
@@ -189,8 +189,7 @@ const AdminDashboard = () => {
         console.error("Error fetching projects:", error);
         setProjects([]);
       } else {
-        console.log("Projects data:", data); // Debug log
-        console.log("Number of projects:", data?.length || 0);
+        // Projects data loaded
         setProjects(data || []);
       }
     } catch (error) {
@@ -198,7 +197,7 @@ const AdminDashboard = () => {
       setProjects([]);
     } finally {
       setLoadingProjects(false);
-      console.log("Finished loading projects"); // Debug log
+      // Finished loading projects
     }
   };
 
@@ -386,7 +385,7 @@ const AdminDashboard = () => {
 
   // Fetch pitches
   const fetchPitches = async () => {
-    console.log("Fetching pitches..."); // Debug log
+    // Fetching pitches...
     setLoadingPitches(true);
 
     try {
@@ -411,7 +410,7 @@ const AdminDashboard = () => {
         return;
       }
 
-      console.log("Pitches data:", pitchesData);
+      // Pitches data loaded
 
       // Then, fetch user profiles for all unique user IDs
       if (pitchesData && pitchesData.length > 0) {
@@ -437,7 +436,7 @@ const AdminDashboard = () => {
             profiles: profilesMap[pitch.user_id],
           }));
 
-          console.log("Combined data:", combinedData);
+          // Combined data loaded
           setPitches(combinedData);
         }
       } else {

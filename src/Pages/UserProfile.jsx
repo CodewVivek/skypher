@@ -67,22 +67,22 @@ const UserProfileSidebar = ({
       ></div>
 
       <aside
-        className={`fixed top-0 left-0 w-64 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6 flex-col gap-8 z-30 transform transition-transform duration-300 ease-in-out md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:flex md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"} transition-colors duration-300`}
+        className={`fixed top-0 left-0 w-64 h-full bg-white border-r border-gray-200 p-6 flex-col gap-8 z-30 transform transition-transform duration-300 ease-in-out md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:flex md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"} transition-colors duration-300`}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 md:hidden"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 md:hidden"
         >
           <X className="w-6 h-6" />
         </button>
         <div className="mt-8 md:mt-0">
-          <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
+          <h2 className="text-lg font-bold mb-4 text-gray-800">
             My Activity
           </h2>
-          <ul className="space-y-3 text-gray-600 dark:text-gray-300 font-medium">
+          <ul className="space-y-3 text-gray-600 font-medium">
             <li
               onClick={() => setActiveTab("projects")}
-              className={`flex items-center justify-between text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer p-2 rounded-lg ${activeTab === "projects" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : ""}`}
+              className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${activeTab === "projects" ? "bg-blue-50 text-blue-600" : ""}`}
             >
               <span className="flex items-center gap-3">
                 <Briefcase className="w-5 h-5" />
@@ -91,14 +91,14 @@ const UserProfileSidebar = ({
             </li>
             <li
               onClick={() => setActiveTab("comments")}
-              className={`flex items-center justify-between text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer p-2 rounded-lg ${activeTab === "comments" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : ""}`}
+              className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${activeTab === "comments" ? "bg-blue-50 text-blue-600" : ""}`}
             >
               <span className="flex items-center gap-3">
                 <MessageCircle className="w-5 h-5" />
                 Comments
               </span>
               <span
-                className={`font-semibold px-2.5 py-0.5 rounded-full ${activeTab === "comments" ? "bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"}`}
+                className={`font-semibold px-2.5 py-0.5 rounded-full ${activeTab === "comments" ? "bg-blue-100 text-blue-800" : "bg-gray-200 text-gray-700"}`}
               >
                 {comments.length}
               </span>
@@ -107,10 +107,10 @@ const UserProfileSidebar = ({
         </div>
         {activeTab === "projects" && (
           <div className="mt-8">
-            <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">
+            <h2 className="text-lg font-bold mb-4 text-gray-800">
               My Launches
             </h2>
-            <ul className="space-y-3 text-gray-600 dark:text-gray-300 font-medium">
+            <ul className="space-y-3 text-gray-600 font-medium">
               <li
                 onClick={() => setProjectFilter("all")}
                 className={`flex items-center justify-between text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "all" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : ""}`}
@@ -628,7 +628,7 @@ const UserProfile = () => {
   );
 
   return (
-    <div className="flex bg-gray-50 dark:bg-gray-900 min-h-screen font-sans transition-colors duration-300">
+    <div className="flex bg-gray-50 min-h-screen font-sans transition-colors duration-300">
       {isOwner && (
         <UserProfileSidebar
           projects={projects}
@@ -648,7 +648,7 @@ const UserProfile = () => {
           <div className="md:hidden pb-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-white dark:bg-gray-800 p-2 text-sm font-semibold text-gray-700 dark:text-gray-200 shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300"
+              className="inline-flex items-center gap-2 rounded-lg bg-white p-2 text-sm font-semibold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-100 transition-colors duration-300"
             >
               <Menu className="w-5 h-5" />
               Profile Menu
@@ -656,35 +656,35 @@ const UserProfile = () => {
           </div>
         )}
         {/* Profile Info */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:p-8 mb-8 transition-colors duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8 transition-colors duration-300">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <img
               src={
                 profile.avatar_url ||
                 "https://api.dicebear.com/6.x/initials/svg?seed=" +
-                  profile.username
+                profile.username
               }
               alt="Profile"
-              className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white dark:border-gray-700 object-cover shadow-md"
+              className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white object-cover shadow-md"
               loading="lazy"
             />
             <div className="flex-1 text-center md:text-left">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 {profile.full_name || profile.username || "Unnamed User"}
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">
+              <p className="text-gray-500 text-sm mb-3">
                 {profile.email || "No email provided"}
               </p>
-              <p className="text-gray-700 dark:text-gray-300 mb-4 max-w-xl mx-auto md:mx-0">
+              <p className="text-gray-700 mb-4 max-w-xl mx-auto md:mx-0">
                 {profile.bio || "This user has not written a bio yet"}
               </p>
-              <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-500 dark:text-gray-400">
+              <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-500">
                 {profile.twitter && (
                   <a
                     href={profile.twitter}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors"
+                    className="hover:text-blue-500 flex items-center gap-1.5 transition-colors"
                   >
                     <Twitter className="w-4 h-4" />
                     <span>Twitter</span>
@@ -695,7 +695,7 @@ const UserProfile = () => {
                     href={profile.linkedin}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-blue-700 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors"
+                    className="hover:text-blue-700 flex items-center gap-1.5 transition-colors"
                   >
                     <Linkedin className="w-4 h-4" />
                     <span>LinkedIn</span>
@@ -706,7 +706,7 @@ const UserProfile = () => {
                     href={profile.youtube}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-red-600 dark:hover:text-red-400 flex items-center gap-1.5 transition-colors"
+                    className="hover:text-red-600 flex items-center gap-1.5 transition-colors"
                   >
                     <Youtube className="w-4 h-4" />
                     <span>YouTube</span>
@@ -717,7 +717,7 @@ const UserProfile = () => {
                     href={profile.portfolio}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-gray-800 dark:hover:text-gray-300 flex items-center gap-1.5 transition-colors"
+                    className="hover:text-gray-800 flex items-center gap-1.5 transition-colors"
                   >
                     <Briefcase className="w-4 h-4" />
                     <span>Portfolio</span>
@@ -739,21 +739,19 @@ const UserProfile = () => {
         <div className="flex space-x-8 border-b border-gray-200 dark:border-gray-700 mb-6">
           <button
             onClick={() => setActiveTab("projects")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "projects"
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "projects"
                 ? "border-blue-500 text-blue-600 dark:text-blue-400"
                 : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
+              }`}
           >
             Projects ({filteredProjects.length})
           </button>
           <button
             onClick={() => setActiveTab("pitches")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "pitches"
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches"
                 ? "border-blue-500 text-blue-600 dark:text-blue-400"
                 : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
+              }`}
           >
             Pitches ({userPitches.length})
           </button>
@@ -764,7 +762,7 @@ const UserProfile = () => {
             {isOwner &&
               projectFilter !== "launched" &&
               filteredProjects.filter((p) => p.status === "draft").length >
-                0 && (
+              0 && (
                 <div className="mb-10">
                   <h3 className="text-xl font-bold text-gray-800 mb-4">
                     Drafts
@@ -978,7 +976,7 @@ const UserProfile = () => {
                           src={
                             profile.avatar_url ||
                             "https://api.dicebear.com/6.x/initials/svg?seed=" +
-                              profile.username
+                            profile.username
                           }
                           alt="author avatar"
                           className="w-8 h-8 rounded-full"

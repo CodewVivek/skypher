@@ -101,8 +101,7 @@ const Settings = () => {
   const handleSave = async () => {
     if (!profile) return;
     setSaving(true);
-    console.log("Saving profile with id:", profile.id);
-    console.log("Form data:", formData);
+    // Saving profile
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -117,7 +116,7 @@ const Settings = () => {
       .eq("id", profile.id);
     setSaving(false);
     if (error) {
-      console.log("Supabase update error:", error);
+      // Supabase update error
       setSnackbar({
         open: true,
         message: "Failed to save changes",
@@ -177,7 +176,7 @@ const Settings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 transition-colors duration-300">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -188,10 +187,10 @@ const Settings = () => {
       case "profile":
         return (
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
               Profile Information
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-sm text-gray-500 mb-6">
               Update your personal details here.
             </p>
             <div className="space-y-6">
@@ -202,7 +201,7 @@ const Settings = () => {
                     `https://api.dicebear.com/6.x/initials/svg?seed=${profile?.username}`
                   }
                   alt="Profile Avatar"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-white shadow"
                 />
                 <div className="flex items-center gap-3">
                   <button
@@ -223,7 +222,7 @@ const Settings = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Name
                   </label>
                   <input
@@ -231,28 +230,28 @@ const Settings = () => {
                     name="full_name"
                     value={formData.full_name}
                     onChange={handleFormChange}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Email Address
                   </label>
                   <input
                     type="email"
                     value={profile?.email || ""}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-600 cursor-not-allowed text-gray-500 dark:text-gray-400"
+                    className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 cursor-not-allowed text-gray-500"
                     readOnly
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Bio
                 </label>
                 <textarea
                   name="bio"
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
                   rows="4"
                   placeholder="Tell us about yourself..."
                   value={formData.bio}
@@ -265,22 +264,22 @@ const Settings = () => {
       case "socials":
         return (
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
               Social Links
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-sm text-gray-500 mb-6">
               Connect your other accounts.
             </p>
             <div className="space-y-4">
               {["twitter", "linkedin", "portfolio", "youtube"].map((social) => (
                 <div key={social}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize mb-1">
+                  <label className="block text-sm font-medium text-gray-700 capitalize mb-1">
                     {social}
                   </label>
                   <input
                     type="url"
                     name={social}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
                     placeholder={`https://...`}
                     value={formData[social]}
                     onChange={handleFormChange}
@@ -293,17 +292,17 @@ const Settings = () => {
       case "danger":
         return (
           <div>
-            <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-1">
+            <h2 className="text-2xl font-bold text-red-600 mb-1">
               Danger Zone
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <p className="text-sm text-gray-500 mb-6">
               Manage your account deletion here.
             </p>
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-              <h3 className="font-bold text-red-800 dark:text-red-200">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h3 className="font-bold text-red-800">
                 Delete Your Account
               </h3>
-              <p className="text-sm text-red-700 dark:text-red-300 mt-2 mb-4">
+              <p className="text-sm text-red-700 mt-2 mb-4">
                 Once you delete your account, there is no going back. Please be
                 certain.
               </p>
@@ -322,7 +321,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 transition-colors duration-300">
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -340,9 +339,9 @@ const Settings = () => {
         </MuiAlert>
       </Snackbar>
 
-      <header className="bg-white dark:bg-gray-800 shadow-sm transition-colors duration-300">
+      <header className="bg-white shadow-sm transition-colors duration-300">
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-gray-900">
             Account Settings
           </h1>
         </div>
@@ -354,28 +353,28 @@ const Settings = () => {
             <nav className="space-y-1">
               <a
                 onClick={() => setActiveTab("profile")}
-                className={`cursor-pointer group rounded-md px-3 py-2 flex items-center text-sm font-medium ${activeTab === "profile" ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400" : "text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                className={`cursor-pointer group rounded-md px-3 py-2 flex items-center text-sm font-medium ${activeTab === "profile" ? "bg-gray-100 text-blue-600" : "text-gray-900 hover:bg-gray-50"}`}
               >
                 <User
-                  className={`-ml-1 mr-3 h-6 w-6 ${activeTab === "profile" ? "text-blue-500" : "text-gray-400 dark:text-gray-500"}`}
+                  className={`-ml-1 mr-3 h-6 w-6 ${activeTab === "profile" ? "text-blue-500" : "text-gray-400"}`}
                 />
                 <span className="truncate">Profile</span>
               </a>
               <a
                 onClick={() => setActiveTab("socials")}
-                className={`cursor-pointer group rounded-md px-3 py-2 flex items-center text-sm font-medium ${activeTab === "socials" ? "bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400" : "text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                className={`cursor-pointer group rounded-md px-3 py-2 flex items-center text-sm font-medium ${activeTab === "socials" ? "bg-gray-100 text-blue-600" : "text-gray-900 hover:bg-gray-50"}`}
               >
                 <LinkIcon
-                  className={`-ml-1 mr-3 h-6 w-6 ${activeTab === "socials" ? "text-blue-500" : "text-gray-400 dark:text-gray-500"}`}
+                  className={`-ml-1 mr-3 h-6 w-6 ${activeTab === "socials" ? "text-blue-500" : "text-gray-400"}`}
                 />
                 <span className="truncate">Socials</span>
               </a>
               <a
                 onClick={() => setActiveTab("danger")}
-                className={`cursor-pointer group rounded-md px-3 py-2 flex items-center text-sm font-medium ${activeTab === "danger" ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"}`}
+                className={`cursor-pointer group rounded-md px-3 py-2 flex items-center text-sm font-medium ${activeTab === "danger" ? "bg-red-50 text-red-600" : "text-gray-900 hover:bg-gray-50"}`}
               >
                 <Trash2
-                  className={`-ml-1 mr-3 h-6 w-6 ${activeTab === "danger" ? "text-red-500" : "text-gray-400 dark:text-gray-500"}`}
+                  className={`-ml-1 mr-3 h-6 w-6 ${activeTab === "danger" ? "text-red-500" : "text-gray-400"}`}
                 />
                 <span className="truncate">Danger Zone</span>
               </a>
@@ -390,10 +389,10 @@ const Settings = () => {
               }}
             >
               <div className="shadow sm:rounded-md sm:overflow-hidden">
-                <div className="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6 transition-colors duration-300">
+                <div className="bg-white py-6 px-4 space-y-6 sm:p-6 transition-colors duration-300">
                   {renderContent()}
                 </div>
-                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 text-right sm:px-6 transition-colors duration-300">
+                <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 transition-colors duration-300">
                   <button
                     type="submit"
                     className="bg-blue-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -410,31 +409,31 @@ const Settings = () => {
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all transition-colors duration-300">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all transition-colors duration-300">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 sm:mx-0">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0">
                   <AlertTriangle className="h-6 w-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-bold text-gray-900">
                   Delete Account
                 </h3>
               </div>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                className="text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-gray-600 mb-6">
               Are you sure you want to delete your account? All of your data
               will be permanently removed. This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-5 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-semibold text-sm transition-all"
+                className="px-5 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-sm transition-all"
               >
                 Cancel
               </button>

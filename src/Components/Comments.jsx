@@ -146,7 +146,7 @@ const Comments = ({ projectId }) => {
       return (
         <div
           key={comment.id}
-          className={`mb-4 ${level > 0 ? "pl-6 border-l-4 border-blue-100 dark:border-blue-900" : ""} transition-all`}
+          className={`mb-4 ${level > 0 ? "pl-6 border-l-4 border-blue-100" : ""} transition-all`}
           style={{ marginLeft: level > 0 ? `${level * 12}px` : 0 }}
         >
           <div className="flex items-start gap-4 group relative">
@@ -156,32 +156,32 @@ const Comments = ({ projectId }) => {
               className="w-8 h-8 rounded-full object-cover mt-1 shadow"
             />
 
-            <div className="flex-1 bg-gray-50 dark:bg-gray-700 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600">
+            <div className="flex-1 bg-gray-50 p-3 rounded-xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-800 dark:text-white text-sm">
+                  <span className="font-semibold text-gray-800 text-sm">
                     {comment.profiles?.full_name || "User"}
                   </span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                  <span className="text-xs text-gray-400">
                     {getRelativeTime(comment.created_at)}
                   </span>
                 </div>
               </div>
 
               {isDeleted ? (
-                <p className="italic text-gray-400 dark:text-gray-500 text-sm mb-1">
+                <p className="italic text-gray-400 text-sm mb-1">
                   This comment was deleted.
                 </p>
               ) : (
-                <p className="text-gray-800 dark:text-gray-200 text-sm mb-2 whitespace-pre-line break-words leading-relaxed">
+                <p className="text-gray-800 text-sm mb-2 whitespace-pre-line break-words leading-relaxed">
                   {comment.content}
                 </p>
               )}
 
-              <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500 dark:text-gray-400 font-medium">
+              <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500 font-medium">
                 {!isDeleted && user && (
                   <button
-                    className="hover:text-blue-500 dark:hover:text-blue-400 transition"
+                    className="hover:text-blue-500 transition"
                     onClick={() => setReplyTo(comment.id)}
                   >
                     Reply
@@ -191,7 +191,7 @@ const Comments = ({ projectId }) => {
                   user &&
                   (user.id === comment.user_id || userRole === "admin") && (
                     <button
-                      className="hover:text-red-500 dark:hover:text-red-400 transition"
+                      className="hover:text-red-500 transition"
                       onClick={() =>
                         userRole === "admin"
                           ? handleAdminDelete(comment)
@@ -203,7 +203,7 @@ const Comments = ({ projectId }) => {
                   )}
                 {!isDeleted && user && user.id !== comment.user_id && (
                   <button
-                    className="hover:text-yellow-600 dark:hover:text-yellow-400 transition"
+                    className="hover:text-yellow-600 transition"
                     onClick={() => {
                       setReportCommentId(comment.id);
                       setIsReportModalOpen(true);
@@ -214,7 +214,7 @@ const Comments = ({ projectId }) => {
                 )}
                 {hasReplies && (
                   <button
-                    className="hover:text-blue-500 dark:hover:text-blue-400 transition"
+                    className="hover:text-blue-500 transition"
                     onClick={() => toggleReplies(comment.id)}
                   >
                     {repliesOpen
@@ -237,7 +237,7 @@ const Comments = ({ projectId }) => {
                     value={replyContent}
                     onChange={(e) => setReplyContent(e.target.value)}
                     placeholder="Write a reply..."
-                    className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-gray-900 placeholder-gray-500"
                   />
                   <button
                     type="submit"
@@ -247,7 +247,7 @@ const Comments = ({ projectId }) => {
                   </button>
                   <button
                     type="button"
-                    className="text-xs text-gray-400 dark:text-gray-500 hover:underline"
+                    className="text-xs text-gray-400 hover:underline"
                     onClick={() => setReplyTo(null)}
                   >
                     Cancel
@@ -268,7 +268,7 @@ const Comments = ({ projectId }) => {
 
   return (
     <div className="">
-      <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
+      <h3 className="text-xl font-bold mb-4 text-gray-800">
         Join the Conversation
       </h3>
       {user ? (
@@ -276,13 +276,13 @@ const Comments = ({ projectId }) => {
           onSubmit={handleAddComment}
           className="mb-6 flex gap-2 items-center"
         >
-          <div className="flex items-center w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-sm px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-300 hover:shadow-md h-20">
+          <div className="flex items-center w-full bg-white border border-gray-200 rounded-2xl shadow-sm px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all duration-300 hover:shadow-md h-20">
             <input
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="💡 Share your thoughts, they might spark something big!"
-              className="flex-1 bg-transparent text-base placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none pr-3 text-gray-900 dark:text-white"
+              className="flex-1 bg-transparent text-base placeholder-gray-500 focus:outline-none pr-3 text-gray-900"
             />
             <button
               type="submit"
@@ -293,13 +293,13 @@ const Comments = ({ projectId }) => {
           </div>
         </form>
       ) : (
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+        <p className="text-sm text-gray-500 mb-6">
           Sign in to comment.
         </p>
       )}
       <div>
         {loading ? (
-          <div className="text-gray-400 dark:text-gray-500">
+          <div className="text-gray-400">
             Loading comments...
           </div>
         ) : (
