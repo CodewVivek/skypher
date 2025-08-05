@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
-    Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User, Menu, X
+    Rocket, CirclePlus, CircleUserRound, Settings, LogOut, User, Menu, X, Video
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import toast from "react-hot-toast";
+import NotificationBell from "./NotificationBell";
+import LaunchDropdown from "../Components/LaunchDropdown";
 
 const Header = () => {
     const [user, setUser] = useState(null);
@@ -109,13 +111,14 @@ const Header = () => {
     };
 
     return (
-        <header className="fixed top-0 left-0 right-0 bg-blue-400 text-white z-50 shadow-lg ">
+        <header className="fixed top-0 left-0 right-0 bg-white text-white z-50 ">
             <div className="max-w-7xl mx-auto px-4 h-16">
                 <div className="flex justify-between items-center h-full">
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2 group">
-                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                            <Rocket className="w-5 h-5 text-white" />
+                        <div className="w-8 h-8  flex items-center justify-center">
+                            <img src="/images/r6_circle.png" alt="l" />
+
                         </div>
                         <span className="text-xl font-bold tracking-wide">
                             <span className="text-black">Launch</span>
@@ -125,24 +128,23 @@ const Header = () => {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-6">
-                        <Link to="/submit" className="text-white/90 hover:text-white font-medium flex items-center gap-2">
-                            <CirclePlus className="w-4 h-4" />
-                            Submit
+                        <LaunchDropdown user={user} />
+                        <Link to="/coming-soon" className="text-gray-800 hover:text-black font-medium flex items-center gap-2">
+                            <Rocket className="w-4 h-4" />
+                            Coming Soon
                         </Link>
 
                         {!user && (
-                            <Link to="/launchpage" className="text-white/90 hover:text-white font-medium">
+                            <Link to="/launchpage" className="text-gray-800 hover:text-white font-medium">
                                 Get Started
                             </Link>
                         )}
 
-                        <Link to="/news" className="text-white/90 hover:text-white font-medium">News</Link>
-
-                        <a href="https://startup.jobs/" className="text-white/90 hover:text-white font-medium">Jobs</a>
-
                         {userRole === "admin" && (
-                            <Link to="/admin" className="text-white/90 hover:text-white font-medium">Admin</Link>
+                            <Link to="/admin" className="text-gray-800 hover:text-white font-medium">Admin</Link>
                         )}
+
+                        {user && <NotificationBell />}
 
                         {/* User Dropdown */}
                         <div className="user-dropdown relative">
@@ -289,47 +291,58 @@ const Header = () => {
                         <div className="px-4 py-4 space-y-3">
                             <Link
                                 to="/submit"
-                                className="flex items-center space-x-2 text-white/90 hover:text-white font-medium py-2"
+                                className="flex items-center space-x-2 text-gray-800 hover:text-white font-medium py-2"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 <CirclePlus className="w-5 h-5" />
                                 <span>Submit Startup</span>
                             </Link>
 
+                            {user && (
+                                <Link
+                                    to="/upload-pitch"
+                                    className="flex items-center space-x-2 text-gray-800 hover:text-white font-medium py-2"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <Video className="w-5 h-5" />
+                                    <span>Upload Pitch</span>
+                                </Link>
+                            )}
+
+                            <Link
+                                to="/coming-soon"
+                                className="flex items-center space-x-2 text-gray-800 hover:text-white font-medium py-2"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <Rocket className="w-5 h-5" />
+                                <span>Coming Soon</span>
+                            </Link>
+
                             {!user && (
                                 <Link
                                     to="/launchpage"
-                                    className="block text-white/90 hover:text-white font-medium py-2"
+                                    className="block text-gray-800 hover:text-white font-medium py-2"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     Get Started
                                 </Link>
                             )}
 
-                            <Link
-                                to="/news"
-                                className="block text-white/90 hover:text-white font-medium py-2"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                News
-                            </Link>
-
-                            <a
-                                href="https://startup.jobs/"
-                                className="block text-white/90 hover:text-white font-medium py-2"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                Jobs
-                            </a>
-
                             {userRole === "admin" && (
                                 <Link
                                     to="/admin"
-                                    className="block text-white/90 hover:text-white font-medium py-2"
+                                    className="block text-gray-800 hover:text-white font-medium py-2"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     Admin
                                 </Link>
+                            )}
+
+                            {user && (
+                                <div className="flex items-center space-x-2 text-gray-800 hover:text-white font-medium py-2">
+                                    <NotificationBell />
+                                    <span>Notifications</span>
+                                </div>
                             )}
                         </div>
                     </div>

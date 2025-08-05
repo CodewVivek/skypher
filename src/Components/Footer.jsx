@@ -74,17 +74,10 @@ const Footer = () => {
                   Submit Startup
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/news"
-                  className="text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  News
-                </Link>
-              </li>
+
               <li>
                 <a
-                  href="https://startup.jobs/"
+                  href="https://www.tg10x.com/"
                   className="text-gray-600 hover:text-blue-600 transition-colors"
                 >
                   Startup Jobs

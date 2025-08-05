@@ -241,7 +241,7 @@ const Comments = ({ projectId }) => {
                   />
                   <button
                     type="submit"
-                    className="bg-blue-500 text-white text-xs px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg transition"
                   >
                     Reply
                   </button>
@@ -286,7 +286,7 @@ const Comments = ({ projectId }) => {
             />
             <button
               type="submit"
-              className="bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl hover:bg-blue-600 transition-all text-sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-xl transition-all text-sm"
             >
               Post
             </button>

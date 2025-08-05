@@ -113,42 +113,42 @@ const UserProfileSidebar = ({
             <ul className="space-y-3 text-gray-600 font-medium">
               <li
                 onClick={() => setProjectFilter("all")}
-                className={`flex items-center justify-between text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "all" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : ""}`}
+                className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "all" ? "bg-blue-50  text-blue-600" : ""}`}
               >
                 <span className="flex items-center gap-3">
                   <Rss className="w-5 h-5" />
                   All
                 </span>
                 <span
-                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "all" ? "bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"}`}
+                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "all" ? "bg-blue-100 text-blue-800" : "bg-gray-200 text-gray-700"}`}
                 >
                   {projects.length}
                 </span>
               </li>
               <li
                 onClick={() => setProjectFilter("draft")}
-                className={`flex items-center justify-between text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "draft" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : ""}`}
+                className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "draft" ? "bg-blue-50 text-blue-600" : ""}`}
               >
                 <span className="flex items-center gap-3">
                   <Edit3 className="w-5 h-5" />
                   Drafts
                 </span>
                 <span
-                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "draft" ? "bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200" : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"}`}
+                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "draft" ? "bg-yellow-100 text-yellow-800" : "bg-gray-200 text-gray-700"}`}
                 >
                   {projects.filter((p) => p.status === "draft").length}
                 </span>
               </li>
               <li
                 onClick={() => setProjectFilter("launched")}
-                className={`flex items-center justify-between text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "launched" ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" : ""}`}
+                className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "launched" ? "bg-blue-50 text-blue-600" : ""}`}
               >
                 <span className="flex items-center gap-3">
                   <Star className="w-5 h-5" />
                   Launched
                 </span>
                 <span
-                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "launched" ? "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200" : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"}`}
+                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "launched" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-700"}`}
                 >
                   {projects.filter((p) => p.status !== "draft").length}
                 </span>
@@ -157,14 +157,14 @@ const UserProfileSidebar = ({
           </div>
         )}
         <div className="mt-auto pt-8">
-          <h3 className="font-semibold mb-3 text-gray-800 dark:text-white">
+          <h3 className="font-semibold mb-3 text-gray-800">
             Resources
           </h3>
-          <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+          <ul className="space-y-2 text-sm text-gray-700">
             <li>
               <a
                 href="/launchitguide"
-                className="hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-2 transition-transform duration-200 hover:translate-x-1"
+                className="hover:text-blue-600 flex items-center gap-2 transition-transform duration-200 hover:translate-x-1"
               >
                 <HelpCircle className="w-4 h-4" />
                 Launch Guide
@@ -173,7 +173,7 @@ const UserProfileSidebar = ({
             <li>
               <a
                 href="/suggestions"
-                className="hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-2 transition-transform duration-200 hover:translate-x-1"
+                className="hover:text-blue-600 flex items-center gap-2 transition-transform duration-200 hover:translate-x-1"
               >
                 <MessageCircle className="w-4 h-4" />
                 Feedback
@@ -728,7 +728,7 @@ const UserProfile = () => {
             {isOwner && (
               <button
                 onClick={() => navigate("/settings")}
-                className="mt-4 md:mt-0 md:ml-auto px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-all shadow-sm hover:shadow-md self-center md:self-start"
+                className="mt-4 md:mt-0 md:ml-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md self-center md:self-start"
               >
                 Edit Profile
               </button>
@@ -736,12 +736,12 @@ const UserProfile = () => {
           </div>
         </div>
         {/* Tab Navigation */}
-        <div className="flex space-x-8 border-b border-gray-200 dark:border-gray-700 mb-6">
+        <div className="flex space-x-8 border-b border-gray-200 mb-6">
           <button
             onClick={() => setActiveTab("projects")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "projects"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
             Projects ({filteredProjects.length})
@@ -749,8 +749,8 @@ const UserProfile = () => {
           <button
             onClick={() => setActiveTab("pitches")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              ? "border-blue-500 text-blue-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
             Pitches ({userPitches.length})
@@ -773,26 +773,26 @@ const UserProfile = () => {
                       .map((project) => (
                         <div
                           key={project.id}
-                          className="flex items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300"
+                          className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300"
                         >
                           <div className="flex items-center gap-4">
                             {project.thumbnail_url ? (
                               <img
                                 src={project.thumbnail_url}
                                 alt="Thumbnail"
-                                className="w-12 h-12 object-cover rounded-lg border bg-gray-50 dark:bg-gray-700 dark:border-gray-600"
+                                className="w-12 h-12 object-cover rounded-lg border bg-gray-50"
                                 loading="lazy"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold border dark:border-gray-600">
+                              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border">
                                 <span>No Thumbnail</span>
                               </div>
                             )}
                             <div>
-                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              <h4 className="text-lg font-semibold text-gray-900">
                                 {project.name}
                               </h4>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                              <p className="text-xs text-gray-500">
                                 Created{" "}
                                 {new Date(
                                   project.created_at,
@@ -812,15 +812,15 @@ const UserProfile = () => {
                               onClick={() =>
                                 navigate(`/submit?draft=${project.id}`)
                               }
-                              className="px-4 py-2 text-sm font-semibold border border-blue-600 rounded-lg bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                              className="px-4 py-2 text-sm font-semibold border border-blue-600 rounded-lg bg-white text-blue-600 hover:bg-blue-50 transition-all"
                             >
                               Continue editing
                             </button>
                             <button
                               onClick={() => handleDeleteClick(project)}
-                              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                             >
-                              <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />
+                              <Trash2 className="w-4 h-4 text-red-500" />
                             </button>
                           </div>
                         </div>
@@ -833,7 +833,7 @@ const UserProfile = () => {
               sortedProjects.filter((p) => p.status !== "draft").length > 0 && (
                 <div className="mb-10">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                    <h3 className="text-xl font-bold text-gray-800">
                       Launched Projects
                     </h3>
                     <SortByDateFilter
@@ -847,10 +847,10 @@ const UserProfile = () => {
                       .map((project) => (
                         <div
                           key={project.id}
-                          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
                           onClick={() => navigate(`/launches/${project.slug}`)}
                         >
-                          <div className="relative pt-[56.25%] bg-gray-100 dark:bg-gray-700 rounded-t-xl overflow-hidden">
+                          <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
                             {project.thumbnail_url ? (
                               <img
                                 src={project.thumbnail_url}
@@ -859,7 +859,7 @@ const UserProfile = () => {
                                 loading="lazy"
                               />
                             ) : (
-                              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">
                                 Nt
                               </div>
                             )}
@@ -870,34 +870,34 @@ const UserProfile = () => {
                                 <img
                                   src={project.logo_url}
                                   alt="Logo"
-                                  className="w-12 h-12 object-contain rounded-lg border bg-white dark:bg-gray-700 dark:border-gray-600 mt-1"
+                                  className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
                                   loading="lazy"
                                 />
                               ) : (
-                                <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold border dark:border-gray-600 flex-shrink-0 mt-1">
+                                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border flex-shrink-0 mt-1">
                                   <span>
                                     {project.name.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
                               )}
                               <div>
-                                <h2 className="text-lg font-bold text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                <h2 className="text-lg font-bold text-gray-800 hover:text-blue-600 transition-colors">
                                   {project.name}
                                 </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                                <p className="text-sm text-gray-600 line-clamp-2">
                                   {project.tagline}
                                 </p>
                               </div>
                             </div>
-                            <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400 mt-auto mb-4">
+                            <div className="space-y-2 text-sm text-gray-500 mt-auto mb-4">
                               <div className="flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                                <span className="capitalize font-medium text-gray-700 dark:text-gray-300">
+                                <Tag className="w-4 h-4 text-gray-400" />
+                                <span className="capitalize font-medium text-gray-700">
                                   {project.category_type}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                                <Calendar className="w-4 h-4 text-gray-400" />
                                 <span>
                                   Launched on{" "}
                                   {new Date(
@@ -910,7 +910,7 @@ const UserProfile = () => {
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                               <Like projectId={project.id} />
                               {isOwner && (
                                 <div className="flex gap-2">
@@ -919,7 +919,7 @@ const UserProfile = () => {
                                       e.stopPropagation();
                                       navigate(`/submit?edit=${project.id}`);
                                     }}
-                                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors"
                                   >
                                     <Edit3 className="w-4 h-4" />
                                   </button>
@@ -928,7 +928,7 @@ const UserProfile = () => {
                                       e.stopPropagation();
                                       handleDeleteClick(project);
                                     }}
-                                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors"
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </button>
@@ -943,11 +943,11 @@ const UserProfile = () => {
               )}
 
             {filteredProjects.length === 0 && (
-              <div className="text-center py-12 bg-gray-100 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-white">
+              <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
+                <h4 className="text-lg font-semibold text-gray-800">
                   No Projects Found
                 </h4>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-gray-500 mt-1">
                   There are no projects matching the selected filter.
                 </p>
               </div>
@@ -957,10 +957,10 @@ const UserProfile = () => {
         {activeTab === "comments" && (
           <div>
             <div className="flex items-center gap-3 mb-5">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+              <h3 className="text-xl font-bold text-gray-800">
                 My Comments
               </h3>
-              <MessageCircle className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <MessageCircle className="w-5 h-5 text-gray-500" />
             </div>
 
             <div className="mt-6">
@@ -969,7 +969,7 @@ const UserProfile = () => {
                   {comments.map((comment) => (
                     <li
                       key={comment.id}
-                      className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                      className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
                     >
                       <div className="flex items-start gap-3">
                         <img
@@ -982,15 +982,15 @@ const UserProfile = () => {
                           className="w-8 h-8 rounded-full"
                         />
                         <div className="flex-1">
-                          <p className="text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                          <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">
                             {comment.content}
                           </p>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                          <div className="text-xs text-gray-500 mt-2">
                             <span>
                               Commented on{" "}
                               <a
                                 href={`/launches/${comment.projects.slug}`}
-                                className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                                className="font-semibold text-blue-600 hover:underline"
                               >
                                 {comment.projects.name}
                               </a>
@@ -1004,11 +1004,11 @@ const UserProfile = () => {
                   ))}
                 </ul>
               ) : (
-                <div className="text-center py-12 bg-gray-100 dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
-                  <h4 className="text-lg font-semibold text-gray-800 dark:text-white">
+                <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
+                  <h4 className="text-lg font-semibold text-gray-800">
                     No Comments Yet
                   </h4>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-gray-500 mt-1">
                     You haven't made any comments yet.
                   </p>
                 </div>
@@ -1019,9 +1019,9 @@ const UserProfile = () => {
 
         {/* Pitches Tab */}
         {activeTab === "pitches" && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+          <div className="bg-white rounded-lg shadow border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">
                 My Pitches
               </h2>
             </div>
@@ -1029,22 +1029,22 @@ const UserProfile = () => {
             {loadingPitches ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                <p className="mt-2 text-gray-600">
                   Loading pitches...
                 </p>
               </div>
             ) : userPitches.length === 0 ? (
-              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+              <div className="p-8 text-center text-gray-500">
                 <p>No pitches submitted yet.</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-gray-200">
                 {userPitches.map((pitch) => (
                   <div key={pitch.id} className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                          <h3 className="text-lg font-semibold text-gray-800">
                             {pitch.title || "Untitled Pitch"}
                           </h3>
                           <span
@@ -1055,26 +1055,26 @@ const UserProfile = () => {
                           </span>
                         </div>
 
-                        <p className="text-gray-600 dark:text-gray-300 mb-2">
+                        <p className="text-gray-600 mb-2">
                           Project: {pitch.projects?.name}
                         </p>
 
                         {pitch.description && (
-                          <p className="text-gray-700 dark:text-gray-300 mb-3">
+                          <p className="text-gray-700 mb-3">
                             {pitch.description}
                           </p>
                         )}
 
                         {pitch.admin_notes && (
-                          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-3">
-                            <p className="text-sm text-red-800 dark:text-red-200">
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                            <p className="text-sm text-red-800">
                               <strong>Rejection Reason:</strong>{" "}
                               {pitch.admin_notes}
                             </p>
                           </div>
                         )}
 
-                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span>
                             Submitted:{" "}
                             {new Date(pitch.created_at).toLocaleDateString()}
@@ -1091,7 +1091,7 @@ const UserProfile = () => {
                             href={pitch.video_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                            className="text-blue-600 hover:text-blue-800"
                           >
                             <Eye className="w-4 h-4" />
                           </a>
@@ -1099,7 +1099,7 @@ const UserProfile = () => {
 
                         <button
                           onClick={() => deletePitch(pitch.id, pitch.status)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                          className="text-red-600 hover:text-red-800"
                           title="Delete pitch"
                         >
                           <Trash2 className="w-4 h-4" />

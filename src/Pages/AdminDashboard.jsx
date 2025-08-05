@@ -628,12 +628,12 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        {" "}
+
         <div className="text-center">
-          {" "}
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>{" "}
-          <p className="text-gray-600">Loading admin dashboard...</p>{" "}
-        </div>{" "}
+
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading admin dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -641,17 +641,17 @@ const AdminDashboard = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        {" "}
+
         <div className="text-center">
-          {" "}
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />{" "}
+
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
             Access Denied
-          </h1>{" "}
+          </h1>
           <p className="text-gray-600">
             You don't have permission to access this page.
           </p>
-        </div>{" "}
+        </div>
       </div>
     );
   }
@@ -660,66 +660,66 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-white p-8">
-      {" "}
+
       <div className="max-w-7xl mx-auto">
-        {" "}
+
         {/* Header */}
         <div className="mb-8">
-          {" "}
+
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             Admin Dashboard
-          </h1>{" "}
+          </h1>
           <p className="text-gray-600">
             Manage platform projects and user reports
-          </p>{" "}
-        </div>{" "}
+          </p>
+        </div>
         {/* Analytics Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          {" "}
+
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            {" "}
+
             <span className="text-2xl font-bold text-blue-600">
-              {" "}
+
               {userCount}
-            </span>{" "}
-            <span className="text-gray-700 mt-2">Users</span>{" "}
-          </div>{" "}
+            </span>
+            <span className="text-gray-700 mt-2">Users</span>
+          </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            {" "}
+
             <span className="text-2xl font-bold text-green-600">
-              {" "}
+
               {projectCount}
-            </span>{" "}
-            <span className="text-gray-700 mt-2">Projects</span>{" "}
-          </div>{" "}
+            </span>
+            <span className="text-gray-700 mt-2">Projects</span>
+          </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            {" "}
+
             <span className="text-2xl font-bold text-purple-600">
-              {" "}
+
               {commentCount}
-            </span>{" "}
-            <span className="text-gray-700 mt-2">Comments</span>{" "}
-          </div>{" "}
+            </span>
+            <span className="text-gray-700 mt-2">Comments</span>
+          </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            {" "}
+
             <span className="text-2xl font-bold text-red-600">
-              {" "}
+
               {reportCount}
-            </span>{" "}
-            <span className="text-gray-700 mt-2">Reports</span>{" "}
-          </div>{" "}
+            </span>
+            <span className="text-gray-700 mt-2">Reports</span>
+          </div>
           <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-            {" "}
+
             <span className="text-2xl font-bold text-orange-600">
-              {" "}
+
               {pitches.length}
-            </span>{" "}
-            <span className="text-gray-700 mt-2">Pitches</span>{" "}
-          </div>{" "}
-        </div>{" "}
+            </span>
+            <span className="text-gray-700 mt-2">Pitches</span>
+          </div>
+        </div>
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b border-gray-200">
-          {" "}
+
           <button
             onClick={() => setActiveTab("projects")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
@@ -730,12 +730,12 @@ const AdminDashboard = () => {
 
             `}
           >
-            {" "}
+
             <div className="flex items-center gap-2">
-              {" "}
-              <Package className="w-4 h-4" /> Projects ( {projects.length}){" "}
-            </div>{" "}
-          </button>{" "}
+
+              <Package className="w-4 h-4" /> Projects ( {projects.length})
+            </div>
+          </button>
           <button
             onClick={() => setActiveTab("reports")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
@@ -746,12 +746,12 @@ const AdminDashboard = () => {
 
             `}
           >
-            {" "}
+
             <div className="flex items-center gap-2">
-              {" "}
-              <Flag className="w-4 h-4" /> Reports ( {reports.length}){" "}
-            </div>{" "}
-          </button>{" "}
+
+              <Flag className="w-4 h-4" /> Reports ( {reports.length})
+            </div>
+          </button>
           <button
             onClick={() => setActiveTab("pitches")}
             className={`pb-2 px-1 border-b-2 font-medium text-sm $ {
@@ -762,129 +762,103 @@ const AdminDashboard = () => {
 
             `}
           >
-            {" "}
+
             <div className="flex items-center gap-2">
-              {" "}
-              <Package className="w-4 h-4" /> Pitches ( {pitches.length}){" "}
-            </div>{" "}
-          </button>{" "}
-        </div>{" "}
+
+              <Package className="w-4 h-4" /> Pitches ( {pitches.length})
+            </div>
+          </button>
+        </div>
         {/* Projects Tab */}
         {activeTab === "projects" && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            {" "}
+
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              {" "}
+
               <h2 className="text-lg font-semibold text-gray-800">
                 All Projects ( {projects.length})
-              </h2>{" "}
+              </h2>
               <SortByDateFilter
                 value={sortOrder}
                 onChange={setSortOrder}
-              />{" "}
-            </div>{" "}
+              />
+            </div>
             {loadingProjects ? (
               <div className="p-8 text-center">
-                {" "}
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>{" "}
-                <p className="mt-2 text-gray-600">Loading projects...</p>{" "}
+
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading projects...</p>
               </div>
             ) : projects.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                {" "}
-                <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />{" "}
-                <p>No projects found.</p>{" "}
+
+                <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No projects found.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                {" "}
+
                 <table className="w-full">
-                  {" "}
                   <thead className="bg-gray-50">
-                    {" "}
                     <tr>
-                      {" "}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Project{" "}
-                      </th>{" "}
+                        Project
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Creator{" "}
-                      </th>{" "}
+                        Creator
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Website{" "}
-                      </th>{" "}
+                        Website
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Created{" "}
-                      </th>{" "}
+                        Created
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Actions{" "}
-                      </th>{" "}
-                    </tr>{" "}
-                  </thead>{" "}
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {" "}
                     {sortedProjects.map((project) => (
                       <tr key={project.id} className="hover:bg-gray-50">
-                        {" "}
                         <td className="px-6 py-4">
-                          {" "}
                           <div>
-                            {" "}
                             <p className="text-sm font-medium text-gray-900">
-                              {" "}
                               {project.name}
-                            </p>{" "}
+                            </p>
                             <p className="text-xs text-gray-500">
-                              {" "}
                               {project.tagline}
-                            </p>{" "}
-                          </div>{" "}
-                        </td>{" "}
+                            </p>
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           <div className="text-sm text-gray-900">
-                            {" "}
                             {project.user_id || "Anonymous"}
-                          </div>{" "}
-                        </td>{" "}
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           <a
                             href={project.website_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
                           >
-                            {" "}
                             {project.website_url}
-                            <ExternalLink className="w-3 h-3" />{" "}
-                          </a>{" "}
-                        </td>{" "}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
-                          {" "}
                           {new Date(project.created_at).toLocaleDateString()}
-                        </td>{" "}
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           <div className="flex gap-2">
-                            {" "}
                             <Link
-                              to={`/launches/$ {
-                                            project.slug
-                                        }
-
-                                        `}
+                              to={`/launches/${project.slug}`}
                               className="text-blue-600 hover:text-blue-800"
                               title="View project"
                             >
-                              {" "}
-                              <Eye className="w-4 h-4" />{" "}
-                            </Link>{" "}
+                              <Eye className="w-4 h-4" />
+                            </Link>
                             <button
                               onClick={() =>
                                 deleteProject(project.id, project.media_urls)
@@ -893,19 +867,18 @@ const AdminDashboard = () => {
                               title="Delete project"
                               disabled={deletingProject === project.id}
                             >
-                              {" "}
                               {deletingProject === project.id ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
                               ) : (
                                 <Trash2 className="w-4 h-4" />
                               )}
-                            </button>{" "}
-                          </div>{" "}
-                        </td>{" "}
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
-                  </tbody>{" "}
-                </table>{" "}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -913,120 +886,90 @@ const AdminDashboard = () => {
         {/* Reports Tab */}
         {activeTab === "reports" && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            {" "}
+
             <div className="px-6 py-4 border-b border-gray-200">
-              {" "}
+
               <h2 className="text-lg font-semibold text-gray-800">
                 User Reports ( {reports.length})
-              </h2>{" "}
-            </div>{" "}
+              </h2>
+            </div>
             {loadingReports ? (
               <div className="p-8 text-center">
-                {" "}
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>{" "}
-                <p className="mt-2 text-gray-600">Loading reports...</p>{" "}
+
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading reports...</p>
               </div>
             ) : reports.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                {" "}
-                <Flag className="w-12 h-12 mx-auto mb-2 text-gray-300" />{" "}
-                <p>No reports found.</p>{" "}
+
+                <Flag className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No reports found.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                {" "}
                 <table className="w-full">
-                  {" "}
                   <thead className="bg-gray-50">
-                    {" "}
                     <tr>
-                      {" "}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Report{" "}
-                      </th>{" "}
+                        Report
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Comment (if reported){" "}
-                      </th>{" "}
+                        Comment (if reported)
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Project{" "}
-                      </th>{" "}
+                        Project
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Reporter{" "}
-                      </th>{" "}
+                        Reporter
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Status{" "}
-                      </th>{" "}
+                        Status
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Date{" "}
-                      </th>{" "}
+                        Date
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Actions{" "}
-                      </th>{" "}
-                    </tr>{" "}
-                  </thead>{" "}
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {" "}
                     {reports.map((report) => (
                       <tr key={report.id} className="hover:bg-gray-50">
-                        {" "}
                         <td className="px-6 py-4">
-                          {" "}
                           <div>
-                            {" "}
                             <p className="text-sm font-medium text-gray-900 capitalize">
-                              {" "}
                               {report.reason.replace("_", " ")}
-                            </p>{" "}
+                            </p>
                             {report.description && (
                               <p className="text-xs text-gray-500 truncate max-w-xs">
-                                {" "}
                                 {report.description}
                               </p>
                             )}
-                          </div>{" "}
-                        </td>{" "}
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           {report.comment_id && report.comments?.content ? (
                             <div className="text-xs text-gray-700 italic max-w-xs truncate">
-                              {" "}
                               {report.comments.content}
                             </div>
                           ) : (
                             <span className="text-gray-400">-</span>
                           )}
-                        </td>{" "}
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           {report.comment_id && report.comments?.projects ? (
                             <Link
-                              to={`/launches/$ {
-                                                    report.comments.projects.slug
-                                                }
-
-                                                `}
+                              to={`/launches/${report.comments.projects.slug}`}
                               className="text-blue-600 hover:text-blue-800 font-medium"
                             >
-                              {" "}
                               {report.comments.projects.name}
                             </Link>
                           ) : report.projects ? (
                             <Link
-                              to={`/launches/$ {
-                                                    report.projects.slug
-                                                }
-
-                                                `}
+                              to={`/launches/${report.projects.slug}`}
                               className="text-blue-600 hover:text-blue-800 font-medium"
                             >
-                              {" "}
                               {report.projects.name}
                             </Link>
                           ) : (
@@ -1034,72 +977,46 @@ const AdminDashboard = () => {
                               Project deleted
                             </span>
                           )}
-                        </td>{" "}
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           <div className="text-sm text-gray-900">
-                            {" "}
                             {report.profiles?.full_name || "Anonymous"}
-                          </div>{" "}
+                          </div>
                           <div className="text-xs text-gray-500">
-                            {" "}
                             {report.profiles?.email}
-                          </div>{" "}
-                        </td>{" "}
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           <span
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full $ {
-                                            getStatusColor(report.status)
-                                        }
-
-                                        `}
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(report.status)}`}
                           >
-                            {" "}
                             {report.status}
-                          </span>{" "}
-                        </td>{" "}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
-                          {" "}
                           {new Date(report.created_at).toLocaleDateString()}
-                        </td>{" "}
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
                           <div className="flex gap-2">
-                            {" "}
                             {/* View button for project or comment */}
                             {report.projects ? (
                               <Link
-                                to={`/launches/$ {
-                                                    report.projects.slug
-                                                }
-
-                                                `}
+                                to={`/launches/${report.projects.slug}`}
                                 className="text-blue-600 hover:text-blue-800"
                                 title="View reported project"
                                 target="_blank"
                               >
-                                {" "}
-                                <Eye className="w-4 h-4" />{" "}
+                                <Eye className="w-4 h-4" />
                               </Link>
                             ) : report.comment_id ? ( // If it's a comment report, try to link to the project and scroll to comment
                               report.project_id && report.projects ? (
                                 <Link
-                                  to={`/launches/$ {
-                                                        report.projects.slug
-                                                    }
-
-                                                    ?comment=$ {
-                                                        report.comment_id
-                                                    }
-
-                                                    `}
+                                  to={`/launches/${report.projects.slug}?comment=${report.comment_id}`}
                                   className="text-blue-600 hover:text-blue-800"
                                   title="View reported comment"
                                   target="_blank"
                                 >
-                                  {" "}
-                                  <Eye className="w-4 h-4" />{" "}
+                                  <Eye className="w-4 h-4" />
                                 </Link>
                               ) : (
                                 <span className="text-gray-400">
@@ -1109,7 +1026,6 @@ const AdminDashboard = () => {
                             ) : null}
                             {report.status === "pending" && (
                               <>
-                                {" "}
                                 <button
                                   onClick={() =>
                                     updateReportStatus(report.id, "resolved")
@@ -1117,9 +1033,8 @@ const AdminDashboard = () => {
                                   className="text-green-600 hover:text-green-800"
                                   title="Mark as resolved"
                                 >
-                                  {" "}
-                                  <Check className="w-4 h-4" />{" "}
-                                </button>{" "}
+                                  <Check className="w-4 h-4" />
+                                </button>
                                 <button
                                   onClick={() =>
                                     updateReportStatus(report.id, "ignored")
@@ -1127,17 +1042,16 @@ const AdminDashboard = () => {
                                   className="text-gray-600 hover:text-gray-800"
                                   title="Ignore report"
                                 >
-                                  {" "}
-                                  <X className="w-4 h-4" />{" "}
-                                </button>{" "}
+                                  <X className="w-4 h-4" />
+                                </button>
                               </>
                             )}
-                          </div>{" "}
-                        </td>{" "}
+                          </div>
+                        </td>
                       </tr>
                     ))}
-                  </tbody>{" "}
-                </table>{" "}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -1145,86 +1059,80 @@ const AdminDashboard = () => {
         {/* Pitches Tab */}
         {activeTab === "pitches" && (
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            {" "}
             {loadingPitches ? (
               <div className="p-8 text-center">
-                {" "}
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>{" "}
-                <p className="mt-2 text-gray-600">Loading pitches...</p>{" "}
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading pitches...</p>
               </div>
             ) : pitches.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                {" "}
-                <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />{" "}
-                <p>No pitch submissions found.</p>{" "}
+                <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No pitch submissions found.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                {" "}
                 <table className="w-full">
-                  {" "}
                   <thead className="bg-gray-50">
-                    {" "}
                     <tr>
-                      {" "}
+
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Project{" "}
-                      </th>{" "}
+
+                        Project
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Tagline{" "}
-                      </th>{" "}
+
+                        Tagline
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Logo{" "}
-                      </th>{" "}
+
+                        Logo
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Founder{" "}
-                      </th>{" "}
+
+                        Founder
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Video{" "}
-                      </th>{" "}
+
+                        Video
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Status{" "}
-                      </th>{" "}
+
+                        Status
+                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {" "}
-                        Actions{" "}
-                      </th>{" "}
-                    </tr>{" "}
-                  </thead>{" "}
+
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {" "}
+
                     {pitches.map((pitch) => (
                       <tr key={pitch.id} className="hover:bg-gray-50">
-                        {" "}
+
                         <td className="px-6 py-4">
-                          {" "}
+
                           <div>
-                            {" "}
+
                             <p className="text-sm font-medium text-gray-900">
-                              {" "}
+
                               {pitch.projects?.name}
-                            </p>{" "}
+                            </p>
                             <p className="text-xs text-gray-500">
-                              {" "}
+
                               {pitch.projects?.tagline}
-                            </p>{" "}
-                          </div>{" "}
-                        </td>{" "}
+                            </p>
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
+
                           <div className="text-sm text-gray-900">
-                            {" "}
+
                             {pitch.projects?.tagline}
-                          </div>{" "}
-                        </td>{" "}
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
+
                           {pitch.projects?.logo_url && (
                             <img
                               src={pitch.projects.logo_url}
@@ -1232,20 +1140,20 @@ const AdminDashboard = () => {
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           )}
-                        </td>{" "}
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
+
                           <div className="text-sm text-gray-900">
-                            {" "}
+
                             {pitch.profiles?.full_name}
-                          </div>{" "}
+                          </div>
                           <div className="text-xs text-gray-500">
-                            {" "}
+
                             {pitch.profiles?.email}
-                          </div>{" "}
-                        </td>{" "}
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
+
                           {pitch.video_type === "file" ? (
                             <PitchVideoPlayer filePath={pitch.video_url} />
                           ) : pitch.video_type === "youtube" ? (
@@ -1267,9 +1175,9 @@ const AdminDashboard = () => {
                               Loom
                             </a>
                           ) : null}
-                        </td>{" "}
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
+
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full $ {
                                             getStatusColor(pitch.status)
@@ -1277,17 +1185,17 @@ const AdminDashboard = () => {
 
                                         `}
                           >
-                            {" "}
+
                             {pitch.status}
-                          </span>{" "}
-                        </td>{" "}
+                          </span>
+                        </td>
                         <td className="px-6 py-4">
-                          {" "}
+
                           <div className="flex gap-2">
-                            {" "}
+
                             {pitch.status === "pending" && (
                               <>
-                                {" "}
+
                                 <button
                                   onClick={() =>
                                     updatePitchStatus(pitch.id, "approved")
@@ -1295,17 +1203,17 @@ const AdminDashboard = () => {
                                   className="text-green-600 hover:text-green-800"
                                   title="Approve pitch"
                                 >
-                                  {" "}
-                                  <Check className="w-4 h-4" />{" "}
-                                </button>{" "}
+
+                                  <Check className="w-4 h-4" />
+                                </button>
                                 <button
                                   onClick={() => handleReject(pitch.id)}
                                   className="text-red-600 hover:text-red-800"
                                   title="Reject pitch"
                                 >
-                                  {" "}
-                                  <X className="w-4 h-4" />{" "}
-                                </button>{" "}
+
+                                  <X className="w-4 h-4" />
+                                </button>
                               </>
                             )}
                             <button
@@ -1319,20 +1227,20 @@ const AdminDashboard = () => {
                               className="text-red-600 hover:text-red-800"
                               title="Delete pitch"
                             >
-                              {" "}
-                              <Trash2 className="w-4 h-4" />{" "}
-                            </button>{" "}
-                          </div>{" "}
-                        </td>{" "}
+
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
-                  </tbody>{" "}
-                </table>{" "}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
         )}
-      </div>{" "}
+      </div>
       {/* Rejection Modal */}
       <Dialog
         open={rejectionModal.open}
@@ -1346,48 +1254,48 @@ const AdminDashboard = () => {
         maxWidth="sm"
         fullWidth
       >
-        {" "}
+
         <DialogTitle className="bg-red-50 border-b border-red-200">
-          {" "}
+
           <div className="flex items-center gap-3">
-            {" "}
+
             <div className="p-2 bg-red-100 rounded-full">
-              {" "}
-              <X className="w-6 h-6 text-red-600" />{" "}
-            </div>{" "}
+
+              <X className="w-6 h-6 text-red-600" />
+            </div>
             <div>
-              {" "}
+
               <h3 className="text-lg font-semibold text-red-800">
                 Reject Pitch
-              </h3>{" "}
+              </h3>
               <p className="text-sm text-red-600 mt-1">
                 Provide a reason for rejection
-              </p>{" "}
-            </div>{" "}
-          </div>{" "}
-        </DialogTitle>{" "}
+              </p>
+            </div>
+          </div>
+        </DialogTitle>
         <DialogContent className="pt-6">
-          {" "}
+
           <div className="space-y-4">
-            {" "}
+
             <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              {" "}
+
               <div className="p-2 bg-yellow-100 rounded-full">
-                {" "}
-                <HelpCircle className="w-5 h-5 text-yellow-600" />{" "}
-              </div>{" "}
+
+                <HelpCircle className="w-5 h-5 text-yellow-600" />
+              </div>
               <div>
-                {" "}
+
                 <p className="font-medium text-yellow-800">
                   Rejection Reason (Optional)
-                </p>{" "}
+                </p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  {" "}
+
                   Providing a reason helps the founder understand why their
-                  pitch was rejected.{" "}
-                </p>{" "}
-              </div>{" "}
-            </div>{" "}
+                  pitch was rejected.
+                </p>
+              </div>
+            </div>
             <TextField
               fullWidth
               multiline
@@ -1401,11 +1309,11 @@ const AdminDashboard = () => {
               }
               placeholder="Enter rejection reason..."
               variant="outlined"
-            />{" "}
-          </div>{" "}
-        </DialogContent>{" "}
+            />
+          </div>
+        </DialogContent>
         <DialogActions className="p-6 pt-0">
-          {" "}
+
           <Button
             onClick={() =>
               setRejectionModal({
@@ -1417,20 +1325,20 @@ const AdminDashboard = () => {
             variant="outlined"
             className="border-gray-300 text-gray-700 hover:bg-gray-50"
           >
-            {" "}
-            Cancel{" "}
-          </Button>{" "}
+
+            Cancel
+          </Button>
           <Button
             onClick={handleRejectConfirm}
             variant="contained"
             className="bg-red-600 hover:bg-red-700 text-white"
             startIcon={<X className="w-4 h-4" />}
           >
-            {" "}
-            Reject Pitch{" "}
-          </Button>{" "}
-        </DialogActions>{" "}
-      </Dialog>{" "}
+
+            Reject Pitch
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* Delete Pitch Confirmation Modal */}
       <Dialog
         open={deletePitchModal.open}
@@ -1438,95 +1346,95 @@ const AdminDashboard = () => {
         maxWidth="sm"
         fullWidth
       >
-        {" "}
+
         <DialogTitle className="bg-red-50 border-b border-red-200">
-          {" "}
+
           <div className="flex items-center gap-3">
-            {" "}
+
             <div className="p-2 bg-red-100 rounded-full">
-              {" "}
-              <Trash2 className="w-6 h-6 text-red-600" />{" "}
-            </div>{" "}
+
+              <Trash2 className="w-6 h-6 text-red-600" />
+            </div>
             <div>
-              {" "}
+
               <h3 className="text-lg font-semibold text-red-800">
                 Delete Pitch
-              </h3>{" "}
+              </h3>
               <p className="text-sm text-red-600 mt-1">
                 This action cannot be undone
-              </p>{" "}
-            </div>{" "}
-          </div>{" "}
-        </DialogTitle>{" "}
+              </p>
+            </div>
+          </div>
+        </DialogTitle>
         <DialogContent className="pt-6">
-          {" "}
+
           <div className="space-y-4">
-            {" "}
+
             <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              {" "}
+
               <div className="p-2 bg-yellow-100 rounded-full">
-                {" "}
-                <HelpCircle className="w-5 h-5 text-yellow-600" />{" "}
-              </div>{" "}
+
+                <HelpCircle className="w-5 h-5 text-yellow-600" />
+              </div>
               <div>
-                {" "}
+
                 <p className="font-medium text-yellow-800">
                   Are you absolutely sure?
-                </p>{" "}
+                </p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  {" "}
+
                   This will permanently delete the pitch video and all
-                  associated data. This action cannot be reversed.{" "}
-                </p>{" "}
-              </div>{" "}
-            </div>{" "}
+                  associated data. This action cannot be reversed.
+                </p>
+              </div>
+            </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              {" "}
+
               <h4 className="font-medium text-gray-800 mb-2">
                 What will be deleted:
-              </h4>{" "}
+              </h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                {" "}
+
                 <li className="flex items-center gap-2">
-                  {" "}
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>{" "}
-                  Pitch video file{" "}
-                </li>{" "}
+
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                  Pitch video file
+                </li>
                 <li className="flex items-center gap-2">
-                  {" "}
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>{" "}
-                  Pitch submission record{" "}
-                </li>{" "}
+
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                  Pitch submission record
+                </li>
                 <li className="flex items-center gap-2">
-                  {" "}
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>{" "}
-                  All associated metadata{" "}
-                </li>{" "}
-              </ul>{" "}
-            </div>{" "}
-          </div>{" "}
-        </DialogContent>{" "}
+
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                  All associated metadata
+                </li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
         <DialogActions className="p-6 pt-0">
-          {" "}
+
           <Button
             onClick={handleDeletePitchCancel}
             variant="outlined"
             className="border-gray-300 text-gray-700 hover:bg-gray-50"
           >
-            {" "}
-            Cancel{" "}
-          </Button>{" "}
+
+            Cancel
+          </Button>
           <Button
             onClick={handleDeletePitchConfirm}
             variant="contained"
             className="bg-red-600 hover:bg-red-700 text-white"
             startIcon={<Trash2 className="w-4 h-4" />}
           >
-            {" "}
-            Delete Pitch{" "}
-          </Button>{" "}
-        </DialogActions>{" "}
-      </Dialog>{" "}
+
+            Delete Pitch
+          </Button>
+        </DialogActions>
+      </Dialog>
       {/* MUI Snackbar */}
       <Snackbar
         open={snackbar.open}
@@ -1538,7 +1446,7 @@ const AdminDashboard = () => {
           })
         }
       >
-        {" "}
+
         <Alert
           onClose={() =>
             setSnackbar({
@@ -1551,10 +1459,10 @@ const AdminDashboard = () => {
             width: "100%",
           }}
         >
-          {" "}
+
           {snackbar.message}
-        </Alert>{" "}
-      </Snackbar>{" "}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
@@ -1564,20 +1472,76 @@ export default AdminDashboard;
 // Helper component for video preview
 function PitchVideoPlayer({ filePath }) {
   const [signedUrl, setSignedUrl] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function getSignedUrl() {
       if (!filePath) return;
 
-      const { data } = await supabase.storage
-        .from("pitch-videos")
-        .createSignedUrl(filePath, 60 * 60);
-      setSignedUrl(data?.signedUrl || "");
+      try {
+        // Check if filePath is already a full URL
+        if (filePath.startsWith('http')) {
+          setSignedUrl(filePath);
+          return;
+        }
+
+        // Extract the file path from the full URL if needed
+        let path = filePath;
+        if (filePath.includes('/storage/v1/object/public/pitch-videos/')) {
+          path = filePath.split('/storage/v1/object/public/pitch-videos/')[1];
+        }
+
+        console.log("Creating signed URL for path:", path);
+
+        const { data, error } = await supabase.storage
+          .from("pitch-videos")
+          .createSignedUrl(path, 60 * 60);
+
+        if (error) {
+          console.error("Error creating signed URL:", error);
+          // Fallback to public URL
+          setSignedUrl(filePath);
+        } else {
+          console.log("Signed URL created:", data?.signedUrl);
+          setSignedUrl(data?.signedUrl || "");
+        }
+      } catch (error) {
+        console.error("Error creating signed URL:", error);
+        // Fallback to public URL
+        setSignedUrl(filePath);
+      }
     }
 
     getSignedUrl();
   }, [filePath]);
-  if (!signedUrl) return <span>Loading video...</span>;
 
-  return <video src={signedUrl} controls width={200} />;
+  if (error) {
+    return (
+      <div className="text-red-500 text-sm">
+        Error loading video: {error}
+      </div>
+    );
+  }
+
+  if (!signedUrl) {
+    return (
+      <div className="flex items-center justify-center w-48 h-32 bg-gray-100 rounded">
+        <span className="text-sm text-gray-500">Loading video...</span>
+      </div>
+    );
+  }
+
+  return (
+    <video
+      src={signedUrl}
+      controls
+      width={200}
+      height={150}
+      className="rounded border"
+      onError={(e) => {
+        console.error("Video error:", e);
+        setError("Failed to load video");
+      }}
+    />
+  );
 }

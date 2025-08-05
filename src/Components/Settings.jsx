@@ -205,7 +205,7 @@ const Settings = () => {
                 />
                 <div className="flex items-center gap-3">
                   <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold transition-all flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
                     onClick={() => fileInputRef.current?.click()}
                     type="button"
                   >
@@ -395,7 +395,7 @@ const Settings = () => {
                 <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 transition-colors duration-300">
                   <button
                     type="submit"
-                    className="bg-blue-600 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     disabled={saving}
                   >
                     {saving ? "Saving..." : "Save Changes"}

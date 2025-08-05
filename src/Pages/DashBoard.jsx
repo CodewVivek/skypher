@@ -102,7 +102,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-white transition-colors duration-300">
         <div className="flex items-center justify-center">
           <div className="text-center py-10 sm:py-16 md:py-24 px-2 sm:px-0">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-4 sm:mb-6 tracking-tight">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-gray-800 leading-tight mb-4 sm:mb-6 tracking-tight">
               Decode Limitless Growth.
               <br />
             </h1>
@@ -138,7 +138,7 @@ const Dashboard = () => {
         {Object.keys(groupedProjects).length === 0 && (
           <div className="flex justify-center items-center min-h-[60vh] sm:min-h-[70vh]">
             <div className="flex flex-col justify-center items-center text-center">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-650 mb-4">
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-800 mb-4">
                 No Launches Available
               </h2>
               <p className="text-lg text-gray-600">
@@ -152,7 +152,7 @@ const Dashboard = () => {
         )}
         {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
           <div key={dateLabel}>
-            <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-900">
+            <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-800">
               {dateLabel}
             </h3>
             <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 ">
@@ -160,61 +160,63 @@ const Dashboard = () => {
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="bg-white flex flex-col p-0 rounded-md cursor-pointer shadow-md transition-colors duration-300"
+                    className="group bg-white flex flex-col p-0 rounded-xl cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out border border-gray-200"
                     onClick={() => openProjectDetails(project)}
                   >
-                    <div className="w-full aspect-square bg-gray-100 overflow-hidden flex items-center justify-center">
+                    <div className="w-full aspect-square bg-gray-100 overflow-hidden flex items-center justify-center rounded-t-lg">
                       {project.thumbnail_url ? (
                         <img
                           src={project.thumbnail_url}
                           alt="Thumbnail"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
                         />
                       ) : (
-                        <span className="text-gray-400 text-3xl">
+                        <span className="text-gray-400 text-3xl group-hover:text-gray-500 transition-colors">
                           No Image
                         </span>
                       )}
                     </div>
                     {/* Logo + Company Name */}
-                    <div className="flex items-center gap-2 mt-4 ml-1">
+                    <div className="flex items-center gap-2 mt-4 ml-3 mr-3">
                       {project.logo_url ? (
                         <img
                           src={project.logo_url}
                           alt="Logo"
-                          className="w-7 h-7 object-contain rounded-full border bg-white"
+                          className="w-7 h-7 object-contain rounded-full border bg-white group-hover:scale-110 transition-transform duration-200"
                         />
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border">
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors duration-200">
                           <Rocket className="w-5 h-5" />
                         </div>
                       )}
-                      <h2 className="text-base font-semibold text-black truncate">
+                      <h2 className="text-base font-semibold text-black truncate group-hover:text-blue-600 transition-colors duration-200">
                         {project.name}
                       </h2>
                       <a
                         href={project.website_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 transition-colors"
+                        className="text-blue-600 hover:text-blue-700 transition-colors opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-200"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     </div>
                     {/* Tagline */}
-                    <p className="text-sm text-black mt-1 ml-1 truncate">
+                    <p className="text-sm text-black mt-1 ml-3 mr-3 truncate group-hover:text-gray-700 transition-colors duration-200">
                       {project.tagline}
                     </p>
                     {/* Category + Like */}
-                    <div className="flex items-center justify-between mt-2 ml-1 mr-1 mb-2">
-                      <div className="flex items-center text-xs gap-1 text-black">
+                    <div className="flex items-center justify-between mt-2 ml-3 mr-3 mb-3">
+                      <div className="flex items-center text-xs gap-1 text-black group-hover:text-blue-600 transition-colors duration-200">
                         <Tag className="w-4 h-4" />
                         <span className="capitalize">
                           {project.category_type}
                         </span>
                       </div>
-                      <Like projectId={project.id} iconOnly={true} />
+                      <div className="group-hover:scale-110 transition-transform duration-200">
+                        <Like projectId={project.id} iconOnly={true} />
+                      </div>
                     </div>
                   </div>
                 ))}

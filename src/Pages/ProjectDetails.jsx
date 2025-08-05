@@ -179,7 +179,7 @@ const ProjectDetails = () => {
                   href={project.website_url}
                   target="_blank"
                   rel="noopener"
-                  className="px-8 py-3 bg-blue-600 text-white font-bold rounded-full shadow hover:bg-blue-700 transition text-lg flex items-center gap-2"
+                  className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow transition text-lg flex items-center gap-2"
                 >
                   <ExternalLink className="w-5 h-5" />
                   Launch {project.name}
@@ -195,77 +195,77 @@ const ProjectDetails = () => {
           {/* Images */}
           {project.cover_urls && project.cover_urls.length > 0 && (
             <div className="mb-10 relative">
-            <Slider
-              dots={true}
-              infinite={project.cover_urls.length > 1}
-              speed={500}
-              slidesToShow={1}
-              slidesToScroll={1}
-              nextArrow={project.cover_urls.length > 1 ? <NextArrow /> : null}
-              prevArrow={project.cover_urls.length > 1 ? <PrevArrow /> : null}
-              swipeToSlide={true}
-              adaptiveHeight={true}
-            >
-              {project.cover_urls.map((url, idx) => (
-                <div
-                  key={idx}
-                  className="group relative flex justify-center items-center w-full h-[360px] sm:h-[400px] md:h-[450px] lg:h-[500px] rounded-xl overflow-hidden cursor-zoom-in transition-all"
-                  onClick={() => openModal(idx)}
-                >
+              <Slider
+                dots={true}
+                infinite={project.cover_urls.length > 1}
+                speed={500}
+                slidesToShow={1}
+                slidesToScroll={1}
+                nextArrow={project.cover_urls.length > 1 ? <NextArrow /> : null}
+                prevArrow={project.cover_urls.length > 1 ? <PrevArrow /> : null}
+                swipeToSlide={true}
+                adaptiveHeight={true}
+              >
+                {project.cover_urls.map((url, idx) => (
+                  <div
+                    key={idx}
+                    className="group relative flex justify-center items-center w-full h-[360px] sm:h-[400px] md:h-[450px] lg:h-[500px] rounded-xl overflow-hidden cursor-zoom-in transition-all"
+                    onClick={() => openModal(idx)}
+                  >
+                    <img
+                      src={url}
+                      alt={`Cover ${idx + 1}`}
+                      className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                ))}
+              </Slider>
+
+              {/* Lightbox Modal */}
+              {modalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+                  {/* Close button */}
+                  <button
+                    className="absolute top-4 right-4 text-white text-4xl font-bold bg-black/50 rounded-full p-2 hover:bg-black/70 transition"
+                    onClick={closeModal}
+                    aria-label="Close"
+                  >
+                    &times;
+                  </button>
+
+                  {/* Prev button */}
+                  {project.cover_urls.length > 1 && (
+                    <button
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 z-10 transition"
+                      onClick={prevModal}
+                      aria-label="Previous image"
+                    >
+                      <ArrowBigLeft className="w-8 h-8 text-gray-700" />
+                    </button>
+                  )}
+
+                  {/* Image */}
                   <img
-                    src={url}
-                    alt={`Cover ${idx + 1}`}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    src={project.cover_urls[modalIndex]}
+                    alt={`Cover ${modalIndex + 1}`}
+                    className="max-h-[85vh] max-w-[95vw] rounded-xl shadow-2xl object-contain bg-white transition duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                  {/* Next button */}
+                  {project.cover_urls.length > 1 && (
+                    <button
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 z-10 transition"
+                      onClick={nextModal}
+                      aria-label="Next image"
+                    >
+                      <ArrowBigRight className="w-8 h-8 text-gray-700" />
+                    </button>
+                  )}
                 </div>
-              ))}
-            </Slider>
-          
-            {/* Lightbox Modal */}
-            {modalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
-                {/* Close button */}
-                <button
-                  className="absolute top-4 right-4 text-white text-4xl font-bold bg-black/50 rounded-full p-2 hover:bg-black/70 transition"
-                  onClick={closeModal}
-                  aria-label="Close"
-                >
-                  &times;
-                </button>
-          
-                {/* Prev button */}
-                {project.cover_urls.length > 1 && (
-                  <button
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 z-10 transition"
-                    onClick={prevModal}
-                    aria-label="Previous image"
-                  >
-                    <ArrowBigLeft className="w-8 h-8 text-gray-700" />
-                  </button>
-                )}
-          
-                {/* Image */}
-                <img
-                  src={project.cover_urls[modalIndex]}
-                  alt={`Cover ${modalIndex + 1}`}
-                  className="max-h-[85vh] max-w-[95vw] rounded-xl shadow-2xl object-contain bg-white transition duration-300"
-                />
-          
-                {/* Next button */}
-                {project.cover_urls.length > 1 && (
-                  <button
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 z-10 transition"
-                    onClick={nextModal}
-                    aria-label="Next image"
-                  >
-                    <ArrowBigRight className="w-8 h-8 text-gray-700" />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-          
+              )}
+            </div>
+
           )}
           {/* Comments */}
           <div className="bg-white rounded-xl shadow p-6 border border-gray-100 mb-10">

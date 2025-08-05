@@ -695,8 +695,8 @@ const Register = () => {
     return (
         <>
             <div className="container-custom py-12">
-                <div className="max-w-2xl mx-auto mt-15">
-                    <div className="bg-white rounded-xl shadow-lg p-8">
+                <div className="max-w-2xl mx-auto mt-20">
+                    <div className="bg-gray-100 rounded-xl shadow-lg p-8">
                         {isEditing && (
                             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                 <h3 className="text-lg font-semibold text-blue-800 mb-2">
@@ -770,7 +770,7 @@ const Register = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Startup Name */}
                                     <div>
-                                        <label className="block font-medium mb-1">Startup Name</label>
+                                        <label className="block font-medium mb-1">Launch Name</label>
                                         <input
                                             name="name"
                                             value={formData.name}
@@ -823,7 +823,7 @@ const Register = () => {
                                             onChange={handleDescriptionChange}
                                             rows={4}
                                             className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                            placeholder="Describe your startup"
+                                            placeholder="Describe your launch"
                                         />
                                         <div className="text-xs text-gray-400 text-right">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
                                     </div>
@@ -946,12 +946,18 @@ const Register = () => {
                                 <div>
                                     <BuiltWithSelect value={builtWith} onChange={setBuiltWith} />
                                 </div>
-                                {/* Team/Collaborators (optional) */}
-                                {/* Add your team/collaborators input fields here if needed */}
-                                {/* Any other extras */}
+
                                 <div className="flex justify-between mt-8">
-                                    <button type="button" onClick={() => setStep(2)} className="px-6 py-3 bg-gray-100 rounded-lg font-semibold">Previous</button>
-                                    <button type="button" onClick={handleSubmit} className="px-6 py-3 bg-blue-900 text-white rounded-lg font-semibold ml-auto">Submit</button>
+                                    <button type="button"
+                                        onClick={() => setStep(2)}
+                                        className="px-6 py-3 bg-gray-100 rounded-lg font-semibold">
+                                        Previous
+                                    </button>
+                                    <button type="button"
+                                        onClick={handleSubmit}
+                                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold ml-auto">
+                                        Submit
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -977,7 +983,7 @@ const Register = () => {
                                     <button
                                         type="button"
                                         onClick={handleNext}
-                                        className="px-6 py-3 bg-blue-900 text-white rounded-lg"
+                                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
                                     >
                                         Next
                                     </button>
