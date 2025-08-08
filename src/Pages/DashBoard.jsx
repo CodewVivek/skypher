@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
-import { ExternalLink, Calendar, Tag, Search, Rocket } from "lucide-react";
+import { ExternalLink, Calendar, Tag, Search, Rocket, MoreVertical } from "lucide-react";
 import Like from "../Components/Like";
 import { useNavigate } from "react-router-dom";
 import { format, isToday, isYesterday } from "date-fns";
+import "../index.css";
 
 const Dashboard = () => {
   const [projects, setProjects] = useState([]);
@@ -83,7 +84,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-700">
+      <div className="min-h-screen flex items-center justify-center text-gray-700 pt-16">
         Loading projects...
       </div>
     );
@@ -91,141 +92,114 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
+      <div className="min-h-screen flex items-center justify-center text-red-600 pt-16">
         Error: {error}
       </div>
     );
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-white transition-colors duration-300">
-        <div className="flex items-center justify-center">
-          <div className="text-center py-10 sm:py-16 md:py-24 px-2 sm:px-0">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold text-gray-800 leading-tight mb-4 sm:mb-6 tracking-tight">
-              Decode Limitless Growth.
-              <br />
-            </h1>
-            <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6 sm:mb-10 leading-relaxed">
-              Stop waiting. Launch it here.
-              Explore the innovations shaping tomorrow.
-            </p>
-            {/* Search Bar */}
-            <div className="relative w-full max-w-2xl mx-auto">
-              <input
-                type="text"
-                placeholder="Search for startups, categories, features..."
-                className="w-full pl-12 pr-12 py-3 sm:py-4 text-base sm:text-lg border border-gray-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 placeholder-gray-500 text-gray-800 bg-white"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <Search className="w-5 h-5 sm:w-6 sm:h-6" />
-              </span>
-              {search && (
-                <button
-                  type="button"
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none text-lg sm:text-xl"
-                  onClick={() => setSearch("")}
-                  aria-label="Clear search"
-                >
-                  &times;
-                </button>
-              )}
+    <div className="min-h-screen pt-16">
+      {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
+        <div key={dateLabel}>
+          <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-800">
+            {dateLabel}
+          </h3>
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-5 gap-4">
+              {projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  onProjectClick={openProjectDetails}
+                />
+              ))}
             </div>
           </div>
         </div>
-        {Object.keys(groupedProjects).length === 0 && (
-          <div className="flex justify-center items-center min-h-[60vh] sm:min-h-[70vh]">
-            <div className="flex flex-col justify-center items-center text-center">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-800 mb-4">
-                No Launches Available
-              </h2>
-              <p className="text-lg text-gray-600">
-                Currently, there are no launches scheduled or listed.
-                <br />
-                We are continuously updating our records; please revisit shortly
-                for new information.
-              </p>
-            </div>
+      ))}
+    </div>
+  );
+};
+
+// ProjectCard component with VideoCard styling
+const ProjectCard = ({ project, onProjectClick }) => {
+  return (
+    <div className="group cursor-pointer" onClick={() => onProjectClick(project)}>
+      {/* Thumbnail */}
+      <div className="relative aspect-video bg-gray-200 rounded-lg overflow-hidden mb-3">
+        {project.thumbnail_url ? (
+          <img
+            src={project.thumbnail_url}
+            alt={project.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <Rocket className="w-12 h-12" />
           </div>
         )}
-        {Object.entries(groupedProjects).map(([dateLabel, projects]) => (
-          <div key={dateLabel}>
-            <h3 className="text-xl sm:text-2xl font-bold my-4 sm:my-6 mx-4 sm:mx-10 text-gray-800">
-              {dateLabel}
-            </h3>
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 ">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 ">
-                {projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="group bg-white flex flex-col p-0 rounded-xl cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out border border-gray-200"
-                    onClick={() => openProjectDetails(project)}
-                  >
-                    <div className="w-full aspect-square bg-gray-100 overflow-hidden flex items-center justify-center rounded-t-lg">
-                      {project.thumbnail_url ? (
-                        <img
-                          src={project.thumbnail_url}
-                          alt="Thumbnail"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
-                        />
-                      ) : (
-                        <span className="text-gray-400 text-3xl group-hover:text-gray-500 transition-colors">
-                          No Image
-                        </span>
-                      )}
-                    </div>
-                    {/* Logo + Company Name */}
-                    <div className="flex items-center gap-2 mt-4 ml-3 mr-3">
-                      {project.logo_url ? (
-                        <img
-                          src={project.logo_url}
-                          alt="Logo"
-                          className="w-7 h-7 object-contain rounded-full border bg-white group-hover:scale-110 transition-transform duration-200"
-                        />
-                      ) : (
-                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold border group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors duration-200">
-                          <Rocket className="w-5 h-5" />
-                        </div>
-                      )}
-                      <h2 className="text-base font-semibold text-black truncate group-hover:text-blue-600 transition-colors duration-200">
-                        {project.name}
-                      </h2>
-                      <a
-                        href={project.website_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 transition-colors opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-200"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </div>
-                    {/* Tagline */}
-                    <p className="text-sm text-black mt-1 ml-3 mr-3 truncate group-hover:text-gray-700 transition-colors duration-200">
-                      {project.tagline}
-                    </p>
-                    {/* Category + Like */}
-                    <div className="flex items-center justify-between mt-2 ml-3 mr-3 mb-3">
-                      <div className="flex items-center text-xs gap-1 text-black group-hover:text-blue-600 transition-colors duration-200">
-                        <Tag className="w-4 h-4" />
-                        <span className="capitalize">
-                          {project.category_type}
-                        </span>
-                      </div>
-                      <div className="group-hover:scale-110 transition-transform duration-200">
-                        <Like projectId={project.id} iconOnly={true} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
+        <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-1 py-0.5 rounded">
+          {project.category_type}
+        </div>
       </div>
-    </>
+
+      {/* Project Info */}
+      <div className="flex gap-3">
+        {/* Logo */}
+        <div className="flex-shrink-0">
+          {project.logo_url ? (
+            <img
+              src={project.logo_url}
+              alt={project.name}
+              className="w-9 h-9 rounded-full object-cover"
+              loading="eager"
+              decoding="async"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
+              <Rocket className="w-5 h-5 text-gray-500" />
+            </div>
+          )}
+        </div>
+
+        {/* Project Details */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-black font-medium text-sm leading-5 line-clamp-2 group-hover:text-black">
+              {project.name}
+            </h3>
+            {project.website_url && (
+              <a
+                href={project.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-600 transition-colors "
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
+          </div>
+          <div className="text-gray-600 text-sm mb-1">
+            {project.tagline}
+          </div>
+        </div>
+      </div>
+
+      {/* Like Button */}
+      <div className="mt-3 flex items-center justify-between">
+        <div className="group-hover:scale-110 transition-transform duration-200">
+          <Like projectId={project.id} iconOnly={true} />
+        </div>
+
+        {/* External Link */}
+
+      </div>
+    </div >
   );
 };
 

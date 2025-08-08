@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import {
   ExternalLink,
@@ -22,6 +22,12 @@ import {
   Clock,
   Check,
   X as XIcon,
+  UserPlus,
+  UserCheck,
+  Rocket,
+  MessageSquare,
+  BookmarkCheck,
+  Bookmark,
 } from "lucide-react";
 import Like from "../Components/Like";
 import {
@@ -35,12 +41,10 @@ import {
   TextField,
 } from "@mui/material";
 import SortByDateFilter from "../Components/SortByDateFilter";
+import toast from "react-hot-toast";
 
-function sortProjectsByDate(
-  projects,
-  dateField = "created_at",
-  order = "newest",
-) {
+// Helper function to sort projects
+function sortProjectsByDate(projects, dateField = "created_at", order = "newest") {
   return [...projects].sort((a, b) => {
     const dateA = new Date(a[dateField]);
     const dateB = new Date(b[dateField]);
@@ -48,189 +52,80 @@ function sortProjectsByDate(
   });
 }
 
-const UserProfileSidebar = ({
-  projects,
-  comments,
-  activeTab,
-  setActiveTab,
-  projectFilter,
-  setProjectFilter,
-  isOpen,
-  onClose,
-}) => {
-  return (
-    <>
-      {/* Backdrop for mobile */}
-      <div
-        className={`fixed inset-0 bg-black bg-opacity-40 z-20 transition-opacity md:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-        onClick={onClose}
-      ></div>
+// Helper component for video preview
+function PitchVideoPlayer({ filePath }) {
+  const [signedUrl, setSignedUrl] = useState("");
+  useEffect(() => {
+    async function getSignedUrl() {
+      if (!filePath) return;
+      try {
+        const { data, error } = await supabase.storage
+          .from("pitch-videos")
+          .createSignedUrl(filePath, 60 * 60); // URL valid for 1 hour
 
-      <aside
-        className={`fixed top-0 left-0 w-64 h-full bg-white border-r border-gray-200 p-6 flex-col gap-8 z-30 transform transition-transform duration-300 ease-in-out md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:flex md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"} transition-colors duration-300`}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 md:hidden"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <div className="mt-8 md:mt-0">
-          <h2 className="text-lg font-bold mb-4 text-gray-800">
-            My Activity
-          </h2>
-          <ul className="space-y-3 text-gray-600 font-medium">
-            <li
-              onClick={() => setActiveTab("projects")}
-              className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${activeTab === "projects" ? "bg-blue-50 text-blue-600" : ""}`}
-            >
-              <span className="flex items-center gap-3">
-                <Briefcase className="w-5 h-5" />
-                Projects
-              </span>
-            </li>
-            <li
-              onClick={() => setActiveTab("comments")}
-              className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${activeTab === "comments" ? "bg-blue-50 text-blue-600" : ""}`}
-            >
-              <span className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5" />
-                Comments
-              </span>
-              <span
-                className={`font-semibold px-2.5 py-0.5 rounded-full ${activeTab === "comments" ? "bg-blue-100 text-blue-800" : "bg-gray-200 text-gray-700"}`}
-              >
-                {comments.length}
-              </span>
-            </li>
-          </ul>
-        </div>
-        {activeTab === "projects" && (
-          <div className="mt-8">
-            <h2 className="text-lg font-bold mb-4 text-gray-800">
-              My Launches
-            </h2>
-            <ul className="space-y-3 text-gray-600 font-medium">
-              <li
-                onClick={() => setProjectFilter("all")}
-                className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "all" ? "bg-blue-50  text-blue-600" : ""}`}
-              >
-                <span className="flex items-center gap-3">
-                  <Rss className="w-5 h-5" />
-                  All
-                </span>
-                <span
-                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "all" ? "bg-blue-100 text-blue-800" : "bg-gray-200 text-gray-700"}`}
-                >
-                  {projects.length}
-                </span>
-              </li>
-              <li
-                onClick={() => setProjectFilter("draft")}
-                className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "draft" ? "bg-blue-50 text-blue-600" : ""}`}
-              >
-                <span className="flex items-center gap-3">
-                  <Edit3 className="w-5 h-5" />
-                  Drafts
-                </span>
-                <span
-                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "draft" ? "bg-yellow-100 text-yellow-800" : "bg-gray-200 text-gray-700"}`}
-                >
-                  {projects.filter((p) => p.status === "draft").length}
-                </span>
-              </li>
-              <li
-                onClick={() => setProjectFilter("launched")}
-                className={`flex items-center justify-between text-sm hover:text-blue-600 transition-colors cursor-pointer p-2 rounded-lg ${projectFilter === "launched" ? "bg-blue-50 text-blue-600" : ""}`}
-              >
-                <span className="flex items-center gap-3">
-                  <Star className="w-5 h-5" />
-                  Launched
-                </span>
-                <span
-                  className={`font-semibold px-2.5 py-0.5 rounded-full ${projectFilter === "launched" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-700"}`}
-                >
-                  {projects.filter((p) => p.status !== "draft").length}
-                </span>
-              </li>
-            </ul>
-          </div>
-        )}
-        <div className="mt-auto pt-8">
-          <h3 className="font-semibold mb-3 text-gray-800">
-            Resources
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-700">
-            <li>
-              <a
-                href="/launchitguide"
-                className="hover:text-blue-600 flex items-center gap-2 transition-transform duration-200 hover:translate-x-1"
-              >
-                <HelpCircle className="w-4 h-4" />
-                Launch Guide
-              </a>
-            </li>
-            <li>
-              <a
-                href="/suggestions"
-                className="hover:text-blue-600 flex items-center gap-2 transition-transform duration-200 hover:translate-x-1"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Feedback
-              </a>
-            </li>
-          </ul>
-        </div>
-      </aside>
-    </>
+        if (error) {
+          console.error("Error creating signed URL:", error);
+          // Fallback to public URL if signed URL creation fails
+          const { data: publicUrlData } = supabase.storage
+            .from("pitch-videos")
+            .getPublicUrl(filePath);
+          setSignedUrl(publicUrlData.publicUrl);
+        } else {
+          setSignedUrl(data?.signedUrl || "");
+        }
+      } catch (error) {
+        console.error("Error creating signed URL:", error);
+        const { data: publicUrlData } = supabase.storage
+          .from("pitch-videos")
+          .getPublicUrl(filePath);
+        setSignedUrl(publicUrlData.publicUrl);
+      }
+    }
+    getSignedUrl();
+  }, [filePath]);
+
+  if (!signedUrl) return <span>Loading video...</span>;
+  return (
+    <video src={signedUrl} controls className="w-48 rounded-lg" />
   );
-};
+}
 
 const UserProfile = () => {
   const { username } = useParams();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [projects, setProjects] = useState([]);
   const [comments, setComments] = useState([]);
+  const [userPitches, setUserPitches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPitches, setLoadingPitches] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
-  const navigate = useNavigate();
-  const [editProject, setEditProject] = useState(null);
-  const [editForm, setEditForm] = useState({});
-  const [editWarning, setEditWarning] = useState(false);
-  const [editSuccess, setEditSuccess] = useState(false);
-  const [deleteProject, setDeleteProject] = useState(null);
-  const [deleteSuccess, setDeleteSuccess] = useState(false);
-  const [editError, setEditError] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("projects");
   const [projectFilter, setProjectFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
-  const [userPitches, setUserPitches] = useState([]);
-  const [loadingPitches, setLoadingPitches] = useState(true);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-  const [deletePitchModal, setDeletePitchModal] = useState({
-    open: false,
-    pitchId: null,
-    status: null,
-  });
 
-  // Add a function to fetch projects for the current profile
+  // States for modals and notifications
+  const [editProject, setEditProject] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [deleteProject, setDeleteProject] = useState(null);
+  const [deletePitchModal, setDeletePitchModal] = useState({ open: false, pitchId: null, status: null });
+  const [editError, setEditError] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
+  // States for follow functionality
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  // Function to fetch all projects for the current profile
   const fetchUserProjects = async (profileId) => {
-    if (!profileId) {
-      return;
-    }
-
+    if (!profileId) return;
     try {
       const { data: userProjects, error } = await supabase
         .from("projects")
         .select("*")
         .eq("user_id", profileId);
-
       if (error) {
         console.error("Error fetching user projects:", error);
         setProjects([]);
@@ -243,32 +138,19 @@ const UserProfile = () => {
     }
   };
 
-  // Fetch user pitches
+  // Function to fetch all pitches for the current profile
   const fetchUserPitches = async (profileId) => {
     if (!profileId) {
-      console.warn("No profileId provided to fetchUserPitches");
       setLoadingPitches(false);
       return;
     }
-
     setLoadingPitches(true);
     try {
       const { data, error } = await supabase
         .from("pitch_submissions")
-        .select(
-          `
-                    *,
-                    projects:project_id (
-                        id, 
-                        name, 
-                        tagline, 
-                        logo_url
-                    )
-                `,
-        )
+        .select(`*, projects:project_id ( id, name, tagline, logo_url )`)
         .eq("user_id", profileId)
         .order("created_at", { ascending: false });
-
       if (!error) {
         setUserPitches(data || []);
       } else {
@@ -282,69 +164,51 @@ const UserProfile = () => {
     setLoadingPitches(false);
   };
 
+  // Main useEffect to fetch all profile data on component mount
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!username) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      if (username.includes("${") || username.includes("profile.username")) {
+    const fetchProfileData = async () => {
+      if (!username || username.includes("${") || username.includes("profile.username")) {
         navigate("/");
         return;
       }
-
       const decodedUsername = decodeURIComponent(username);
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", decodedUsername)
-        .single();
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("username", decodedUsername)
+          .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error.message);
-        console.error("Query details:", { username, error });
-        setProfile(null);
-        setLoading(false);
-        return;
-      } else {
-        setProfile(data);
-        // Check if logged-in user is the owner
-        const {
-          data: { user: loggedInUser },
-        } = await supabase.auth.getUser();
-        let userProjects = [];
-        // Set isOwner based on whether logged-in user matches profile owner
-        const isProfileOwner = loggedInUser && loggedInUser.id === data.id;
+        if (profileError) {
+          console.error("Error fetching profile:", profileError.message);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
+        setProfile(profileData);
+
+        const { data: { user: loggedInUser } } = await supabase.auth.getUser();
+        setCurrentUser(loggedInUser);
+
+        const isProfileOwner = loggedInUser && loggedInUser.id === profileData.id;
         setIsOwner(isProfileOwner);
 
-        if (loggedInUser && loggedInUser.id === data.id) {
-          // Owner: fetch all projects (including drafts)
-          const { data: allProjects } = await supabase
-            .from("projects")
-            .select("*")
-            .eq("user_id", data.id);
+        let userProjects = [];
+        if (isProfileOwner) {
+          const { data: allProjects } = await supabase.from("projects").select("*").eq("user_id", profileData.id);
           userProjects = allProjects || [];
+          await fetchUserPitches(profileData.id);
         } else {
-          // Not owner: only show submitted projects
-          const { data: nonDraftProjects } = await supabase
-            .from("projects")
-            .select("*")
-            .eq("user_id", data.id)
-            .neq("status", "draft");
+          const { data: nonDraftProjects } = await supabase.from("projects").select("*").eq("user_id", profileData.id).neq("status", "draft");
           userProjects = nonDraftProjects || [];
         }
         setProjects(userProjects);
-        // Fetch comments on own projects
+
         if (userProjects && userProjects.length > 0) {
           const projectIds = userProjects.map((p) => p.id);
-          const { data: userComments, error: commentsError } = await supabase
-            .from("comments")
-            .select("*, projects(name, slug)")
-            .in("project_id", projectIds)
-            .eq("user_id", data.id);
+          const { data: userComments, error: commentsError } = await supabase.from("comments").select("*, projects(name, slug)").in("project_id", projectIds).eq("user_id", profileData.id);
           if (!commentsError) {
             setComments(userComments);
           } else {
@@ -354,56 +218,38 @@ const UserProfile = () => {
           setComments([]);
         }
 
-        // Fetch user pitches if this is the owner
-        if (isProfileOwner) {
-          await fetchUserPitches(data.id);
+        if (loggedInUser && !isProfileOwner) {
+          const { data: followData } = await supabase.from('follows').select('id').eq('follower_id', loggedInUser.id).eq('following_id', profileData.id).single();
+          setIsFollowing(!!followData);
         }
-
+      } catch (err) {
+        console.error("Exception fetching profile data:", err);
+        setProfile(null);
+      } finally {
         setLoading(false);
       }
     };
-
-    fetchProfile();
-  }, [username]);
-
-  // Remove the redundant useEffect that was causing circular dependency
+    fetchProfileData();
+  }, [username, navigate, isOwner]);
 
   // Edit handlers
-  const handleEditClick = (project) => {
-    setEditProject(project);
-    setEditForm({ ...project });
-  };
-  const handleEditClose = () => {
-    setEditProject(null);
-    setEditWarning(false);
-    setEditError("");
-  };
-  const handleEditChange = (e) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
-  };
-  // In handleEditSave, after updating the project, refetch the latest projects from Supabase
+  const handleEditClick = (project) => { setEditProject(project); setEditForm({ ...project }); };
+  const handleEditClose = () => { setEditProject(null); setEditError(""); };
+  const handleEditChange = (e) => { setEditForm({ ...editForm, [e.target.name]: e.target.value }); };
   const handleEditSave = async () => {
     try {
-      const { error } = await supabase
-        .from("projects")
-        .update({
-          name: editProject.name,
-          tagline: editProject.tagline,
-          description: editProject.description,
-          website_url: editProject.website_url,
-          category_type: editProject.category_type,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", editProject.id);
+      const { error } = await supabase.from("projects").update({
+        name: editForm.name,
+        tagline: editForm.tagline,
+        description: editForm.description,
+        website_url: editForm.website_url,
+        category_type: editForm.category_type,
+        updated_at: new Date().toISOString(),
+      }).eq("id", editProject.id);
       if (error) throw error;
-      setEditSuccess(true);
       setEditProject(null);
-      // Add a small delay before refetching to avoid conflicts
-      setTimeout(async () => {
-        if (profile && profile.id) {
-          await fetchUserProjects(profile.id);
-        }
-      }, 500);
+      setSnackbar({ open: true, message: "Project updated successfully!", severity: "success" });
+      setTimeout(() => fetchUserProjects(profile.id), 500);
     } catch (err) {
       setEditError(err.message || "Failed to update project.");
     }
@@ -412,156 +258,112 @@ const UserProfile = () => {
   // Delete handlers
   const handleDeleteClick = (project) => setDeleteProject(project);
   const handleDeleteCancel = () => setDeleteProject(null);
-  // In handleDeleteConfirm, after deleting the project, refetch the latest projects
   const handleDeleteConfirm = async () => {
     try {
-      // First, delete associated data (likes, comments, etc.)
-      const { error: likesError } = await supabase
-        .from("project_likes")
-        .delete()
-        .eq("project_id", deleteProject.id);
-
-      if (likesError) {
-        console.error("Error deleting likes:", likesError);
-      }
-
-      const { error: commentsError } = await supabase
-        .from("comments")
-        .delete()
-        .eq("project_id", deleteProject.id);
-
-      if (commentsError) {
-        console.error("Error deleting comments:", commentsError);
-      }
-
-      // Then delete the project
-      const { error } = await supabase
-        .from("projects")
-        .delete()
-        .eq("id", deleteProject.id);
-
-      if (error) {
-        console.error("Error deleting project:", error);
-        throw error;
-      }
-
-      setDeleteSuccess(true);
+      await supabase.from("project_likes").delete().eq("project_id", deleteProject.id);
+      await supabase.from("comments").delete().eq("project_id", deleteProject.id);
+      const { error } = await supabase.from("projects").delete().eq("id", deleteProject.id);
+      if (error) throw error;
       setDeleteProject(null);
-
-      // Add a small delay before refetching to avoid conflicts
-      setTimeout(async () => {
-        if (profile && profile.id) {
-          await fetchUserProjects(profile.id);
-        }
-      }, 500);
+      setSnackbar({ open: true, message: "Project deleted successfully!", severity: "success" });
+      setTimeout(() => fetchUserProjects(profile.id), 500);
     } catch (err) {
       console.error("Error in handleDeleteConfirm:", err);
       setEditError(err.message || "Failed to delete project.");
     }
   };
 
-  // Delete pitch
-  const deletePitch = async (pitchId, status) => {
+  // Delete pitch handlers
+  const deletePitch = (pitchId, status) => {
     setDeletePitchModal({ open: true, pitchId, status });
   };
-
   const handleDeletePitchConfirm = async () => {
     const { pitchId, status } = deletePitchModal;
-
     try {
-      // First, get pitch data to check video type and URL
-      const { data: pitchData, error: fetchError } = await supabase
-        .from("pitch_submissions")
-        .select("video_url, video_type")
-        .eq("id", pitchId)
-        .single();
-
-      if (fetchError) {
-        console.error("Error fetching pitch data:", fetchError);
-        throw fetchError;
-      }
-
-      // If it's a file upload, delete from storage
-      if (
-        pitchData?.video_type === "file" &&
-        pitchData?.video_url &&
-        pitchData.video_url.includes("pitch-videos")
-      ) {
+      const { data: pitchData, error: fetchError } = await supabase.from("pitch_submissions").select("video_url, video_type").eq("id", pitchId).single();
+      if (fetchError) throw fetchError;
+      if (pitchData?.video_type === "file" && pitchData?.video_url && pitchData.video_url.includes("pitch-videos")) {
         const filePath = pitchData.video_url.split("/pitch-videos/")[1];
-        if (filePath) {
-          const { error: storageError } = await supabase.storage
-            .from("pitch-videos")
-            .remove([filePath]);
-
-          if (storageError) {
-            console.error("Error deleting video file:", storageError);
-            // Continue with database deletion even if file deletion fails
-          }
-        }
+        if (filePath) await supabase.storage.from("pitch-videos").remove([filePath]);
       }
-
-      // Delete the pitch record from database
-      const { error: deleteError } = await supabase
-        .from("pitch_submissions")
-        .delete()
-        .eq("id", pitchId);
-
-      if (deleteError) {
-        console.error("Error deleting pitch record:", deleteError);
-        throw deleteError;
-      }
-
-      // Refresh pitches with a small delay to avoid conflicts
-      setTimeout(() => {
-        fetchUserPitches(profile.id);
-      }, 500);
-
-      setSnackbar({
-        open: true,
-        message: "Pitch deleted successfully",
-        severity: "success",
-      });
+      const { error: deleteError } = await supabase.from("pitch_submissions").delete().eq("id", pitchId);
+      if (deleteError) throw deleteError;
+      setTimeout(() => fetchUserPitches(profile.id), 500);
+      setSnackbar({ open: true, message: "Pitch deleted successfully", severity: "success" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     } catch (error) {
       console.error("Error deleting pitch:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to delete pitch: " + error.message,
-        severity: "error",
-      });
+      setSnackbar({ open: true, message: "Failed to delete pitch: " + error.message, severity: "error" });
       setDeletePitchModal({ open: false, pitchId: null, status: null });
     }
   };
+  const handleDeletePitchCancel = () => { setDeletePitchModal({ open: false, pitchId: null, status: null }); };
 
-  const handleDeletePitchCancel = () => {
-    setDeletePitchModal({ open: false, pitchId: null, status: null });
-  };
-
+  // Status icons and colors
   const getStatusIcon = (status) => {
     switch (status) {
-      case "pending":
-        return <Clock className="w-4 h-4 text-yellow-500" />;
-      case "approved":
-        return <Check className="w-4 h-4 text-green-500" />;
-      case "rejected":
-        return <XIcon className="w-4 h-4 text-red-500" />;
-      default:
-        return null;
+      case "pending": return <Clock className="w-4 h-4 text-yellow-500" />;
+      case "approved": return <Check className="w-4 h-4 text-green-500" />;
+      case "rejected": return <XIcon className="w-4 h-4 text-red-500" />;
+      default: return null;
+    }
+  };
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "pending": return "bg-yellow-100 text-yellow-800";
+      case "approved": return "bg-green-100 text-green-800";
+      case "rejected": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+  // Time ago helper
+  const getTimeAgo = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  };
+
+  // Follow functionality
+  const handleFollow = async () => {
+    if (!currentUser) { toast.error("Please login to follow users"); return; }
+    if (!profile || currentUser.id === profile.id) { toast.error("Invalid action"); return; }
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        const { error } = await supabase.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', profile.id);
+        if (error) throw error;
+        setIsFollowing(false);
+        toast.success(`Unfollowed ${profile.full_name || profile.username}`);
+      } else {
+        const { error } = await supabase.from('follows').insert({ follower_id: currentUser.id, following_id: profile.id });
+        if (error) throw error;
+        setIsFollowing(true);
+        toast.success(`Following ${profile.full_name || profile.username}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error(isFollowing ? 'Failed to unfollow' : 'Failed to follow');
+    } finally {
+      setFollowLoading(false);
     }
   };
+
+  // Check if a draft has at least one required field filled
+  const isDraftStarted = (project) => !!(project.name || project.tagline || project.description || project.website_url || project.category_type);
+
+  // Filter and sort projects based on state
+  const filteredProjects = projects.filter((project) => {
+    if (projectFilter === "all") return true;
+    if (projectFilter === "draft") return project.status === "draft" && isDraftStarted(project);
+    if (projectFilter === "launched") return project.status !== "draft";
+    return true;
+  });
+  const sortedProjects = sortProjectsByDate(filteredProjects, "created_at", sortOrder);
 
   if (loading) {
     return (
@@ -570,7 +372,6 @@ const UserProfile = () => {
       </div>
     );
   }
-
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -579,91 +380,15 @@ const UserProfile = () => {
     );
   }
 
-  // Helper function to get time ago
-  const getTimeAgo = (dateString) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffInMs = now - date;
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-
-    if (diffInMinutes < 1) return "just now";
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 30) return `${diffInDays}d ago`;
-
-    const diffInMonths = Math.floor(diffInDays / 30);
-    if (diffInMonths < 12) return `${diffInMonths}mo ago`;
-
-    const diffInYears = Math.floor(diffInMonths / 12);
-    return `${diffInYears}y ago`;
-  };
-
-  // Add a helper to check if a draft has at least one required field filled
-  const isDraftStarted = (project) => {
-    return !!(
-      project.name ||
-      project.tagline ||
-      project.description ||
-      project.website_url ||
-      project.category_type
-    );
-  };
-
-  // Update the filteredProjects logic for drafts
-  const filteredProjects = projects.filter((project) => {
-    if (projectFilter === "all") return true;
-    if (projectFilter === "draft")
-      return project.status === "draft" && isDraftStarted(project);
-    if (projectFilter === "launched") return project.status !== "draft";
-    return true;
-  });
-
-  const sortedProjects = sortProjectsByDate(
-    filteredProjects,
-    "created_at",
-    sortOrder,
-  );
-
   return (
-    <div className="flex bg-gray-50 min-h-screen font-sans transition-colors duration-300">
-      {isOwner && (
-        <UserProfileSidebar
-          projects={projects}
-          comments={comments}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          projectFilter={projectFilter}
-          setProjectFilter={setProjectFilter}
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
-      )}
-
+    <div className="flex bg-gray-50 min-h-screen font-sans transition-colors duration-300 pt-16">
       {/* Main Content */}
-      <main className="w-full flex-1 p-4 sm:p-6 md:p-8 mt-16">
-        {isOwner && (
-          <div className="md:hidden pb-4">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-white p-2 text-sm font-semibold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-100 transition-colors duration-300"
-            >
-              <Menu className="w-5 h-5" />
-              Profile Menu
-            </button>
-          </div>
-        )}
+      <main className="w-full flex-1 p-4 sm:p-6 md:p-8">
         {/* Profile Info */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8 mb-8 transition-colors duration-300">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <img
-              src={
-                profile.avatar_url ||
-                "https://api.dicebear.com/6.x/initials/svg?seed=" +
-                profile.username
-              }
+              src={profile.avatar_url || "https://api.dicebear.com/6.x/initials/svg?seed=" + profile.username}
               alt="Profile"
               className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white object-cover shadow-md"
               loading="lazy"
@@ -679,52 +404,27 @@ const UserProfile = () => {
                 {profile.bio || "This user has not written a bio yet"}
               </p>
               <div className="flex flex-wrap justify-center md:justify-start gap-4 text-gray-500">
-                {profile.twitter && (
-                  <a
-                    href={profile.twitter}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-blue-500 flex items-center gap-1.5 transition-colors"
-                  >
-                    <Twitter className="w-4 h-4" />
-                    <span>Twitter</span>
-                  </a>
-                )}
-                {profile.linkedin && (
-                  <a
-                    href={profile.linkedin}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-blue-700 flex items-center gap-1.5 transition-colors"
-                  >
-                    <Linkedin className="w-4 h-4" />
-                    <span>LinkedIn</span>
-                  </a>
-                )}
-                {profile.youtube && (
-                  <a
-                    href={profile.youtube}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-red-600 flex items-center gap-1.5 transition-colors"
-                  >
-                    <Youtube className="w-4 h-4" />
-                    <span>YouTube</span>
-                  </a>
-                )}
-                {profile.portfolio && (
-                  <a
-                    href={profile.portfolio}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-gray-800 flex items-center gap-1.5 transition-colors"
-                  >
-                    <Briefcase className="w-4 h-4" />
-                    <span>Portfolio</span>
-                  </a>
-                )}
+                {profile.twitter && (<a href={profile.twitter} target="_blank" rel="noreferrer" className="hover:text-blue-500 flex items-center gap-1.5 transition-colors"> <Twitter className="w-4 h-4" /><span>Twitter</span></a>)}
+                {profile.linkedin && (<a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-blue-700 flex items-center gap-1.5 transition-colors"> <Linkedin className="w-4 h-4" /><span>LinkedIn</span></a>)}
+                {profile.youtube && (<a href={profile.youtube} target="_blank" rel="noreferrer" className="hover:text-red-600 flex items-center gap-1.5 transition-colors"> <Youtube className="w-4 h-4" /><span>YouTube</span></a>)}
+                {profile.portfolio && (<a href={profile.portfolio} target="_blank" rel="noreferrer" className="hover:text-gray-800 flex items-center gap-1.5 transition-colors"> <Briefcase className="w-4 h-4" /><span>Portfolio</span></a>)}
               </div>
             </div>
+            {currentUser && currentUser.id !== profile.id && (
+              <button
+                onClick={handleFollow}
+                disabled={followLoading}
+                className={`mt-4 md:mt-0 md:ml-auto px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md self-center md:self-start ${isFollowing ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' : 'bg-blue-600 hover:bg-blue-700 text-white'} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {followLoading ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto" />
+                ) : isFollowing ? (
+                  <div className="flex items-center gap-2"> <UserCheck className="w-4 h-4" />Following </div>
+                ) : (
+                  <div className="flex items-center gap-2"> <UserPlus className="w-4 h-4" />Follow </div>
+                )}
+              </button>
+            )}
             {isOwner && (
               <button
                 onClick={() => navigate("/settings")}
@@ -739,261 +439,209 @@ const UserProfile = () => {
         <div className="flex space-x-8 border-b border-gray-200 mb-6">
           <button
             onClick={() => setActiveTab("projects")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "projects"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "projects" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            Projects ({filteredProjects.length})
+            Projects
           </button>
           <button
             onClick={() => setActiveTab("pitches")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "pitches" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
           >
-            Pitches ({userPitches.length})
+            Pitches
+          </button>
+          <button
+            onClick={() => setActiveTab("comments")}
+            className={`pb-2 px-1 border-b-2 font-medium text-sm ${activeTab === "comments" ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+          >
+            Comments
           </button>
         </div>
         {activeTab === "projects" && (
           <>
-            {/* Drafts Section */}
-            {isOwner &&
-              projectFilter !== "launched" &&
-              filteredProjects.filter((p) => p.status === "draft").length >
-              0 && (
-                <div className="mb-10">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    Drafts
-                  </h3>
-                  <div className="space-y-4">
-                    {filteredProjects
-                      .filter((p) => p.status === "draft")
-                      .map((project) => (
-                        <div
-                          key={project.id}
-                          className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-4">
-                            {project.thumbnail_url ? (
-                              <img
-                                src={project.thumbnail_url}
-                                alt="Thumbnail"
-                                className="w-12 h-12 object-cover rounded-lg border bg-gray-50"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border">
-                                <span>No Thumbnail</span>
-                              </div>
-                            )}
-                            <div>
-                              <h4 className="text-lg font-semibold text-gray-900">
-                                {project.name}
-                              </h4>
-                              <p className="text-xs text-gray-500">
-                                Created{" "}
-                                {new Date(
-                                  project.created_at,
-                                ).toLocaleDateString("en-US", {
-                                  month: "long",
-                                  day: "numeric",
-                                })}{" "}
-                                • Last edited{" "}
-                                {getTimeAgo(
-                                  project.updated_at || project.created_at,
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={() =>
-                                navigate(`/submit?draft=${project.id}`)
-                              }
-                              className="px-4 py-2 text-sm font-semibold border border-blue-600 rounded-lg bg-white text-blue-600 hover:bg-blue-50 transition-all"
-                            >
-                              Continue editing
-                            </button>
-                            <button
-                              onClick={() => handleDeleteClick(project)}
-                              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-            {/* Launched Section */}
-            {projectFilter !== "draft" &&
-              sortedProjects.filter((p) => p.status !== "draft").length > 0 && (
-                <div className="mb-10">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-xl font-bold text-gray-800">
-                      Launched Projects
-                    </h3>
-                    <SortByDateFilter
-                      value={sortOrder}
-                      onChange={setSortOrder}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sortedProjects
-                      .filter((p) => p.status !== "draft")
-                      .map((project) => (
-                        <div
-                          key={project.id}
-                          className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
-                          onClick={() => navigate(`/launches/${project.slug}`)}
-                        >
-                          <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
-                            {project.thumbnail_url ? (
-                              <img
-                                src={project.thumbnail_url}
-                                alt={`${project.name} thumbnail`}
-                                className="absolute top-0 left-0 w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">
-                                Nt
-                              </div>
-                            )}
-                          </div>
-                          <div className="p-5 flex-grow flex flex-col">
-                            <div className="flex items-start gap-4 mb-3">
-                              {project.logo_url ? (
-                                <img
-                                  src={project.logo_url}
-                                  alt="Logo"
-                                  className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border flex-shrink-0 mt-1">
-                                  <span>
-                                    {project.name.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-                              <div>
-                                <h2 className="text-lg font-bold text-gray-800 hover:text-blue-600 transition-colors">
-                                  {project.name}
-                                </h2>
-                                <p className="text-sm text-gray-600 line-clamp-2">
-                                  {project.tagline}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="space-y-2 text-sm text-gray-500 mt-auto mb-4">
-                              <div className="flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-gray-400" />
-                                <span className="capitalize font-medium text-gray-700">
-                                  {project.category_type}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-400" />
-                                <span>
-                                  Launched on{" "}
-                                  {new Date(
-                                    project.created_at,
-                                  ).toLocaleDateString("en-GB", {
-                                    day: "2-digit",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                              <Like projectId={project.id} />
-                              {isOwner && (
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/submit?edit=${project.id}`);
-                                    }}
-                                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-                                  >
-                                    <Edit3 className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteClick(project);
-                                    }}
-                                    className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div className="flex flex-wrap gap-2 text-sm font-medium">
+                <button
+                  onClick={() => setProjectFilter("all")}
+                  className={`px-4 py-2 rounded-full transition-colors ${projectFilter === "all" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                >
+                  All ({projects.length})
+                </button>
+                {isOwner && (
+                  <button
+                    onClick={() => setProjectFilter("draft")}
+                    className={`px-4 py-2 rounded-full transition-colors ${projectFilter === "draft" ? "bg-yellow-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                  >
+                    Drafts ({projects.filter((p) => p.status === "draft").length})
+                  </button>
+                )}
+                <button
+                  onClick={() => setProjectFilter("launched")}
+                  className={`px-4 py-2 rounded-full transition-colors ${projectFilter === "launched" ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                >
+                  Launched ({projects.filter((p) => p.status !== "draft").length})
+                </button>
+              </div>
+              <SortByDateFilter value={sortOrder} onChange={setSortOrder} />
+            </div>
 
-            {filteredProjects.length === 0 && (
+            {sortedProjects.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {sortedProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+                    onClick={() => navigate(`/launches/${project.slug}`)}
+                  >
+                    <div className="relative pt-[56.25%] bg-gray-100 rounded-t-xl overflow-hidden">
+                      {project.thumbnail_url ? (
+                        <img
+                          src={project.thumbnail_url}
+                          alt={`${project.name} thumbnail`}
+                          className="absolute top-0 left-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-gray-400">Nt</div>
+                      )}
+                    </div>
+                    <div className="p-5 flex-grow flex flex-col">
+                      <div className="flex items-start gap-4 mb-3">
+                        {project.logo_url ? (
+                          <img
+                            src={project.logo_url}
+                            alt="Logo"
+                            className="w-12 h-12 object-contain rounded-lg border bg-white mt-1"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-bold border flex-shrink-0 mt-1">
+                            <span>{project.name.charAt(0).toUpperCase()}</span>
+                          </div>
+                        )}
+                        <div>
+                          <h2 className="text-lg font-bold text-gray-800 hover:text-blue-600 transition-colors">{project.name}</h2>
+                          <p className="text-sm text-gray-600 line-clamp-2">{project.tagline}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-500 mt-auto mb-4">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-gray-400" />
+                          <span className="capitalize font-medium text-gray-700">{project.category_type}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span>
+                            Launched on{" "}
+                            {new Date(project.created_at).toLocaleDateString("en-GB", {
+                              day: "2-digit", month: "short", year: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <Like projectId={project.id} />
+                        {isOwner && (
+                          <div className="flex gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/submit?edit=${project.id}`); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteClick(project); }} className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-red-600 transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
               <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
-                <h4 className="text-lg font-semibold text-gray-800">
-                  No Projects Found
-                </h4>
-                <p className="text-gray-500 mt-1">
-                  There are no projects matching the selected filter.
-                </p>
+                <h4 className="text-lg font-semibold text-gray-800">No Projects Found</h4>
+                <p className="text-gray-500 mt-1">There are no projects matching the selected filter.</p>
               </div>
             )}
           </>
         )}
+        {activeTab === "pitches" && isOwner && (
+          <div className="bg-white rounded-lg shadow border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">My Pitches</h2>
+            </div>
+            {loadingPitches ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading pitches...</p>
+              </div>
+            ) : userPitches.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <p>No pitches submitted yet.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {userPitches.map((pitch) => (
+                  <div key={pitch.id} className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 pr-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-800">{pitch.title || "Untitled Pitch"}</h3>
+                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pitch.status)}`}>
+                            {getStatusIcon(pitch.status)}{pitch.status}
+                          </span>
+                        </div>
+                        <p className="text-gray-600 mb-2">Project: {pitch.projects?.name}</p>
+                        {pitch.description && (<p className="text-gray-700 mb-3">{pitch.description}</p>)}
+                        {pitch.admin_notes && (
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                            <p className="text-sm text-red-800"><strong>Rejection Reason:</strong> {pitch.admin_notes}</p>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span>Submitted: {new Date(pitch.created_at).toLocaleDateString()}</span>
+                          <span>Type: {pitch.video_type}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        {pitch.video_type === "file" ? (
+                          <PitchVideoPlayer filePath={pitch.video_url} />
+                        ) : (
+                          <a href={pitch.video_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-full text-blue-600 hover:bg-blue-50 transition-colors" title="Watch on external site">
+                            <Eye className="w-5 h-5" />
+                          </a>
+                        )}
+                        <button onClick={() => deletePitch(pitch.id, pitch.status)} className="p-2 rounded-full text-red-600 hover:bg-red-50 transition-colors" title="Delete pitch">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {activeTab === "comments" && (
           <div>
             <div className="flex items-center gap-3 mb-5">
-              <h3 className="text-xl font-bold text-gray-800">
-                My Comments
-              </h3>
+              <h3 className="text-xl font-bold text-gray-800">My Comments</h3>
               <MessageCircle className="w-5 h-5 text-gray-500" />
             </div>
-
             <div className="mt-6">
               {comments && comments.length > 0 ? (
                 <ul className="space-y-4">
                   {comments.map((comment) => (
-                    <li
-                      key={comment.id}
-                      className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
-                    >
+                    <li key={comment.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
                       <div className="flex items-start gap-3">
                         <img
-                          src={
-                            profile.avatar_url ||
-                            "https://api.dicebear.com/6.x/initials/svg?seed=" +
-                            profile.username
-                          }
+                          src={profile.avatar_url || "https://api.dicebear.com/6.x/initials/svg?seed=" + profile.username}
                           alt="author avatar"
                           className="w-8 h-8 rounded-full"
                         />
                         <div className="flex-1">
-                          <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">
-                            {comment.content}
-                          </p>
+                          <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">{comment.content}</p>
                           <div className="text-xs text-gray-500 mt-2">
-                            <span>
-                              Commented on{" "}
-                              <a
-                                href={`/launches/${comment.projects.slug}`}
-                                className="font-semibold text-blue-600 hover:underline"
-                              >
-                                {comment.projects.name}
-                              </a>
+                            <span>Commented on{" "}
+                              <a href={`/launches/${comment.projects.slug}`} className="font-semibold text-blue-600 hover:underline">{comment.projects.name}</a>
                             </span>
                             <span className="mx-1">·</span>
                             <span>{getTimeAgo(comment.created_at)}</span>
@@ -1005,308 +653,80 @@ const UserProfile = () => {
                 </ul>
               ) : (
                 <div className="text-center py-12 bg-gray-100 rounded-lg border border-dashed border-gray-300">
-                  <h4 className="text-lg font-semibold text-gray-800">
-                    No Comments Yet
-                  </h4>
-                  <p className="text-gray-500 mt-1">
-                    You haven't made any comments yet.
-                  </p>
+                  <h4 className="text-lg font-semibold text-gray-800">No Comments Yet</h4>
+                  <p className="text-gray-500 mt-1">You haven't made any comments yet.</p>
                 </div>
               )}
             </div>
           </div>
         )}
-
-        {/* Pitches Tab */}
-        {activeTab === "pitches" && (
-          <div className="bg-white rounded-lg shadow border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-800">
-                My Pitches
-              </h2>
-            </div>
-
-            {loadingPitches ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">
-                  Loading pitches...
-                </p>
-              </div>
-            ) : userPitches.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>No pitches submitted yet.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {userPitches.map((pitch) => (
-                  <div key={pitch.id} className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-800">
-                            {pitch.title || "Untitled Pitch"}
-                          </h3>
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pitch.status)}`}
-                          >
-                            {getStatusIcon(pitch.status)}
-                            {pitch.status}
-                          </span>
-                        </div>
-
-                        <p className="text-gray-600 mb-2">
-                          Project: {pitch.projects?.name}
-                        </p>
-
-                        {pitch.description && (
-                          <p className="text-gray-700 mb-3">
-                            {pitch.description}
-                          </p>
-                        )}
-
-                        {pitch.admin_notes && (
-                          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-                            <p className="text-sm text-red-800">
-                              <strong>Rejection Reason:</strong>{" "}
-                              {pitch.admin_notes}
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>
-                            Submitted:{" "}
-                            {new Date(pitch.created_at).toLocaleDateString()}
-                          </span>
-                          <span>Type: {pitch.video_type}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {pitch.video_type === "file" ? (
-                          <PitchVideoPlayer filePath={pitch.video_url} />
-                        ) : (
-                          <a
-                            href={pitch.video_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </a>
-                        )}
-
-                        <button
-                          onClick={() => deletePitch(pitch.id, pitch.status)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Delete pitch"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </main>
 
       {/* Edit Dialog */}
-      <Dialog
-        open={!!editProject}
-        onClose={handleEditClose}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={!!editProject} onClose={handleEditClose} maxWidth="sm" fullWidth>
         <DialogTitle>Edit {editForm.name}</DialogTitle>
         <DialogContent>
-          <TextField
-            label="Name"
-            name="name"
-            value={editForm.name || ""}
-            onChange={handleEditChange}
-            fullWidth
-            margin="dense"
-          />
-
-          <TextField
-            label="Tagline"
-            name="tagline"
-            value={editForm.tagline || ""}
-            onChange={handleEditChange}
-            fullWidth
-            margin="dense"
-          />
-
-          <TextField
-            label="Website URL"
-            name="website_url"
-            value={editForm.website_url || ""}
-            onChange={handleEditChange}
-            fullWidth
-            margin="dense"
-          />
-
-          <TextField
-            label="Description"
-            name="description"
-            value={editForm.description || ""}
-            onChange={handleEditChange}
-            fullWidth
-            margin="dense"
-            multiline
-            rows={4}
-          />
-          {editError && (
-            <Alert severity="error" className="mt-4">
-              {editError}
-            </Alert>
-          )}
+          <TextField label="Name" name="name" value={editForm.name || ""} onChange={handleEditChange} fullWidth margin="dense" />
+          <TextField label="Tagline" name="tagline" value={editForm.tagline || ""} onChange={handleEditChange} fullWidth margin="dense" />
+          <TextField label="Website URL" name="website_url" value={editForm.website_url || ""} onChange={handleEditChange} fullWidth margin="dense" />
+          <TextField label="Description" name="description" value={editForm.description || ""} onChange={handleEditChange} fullWidth margin="dense" multiline rows={4} />
+          {editError && (<Alert severity="error" className="mt-4">{editError}</Alert>)}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleEditClose}>Cancel</Button>
-          <Button onClick={handleEditSave} color="primary" variant="contained">
-            Save Changes
-          </Button>
+          <Button onClick={handleEditSave} color="primary" variant="contained">Save Changes</Button>
         </DialogActions>
       </Dialog>
-
       {/* Delete Confirmation */}
       <Dialog open={!!deleteProject} onClose={handleDeleteCancel}>
         <DialogTitle>Delete "{deleteProject?.name}"?</DialogTitle>
-        <DialogContent>
-          <p>
-            Are you sure you want to delete this project? This action cannot be
-            undone.
-          </p>
-        </DialogContent>
+        <DialogContent><p>Are you sure you want to delete this project? This action cannot be undone.</p></DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-          >
-            Delete
-          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">Delete</Button>
         </DialogActions>
       </Dialog>
-
       {/* Delete Pitch Confirmation Modal */}
-      <Dialog
-        open={deletePitchModal.open}
-        onClose={handleDeletePitchCancel}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={deletePitchModal.open} onClose={handleDeletePitchCancel} maxWidth="sm" fullWidth>
         <DialogTitle className="bg-red-50 border-b border-red-200">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-full">
-              <Trash2 className="w-6 h-6 text-red-600" />
-            </div>
+            <div className="p-2 bg-red-100 rounded-full"><Trash2 className="w-6 h-6 text-red-600" /></div>
             <div>
-              <h3 className="text-lg font-semibold text-red-800">
-                Delete Pitch
-              </h3>
-              <p className="text-sm text-red-600 mt-1">
-                This action cannot be undone
-              </p>
+              <h3 className="text-lg font-semibold text-red-800">Delete Pitch</h3>
+              <p className="text-sm text-red-600 mt-1">This action cannot be undone</p>
             </div>
           </div>
         </DialogTitle>
         <DialogContent className="pt-6">
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <div className="p-2 bg-yellow-100 rounded-full">
-                <HelpCircle className="w-5 h-5 text-yellow-600" />
-              </div>
+              <div className="p-2 bg-yellow-100 rounded-full"><HelpCircle className="w-5 h-5 text-yellow-600" /></div>
               <div>
-                <p className="font-medium text-yellow-800">
-                  Are you absolutely sure?
-                </p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  This will permanently delete your pitch video and all
-                  associated data. This action cannot be reversed.
-                </p>
+                <p className="font-medium text-yellow-800">Are you absolutely sure?</p>
+                <p className="text-sm text-yellow-700 mt-1">This will permanently delete your pitch video and all associated data. This action cannot be reversed.</p>
               </div>
             </div>
-
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-2">
-                What will be deleted:
-              </h4>
+              <h4 className="font-medium text-gray-800 mb-2">What will be deleted:</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                  Your pitch video file
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                  Pitch submission record
-                </li>
-                <li className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                  All associated metadata
-                </li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>Your pitch video file</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>Pitch submission record</li>
+                <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>All associated metadata</li>
               </ul>
             </div>
           </div>
         </DialogContent>
         <DialogActions className="p-6 pt-0">
-          <Button
-            onClick={handleDeletePitchCancel}
-            variant="outlined"
-            className="border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeletePitchConfirm}
-            variant="contained"
-            className="bg-red-600 hover:bg-red-700 text-white"
-            startIcon={<Trash2 className="w-4 h-4" />}
-          >
-            Delete Pitch
-          </Button>
+          <Button onClick={handleDeletePitchCancel} variant="outlined" className="border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</Button>
+          <Button onClick={handleDeletePitchConfirm} variant="contained" className="bg-red-600 hover:bg-red-700 text-white" startIcon={<Trash2 className="w-4 h-4" />}>Delete Pitch</Button>
         </DialogActions>
       </Dialog>
-
       {/* MUI Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
       </Snackbar>
     </div>
   );
 };
-
-// Helper component for video preview
-function PitchVideoPlayer({ filePath }) {
-  const [signedUrl, setSignedUrl] = useState("");
-  useEffect(() => {
-    async function getSignedUrl() {
-      if (!filePath) return;
-      const { data } = await supabase.storage
-        .from("pitch-videos")
-        .createSignedUrl(filePath, 60 * 60);
-      setSignedUrl(data?.signedUrl || "");
-    }
-    getSignedUrl();
-  }, [filePath]);
-  if (!signedUrl) return <span>Loading video...</span>;
-  return <video src={signedUrl} controls width={200} />;
-}
 
 export default UserProfile;

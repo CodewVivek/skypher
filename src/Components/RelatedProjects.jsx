@@ -110,6 +110,9 @@ const RelatedProjects = ({ categoryType, excludeProjectId }) => {
                                     src={project.thumbnail_url}
                                     alt={`${project.name} thumbnail`}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    loading="eager"
+                                    fetchPriority="high"
+                                    decoding="async"
                                 />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">

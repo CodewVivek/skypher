@@ -186,132 +186,168 @@ const Settings = () => {
     switch (activeTab) {
       case "profile":
         return (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              Profile Information
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Update your personal details here.
-            </p>
-            <div className="space-y-6">
-              <div className="flex items-center gap-6">
-                <img
-                  src={
-                    avatarUrl ||
-                    `https://api.dicebear.com/6.x/initials/svg?seed=${profile?.username}`
-                  }
-                  alt="Profile Avatar"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-white shadow"
-                />
-                <div className="flex items-center gap-3">
-                  <button
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                    type="button"
-                  >
-                    <Camera className="w-4 h-4" /> Change Photo
-                  </button>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    style={{ display: "none" }}
-                    onChange={handleAvatarChange}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="space-y-6"
+          >
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-1">
+                Profile Information
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">
+                Update your personal details here.
+              </p>
+              <div className="space-y-6">
+                <div className="flex items-center gap-6">
+                  <img
+                    src={
+                      avatarUrl ||
+                      `https://api.dicebear.com/6.x/initials/svg?seed=${profile?.username}`
+                    }
+                    alt="Profile Avatar"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-white shadow"
                   />
+                  <div className="flex items-center gap-3">
+                    <button
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+                      onClick={() => fileInputRef.current?.click()}
+                      type="button"
+                    >
+                      <Camera className="w-4 h-4" /> Change Photo
+                    </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      style={{ display: "none" }}
+                      onChange={handleAvatarChange}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      name="full_name"
+                      value={formData.full_name}
+                      onChange={handleFormChange}
+                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={profile?.email || ""}
+                      className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 cursor-not-allowed text-gray-500"
+                      readOnly
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
+                    Bio
                   </label>
-                  <input
-                    type="text"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleFormChange}
+                  <textarea
+                    name="bio"
                     className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                    rows="4"
+                    placeholder="Tell us about yourself..."
+                    value={formData.bio}
+                    onChange={handleFormChange}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={profile?.email || ""}
-                    className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 cursor-not-allowed text-gray-500"
-                    readOnly
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bio
-                </label>
-                <textarea
-                  name="bio"
-                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
-                  rows="4"
-                  placeholder="Tell us about yourself..."
-                  value={formData.bio}
-                  onChange={handleFormChange}
-                />
               </div>
             </div>
-          </div>
+            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 transition-colors duration-300 rounded-b-md mt-6">
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
         );
       case "socials":
         return (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              Social Links
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Connect your other accounts.
-            </p>
-            <div className="space-y-4">
-              {["twitter", "linkedin", "portfolio", "youtube"].map((social) => (
-                <div key={social}>
-                  <label className="block text-sm font-medium text-gray-700 capitalize mb-1">
-                    {social}
-                  </label>
-                  <input
-                    type="url"
-                    name={social}
-                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
-                    placeholder={`https://...`}
-                    value={formData[social]}
-                    onChange={handleFormChange}
-                  />
-                </div>
-              ))}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+            className="space-y-6"
+          >
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-1">
+                Social Links
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">
+                Connect your other accounts.
+              </p>
+              <div className="space-y-4">
+                {["twitter", "linkedin", "portfolio", "youtube"].map((social) => (
+                  <div key={social}>
+                    <label className="block text-sm font-medium text-gray-700 capitalize mb-1">
+                      {social}
+                    </label>
+                    <input
+                      type="url"
+                      name={social}
+                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                      placeholder={`https://...`}
+                      value={formData[social]}
+                      onChange={handleFormChange}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 transition-colors duration-300 rounded-b-md mt-6">
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </form>
         );
       case "danger":
         return (
-          <div>
-            <h2 className="text-2xl font-bold text-red-600 mb-1">
-              Danger Zone
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Manage your account deletion here.
-            </p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h3 className="font-bold text-red-800">
-                Delete Your Account
-              </h3>
-              <p className="text-sm text-red-700 mt-2 mb-4">
-                Once you delete your account, there is no going back. Please be
-                certain.
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-red-600 mb-1">
+                Danger Zone
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">
+                Manage your account deletion here.
               </p>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
-              >
-                <Trash2 className="w-4 h-4" /> Delete Account
-              </button>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h3 className="font-bold text-red-800">
+                  Delete Your Account
+                </h3>
+                <p className="text-sm text-red-700 mt-2 mb-4">
+                  Once you delete your account, there is no going back. Please be
+                  certain.
+                </p>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete Account
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -382,27 +418,11 @@ const Settings = () => {
           </aside>
 
           <div className="space-y-6 sm:px-6 lg:px-0 lg:col-span-9">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSave();
-              }}
-            >
-              <div className="shadow sm:rounded-md sm:overflow-hidden">
-                <div className="bg-white py-6 px-4 space-y-6 sm:p-6 transition-colors duration-300">
-                  {renderContent()}
-                </div>
-                <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 transition-colors duration-300">
-                  <button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm py-2 px-4 inline-flex justify-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    disabled={saving}
-                  >
-                    {saving ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
+            <div className="shadow sm:rounded-md sm:overflow-hidden">
+              <div className="bg-white py-6 px-4 sm:p-6 transition-colors duration-300">
+                {renderContent()}
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </main>

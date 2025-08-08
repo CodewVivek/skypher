@@ -39,7 +39,7 @@ const LaunchDropdown = ({ user }) => {
                     </Link>
                     {user && (
                         <Link
-                            to="/upload-pitch"
+                            to="/uploadpitch"
                             onClick={() => setOpen(false)}
                             className="block px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center gap-2"
                         >

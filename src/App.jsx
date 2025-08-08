@@ -1,31 +1,47 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import Header from "./Components/Header";
+import Sidebar from "./Components/Sidebar";
 import Register from "./Pages/Register";
 import UserRegister from "./Pages/UserRegister";
-import ProjectDetails from "./Pages/ProjectDetails.jsx";
-import DashBoard from "./Pages/DashBoard.jsx";
-import TermsOfService from "./Pages/TermsOfService";
-import PrivacyPolicy from "./Pages/PrivacyPolicy";
+import DashBoard from "./Pages/DashBoard";
+import ProjectDetails from "./Pages/ProjectDetails";
+import UserProfile from "./Pages/UserProfile";
+import PitchUpload from "./Pages/PitchUpload";
+import ComingSoon from "./others/ComingSoon.jsx";
+import LaunchItGuide from "./others/LaunchItGuide.jsx";
+import LandingPage from "./others/LandingPage.jsx";
 import AdminDashboard from "./Pages/AdminDashboard";
-import Settings from "./Components/Settings.jsx";
-import Aboutus from "./Components/Aboutus.jsx";
-import Footer from "./Components/Footer.jsx";
-import UserProfile from "./Pages/UserProfile.jsx";
-import Suggestions from "./Pages/Suggestions.jsx";
-import LaunchItGuide from "./Pages/LaunchItGuide.jsx";
+import Settings from "./Components/Settings";
+import TermsOfService from "./others/TermsOfService.jsx";
+import PrivacyPolicy from "./others/PrivacyPolicy.jsx";
+import Aboutus from "./others/Aboutus.jsx";
+import Suggestions from "./others/Suggestions.jsx";
+import ApprovedPitches from "./Pages/ApprovedPitchesGallery.jsx";
+import MyLaunches from "./Pages/userinfoyou/MyLaunches.jsx";
+import SavedProjects from "./Pages/userinfoyou/SavedProjects.jsx";
+import UpvotedProjects from "./Pages/userinfoyou/UpvotedProjects.jsx";
+import MyComments from "./Pages/userinfoyou/MyComments.jsx";
+import FollowersFollowing from "./Pages/userinfoyou/FollowersFollowing.jsx";
+import CategoryProjects from "./Pages/CategoryProjects.jsx";
 import ScrollToTop from "./Components/ScrollToTop";
-import { AnimatePresence, motion } from "framer-motion";
-import PitchUpload from "./Pages/PitchUpload.jsx";
-import ComingSoon from "./Pages/ComingSoon.jsx";
 
 function AppRoutes() {
   const location = useLocation();
+  const hideHeaderFooter = location.pathname === "/launchpage";
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleSidebarToggle = () => setSidebarOpen((open) => !open);
+
   return (
-    <div className="">
-      <div className="flex-1 flex flex-col ">
-        <Header />
-        <main className="flex-grow" style={{ minHeight: "100%" }}>
+    <div className="flex min-h-screen transition-colors duration-300">
+      {!hideHeaderFooter && (
+        <Sidebar isOpen={sidebarOpen} />
+      )}
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:ml-60' : 'lg:ml-10'}`}>
+        {!hideHeaderFooter && <Header onMenuClick={handleSidebarToggle} />}
+        <main className="flex-grow pt-16" style={{ minHeight: "100%" }}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route
@@ -110,14 +126,6 @@ function AppRoutes() {
                 }
               />
               <Route
-                path="/footer"
-                element={
-                  <PageFade>
-                    <Footer />
-                  </PageFade>
-                }
-              />
-              <Route
                 path="/suggestions"
                 element={
                   <PageFade>
@@ -149,10 +157,89 @@ function AppRoutes() {
                   </PageFade>
                 }
               />
+              <Route
+                path="/my-launches"
+                element={
+                  <PageFade>
+                    <MyLaunches />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/saved-projects"
+                element={
+                  <PageFade>
+                    <SavedProjects />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/upvoted-projects"
+                element={
+                  <PageFade>
+                    <UpvotedProjects />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/viewed-history"
+                element={
+                  <PageFade>
+                    <ComingSoon />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/launch-challenges"
+                element={
+                  <PageFade>
+                    <ComingSoon />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/my-comments"
+                element={
+                  <PageFade>
+                    <MyComments />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/downloads"
+                element={
+                  <PageFade>
+                    <ComingSoon />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/followers-following"
+                element={
+                  <PageFade>
+                    <FollowersFollowing />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/approved-pitches"
+                element={
+                  <PageFade>
+                    <ApprovedPitches />
+                  </PageFade>
+                }
+              />
+              <Route
+                path="/category/:category"
+                element={
+                  <PageFade>
+                    <CategoryProjects />
+                  </PageFade>
+                }
+              />
             </Routes>
           </AnimatePresence>
         </main>
-        <Footer />
       </div>
     </div>
   );

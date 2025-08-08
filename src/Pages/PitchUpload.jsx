@@ -55,15 +55,9 @@ export default function PitchUpload() {
     const fetchApprovedPitches = async () => {
         setLoadingApprovedPitches(true);
         try {
-            console.log("Fetching approved pitches...");
-
-            // First, fetch pitches with project data
             const { data: pitchesData, error: pitchesError } = await supabase
                 .from("pitch_submissions")
-                .select(
-                    `
-                    *,
-                    projects:project_id (
+                .select(`*,projects:project_id (
                         id, 
                         name, 
                         tagline, 
@@ -75,7 +69,6 @@ export default function PitchUpload() {
                 .eq("status", "approved")
                 .order("created_at", { ascending: false });
 
-            console.log("Pitches query result:", { pitchesData, pitchesError });
 
             if (pitchesError) {
                 console.error("Error fetching pitches:", pitchesError);
@@ -83,18 +76,12 @@ export default function PitchUpload() {
                 return;
             }
 
-            // Then, fetch user profiles for all unique user IDs
             if (pitchesData && pitchesData.length > 0) {
-                console.log("Found pitches data:", pitchesData.length, "pitches");
                 const userIds = [...new Set(pitchesData.map((p) => p.user_id))];
-                console.log("User IDs to fetch profiles for:", userIds);
-
                 const { data: profilesData, error: profilesError } = await supabase
                     .from("profiles")
                     .select("id, full_name")
                     .in("id", userIds);
-
-                console.log("Profiles query result:", { profilesData, profilesError });
 
                 if (profilesError) {
                     console.error("Error fetching profiles:", profilesError);
@@ -109,12 +96,9 @@ export default function PitchUpload() {
                         ...pitch,
                         profiles: profilesMap[pitch.user_id],
                     }));
-
-                    console.log("Final combined data:", combinedData);
                     setApprovedPitches(combinedData);
                 }
             } else {
-                console.log("No pitches data found");
                 setApprovedPitches([]);
             }
         } catch (err) {
@@ -129,7 +113,6 @@ export default function PitchUpload() {
         fetchApprovedPitches();
     }, []);
 
-    // File upload helper
     async function uploadPitchFile(file, userId, projectId) {
         const ext = file.name.split(".").pop();
         const filePath = `${userId}/${projectId}/${Date.now()}-pitch.${ext}`;
@@ -780,7 +763,7 @@ function ApprovedPitchVideoPlayer({ filePath }) {
                     path = filePath.split('/storage/v1/object/public/pitch-videos/')[1];
                 }
 
-                console.log("Creating signed URL for path:", path);
+
 
                 const { data, error } = await supabase.storage
                     .from("pitch-videos")
