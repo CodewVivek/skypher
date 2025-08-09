@@ -299,6 +299,25 @@ const UserProfile = () => {
   };
   const handleDeletePitchCancel = () => { setDeletePitchModal({ open: false, pitchId: null, status: null }); };
 
+  // Delete comment handler
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("comments").delete().eq("id", commentId);
+      if (error) throw error;
+
+      // Refresh comments
+      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      toast.success("Comment deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      toast.error("Failed to delete comment. Please try again.");
+    }
+  };
+
   // Status icons and colors
   const getStatusIcon = (status) => {
     switch (status) {
@@ -639,12 +658,23 @@ const UserProfile = () => {
                         />
                         <div className="flex-1">
                           <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">{comment.content}</p>
-                          <div className="text-xs text-gray-500 mt-2">
-                            <span>Commented on{" "}
-                              <a href={`/launches/${comment.projects.slug}`} className="font-semibold text-blue-600 hover:underline">{comment.projects.name}</a>
-                            </span>
-                            <span className="mx-1">·</span>
-                            <span>{getTimeAgo(comment.created_at)}</span>
+                          <div className="text-xs text-gray-500 mt-2 flex items-center justify-between">
+                            <div>
+                              <span>Commented on{" "}
+                                <a href={`/launches/${comment.projects.slug}`} className="font-semibold text-blue-600 hover:underline">{comment.projects.name}</a>
+                              </span>
+                              <span className="mx-1">·</span>
+                              <span>{getTimeAgo(comment.created_at)}</span>
+                            </div>
+                            {isOwner && (
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-50"
+                                title="Delete comment"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -666,9 +696,9 @@ const UserProfile = () => {
       <Dialog open={!!editProject} onClose={handleEditClose} maxWidth="sm" fullWidth>
         <DialogTitle>Edit {editForm.name}</DialogTitle>
         <DialogContent>
-          <TextField label="Name" name="name" value={editForm.name || ""} onChange={handleEditChange} fullWidth margin="dense" />
+          <TextField label="Name" name="name" value={editForm.name || ""} onChange={handleEditChange} fullWidth margin="dense" disabled={editProject?.status !== "draft"} />
           <TextField label="Tagline" name="tagline" value={editForm.tagline || ""} onChange={handleEditChange} fullWidth margin="dense" />
-          <TextField label="Website URL" name="website_url" value={editForm.website_url || ""} onChange={handleEditChange} fullWidth margin="dense" />
+          <TextField label="Website URL" name="website_url" value={editForm.website_url || ""} onChange={handleEditChange} fullWidth margin="dense" disabled={editProject?.status !== "draft"} />
           <TextField label="Description" name="description" value={editForm.description || ""} onChange={handleEditChange} fullWidth margin="dense" multiline rows={4} />
           {editError && (<Alert severity="error" className="mt-4">{editError}</Alert>)}
         </DialogContent>

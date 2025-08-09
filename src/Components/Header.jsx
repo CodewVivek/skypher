@@ -370,12 +370,6 @@ const Header = ({ onMenuClick }) => {
                     Coming Soon
                 </Link>
 
-                {!user && (
-                    <Link to="/launchpage" className="text-gray-800 text-gray-800font-medium">
-                        Get Started
-                    </Link>
-                )}
-
                 {userRole === "admin" && (
                     <Link to="/admin" className="text-gray-800 text-gray-800font-medium">Admin</Link>
                 )}
@@ -446,8 +440,44 @@ const Header = ({ onMenuClick }) => {
                 </div>
             </nav>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Navigation - Right Side */}
             <div className="md:hidden flex items-center space-x-2">
+                {/* + Launch Dropdown Mobile */}
+                <div className="relative">
+                    <button
+                        onClick={handleLaunchDropdownToggle}
+                        className="flex items-center gap-1 px-3 py-2 text-black rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                        <CirclePlus className="w-4 h-4" />
+                        <span className="text-sm">Launch</span>
+                    </button>
+
+                    {launchDropdownOpen && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                            <button
+                                onClick={() => handleLaunchItemClick('submit')}
+                                className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                            >
+                                <CirclePlus className="w-4 h-4 mr-2" />
+                                Submit
+                            </button>
+                            {user && (
+                                <button
+                                    onClick={() => handleLaunchItemClick('pitch')}
+                                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Video className="w-4 h-4 mr-2" />
+                                    Pitch
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Notifications Mobile */}
+                {user && <NotificationBell />}
+
+                {/* User Dropdown Mobile */}
                 <div className="user-dropdown relative">
                     <button className="p-2 rounded-full hover:bg-white/20" onClick={handlepopover}>
                         {user ? (
@@ -517,8 +547,6 @@ const Header = ({ onMenuClick }) => {
                     {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
             </div>
-
-
             {/* Mobile Search Bar */}
             <div className="block md:hidden px-4 pb-2 bg-blue-500">
                 <div className="relative w-full max-w-full mx-auto">
@@ -574,11 +602,6 @@ const Header = ({ onMenuClick }) => {
                                 <Rocket className="w-4 h-4" />
                                 Coming Soon
                             </Link>
-                            {!user && (
-                                <Link to="/launchpage" className="block text-gray-800 text-gray-800font-medium py-2">
-                                    Get Started
-                                </Link>
-                            )}
                             {userRole === "admin" && (
                                 <Link to="/admin" className="block text-gray-800 text-gray-800 font-medium py-2">Admin</Link>
                             )}

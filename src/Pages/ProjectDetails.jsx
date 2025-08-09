@@ -303,8 +303,8 @@ const ProjectDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-16">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 py-10 px-4 lg:px-6">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 lg:gap-8 py-6 lg:py-10 px-4 lg:px-6">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-4 justify-center">
             <div className="flex flex-col items-center justify-center w-full max-w-2xl p-6 text-center ">
@@ -326,7 +326,8 @@ const ProjectDetails = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-4">
                 <a
-                  href={project.website_url}
+                  href={`${project.website_url}${project.website_url.includes('?') ? '&' : '?'
+                    }ref=launchit`}
                   target="_blank"
                   rel="noopener"
                   className="px-6 lg:px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full shadow transition text-base lg:text-lg flex items-center gap-2"
@@ -453,7 +454,13 @@ const ProjectDetails = () => {
               <h2 className="text-lg font-bold mb-4">Launch Info</h2>
               <div className="flex items-center gap-2 mb-2">
                 <ExternalLink className="w-4 h-4" />
-                <a href={project.website_url} target="_blank" rel="noopener" className="text-blue-700 hover:underline truncate text-sm">{project.website_url}</a>
+                <a href={`${project.website_url}${project.website_url.includes('?') ? '&' : '?'
+                  }ref=launchit`}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-blue-700 hover:underline truncate text-sm">
+                  {project.website_url}
+                </a>
               </div>
               <div className="flex items-center gap-2 mb-4">
                 <Calendar className="w-4 h-4" />
@@ -524,13 +531,15 @@ const ProjectDetails = () => {
                     </span>
                   </button>
                 )}
-                <button
-                  onClick={() => setIsReportModalOpen(true)}
-                  className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-700 hover:text-orange-600 transition-colors"
-                >
-                  <Flag className="h-4 w-4" />
-                  <span className="text-sm">Report</span>
-                </button>
+                {user && user.id !== project.user_id && (
+                  <button
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="w-full flex items-center gap-2 p-2 rounded-lg text-gray-700 hover:text-orange-600 transition-colors"
+                  >
+                    <Flag className="h-4 w-4" />
+                    <span className="text-sm">Report</span>
+                  </button>
+                )}
                 <TrendingProjects limit={5} by="likes" />
               </div>
             </div>

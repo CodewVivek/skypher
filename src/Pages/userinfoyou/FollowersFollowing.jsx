@@ -35,45 +35,57 @@ const FollowersFollowing = () => {
             // Fetch users that current user is following
             const { data: followingData, error: followingError } = await supabase
                 .from('follows')
-                .select(`
-                    following_id,
-                    profiles!follows_following_id_fkey (
-                        id,
-                        username,
-                        full_name,
-                        avatar_url,
-                        bio
-                    )
-                `)
+                .select('following_id')
                 .eq('follower_id', userId);
 
             if (followingError) {
                 console.error('Error fetching following:', followingError);
                 toast.error('Failed to load following data');
             } else {
-                setFollowing(followingData || []);
+                // Get the user profiles for the following IDs
+                if (followingData && followingData.length > 0) {
+                    const followingIds = followingData.map(item => item.following_id);
+                    const { data: profilesData, error: profilesError } = await supabase
+                        .from('profiles')
+                        .select('id, username, full_name, avatar_url, bio')
+                        .in('id', followingIds);
+
+                    if (profilesError) {
+                        console.error('Error fetching profiles:', profilesError);
+                    } else {
+                        setFollowing(profilesData || []);
+                    }
+                } else {
+                    setFollowing([]);
+                }
             }
 
             // Fetch users who are following current user
             const { data: followersData, error: followersError } = await supabase
                 .from('follows')
-                .select(`
-                    follower_id,
-                    profiles!follows_follower_id_fkey (
-                        id,
-                        username,
-                        full_name,
-                        avatar_url,
-                        bio
-                    )
-                `)
+                .select('follower_id')
                 .eq('following_id', userId);
 
             if (followersError) {
                 console.error('Error fetching followers:', followersError);
                 toast.error('Failed to load followers data');
             } else {
-                setFollowers(followersData || []);
+                // Get the user profiles for the follower IDs
+                if (followersData && followersData.length > 0) {
+                    const followerIds = followersData.map(item => item.follower_id);
+                    const { data: profilesData, error: profilesError } = await supabase
+                        .from('profiles')
+                        .select('id, username, full_name, avatar_url, bio')
+                        .in('id', followerIds);
+
+                    if (profilesError) {
+                        console.error('Error fetching profiles:', profilesError);
+                    } else {
+                        setFollowers(profilesData || []);
+                    }
+                } else {
+                    setFollowers([]);
+                }
             }
 
         } catch (error) {
@@ -138,7 +150,7 @@ const FollowersFollowing = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-16">
+        <div className="min-h-screen">
             <div className="max-w-4xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">
@@ -197,32 +209,32 @@ const FollowersFollowing = () => {
                             </div>
                         ) : (
                             <div className="grid gap-4">
-                                {following.map((item) => (
+                                {following.map((profile) => (
                                     <div
-                                        key={item.following_id}
+                                        key={profile.id}
                                         className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center justify-between"
                                     >
                                         <div className="flex items-center gap-4">
                                             <img
-                                                src={item.profiles.avatar_url || '/default-avatar.png'}
-                                                alt={item.profiles.full_name || item.profiles.username}
+                                                src={profile.avatar_url || '/default-avatar.png'}
+                                                alt={profile.full_name || profile.username}
                                                 className="w-12 h-12 rounded-full object-cover"
                                                 loading="lazy"
                                             />
                                             <div>
                                                 <h3 className="font-semibold text-gray-900">
-                                                    {item.profiles.full_name || 'Anonymous'}
+                                                    {profile.full_name || 'Anonymous'}
                                                 </h3>
-                                                <p className="text-sm text-gray-500">@{item.profiles.username}</p>
-                                                {item.profiles.bio && (
+                                                <p className="text-sm text-gray-500">@{profile.username}</p>
+                                                {profile.bio && (
                                                     <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                                        {item.profiles.bio}
+                                                        {profile.bio}
                                                     </p>
                                                 )}
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => handleUnfollow(item.following_id, item.profiles.full_name || item.profiles.username)}
+                                            onClick={() => handleUnfollow(profile.id, profile.full_name || profile.username)}
                                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
                                         >
                                             <UserCheck className="w-4 h-4 inline mr-2" />
@@ -251,32 +263,32 @@ const FollowersFollowing = () => {
                             </div>
                         ) : (
                             <div className="grid gap-4">
-                                {followers.map((item) => (
+                                {followers.map((profile) => (
                                     <div
-                                        key={item.follower_id}
+                                        key={profile.id}
                                         className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex items-center justify-between"
                                     >
                                         <div className="flex items-center gap-4">
                                             <img
-                                                src={item.profiles.avatar_url || '/default-avatar.png'}
-                                                alt={item.profiles.full_name || item.profiles.username}
+                                                src={profile.avatar_url || '/default-avatar.png'}
+                                                alt={profile.full_name || profile.username}
                                                 className="w-12 h-12 rounded-full object-cover"
                                                 loading="lazy"
                                             />
                                             <div>
                                                 <h3 className="font-semibold text-gray-900">
-                                                    {item.profiles.full_name || 'Anonymous'}
+                                                    {profile.full_name || 'Anonymous'}
                                                 </h3>
-                                                <p className="text-sm text-gray-500">@{item.profiles.username}</p>
-                                                {item.profiles.bio && (
+                                                <p className="text-sm text-gray-500">@{profile.username}</p>
+                                                {profile.bio && (
                                                     <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                                        {item.profiles.bio}
+                                                        {profile.bio}
                                                     </p>
                                                 )}
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => navigate(`/profile/${item.profiles.username}`)}
+                                            onClick={() => navigate(`/profile/${profile.username}`)}
                                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                                         >
                                             View Profile

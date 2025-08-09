@@ -75,7 +75,6 @@ const Sidebar = ({ isOpen }) => {
         return (
             <aside className={`fixed left-0 top-16 w-16 h-[calc(100vh-64px)] bg-white overflow-y-auto ${isProjectDetails ? 'z-50' : 'z-40'}`}>
                 <div className="p-2">
-
                     <div className="space-y-2">
                         {mainItems.map((item) => (
                             <Link
@@ -97,10 +96,10 @@ const Sidebar = ({ isOpen }) => {
     }
 
     return (
-        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white border-r border-gray-200 overflow-y-auto ${isProjectDetails ? 'z-50' : 'z-40'}`}>
-            <div className="p-3">
+        <aside className={`fixed left-0 top-16 w-60 h-[calc(100vh-64px)] bg-white overflow-y-auto ${isProjectDetails ? 'z-50' : 'z-40'}`}>
+            <div className="">
                 {/* Main Navigation */}
-                <div className="space-y-1">
+                <div className="space-y-1 p-2">
                     {mainItems.map((item) => (
                         <Link
                             key={item.title}

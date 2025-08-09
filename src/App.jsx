@@ -11,7 +11,6 @@ import UserProfile from "./Pages/UserProfile";
 import PitchUpload from "./Pages/PitchUpload";
 import ComingSoon from "./others/ComingSoon.jsx";
 import LaunchItGuide from "./others/LaunchItGuide.jsx";
-import LandingPage from "./others/LandingPage.jsx";
 import AdminDashboard from "./Pages/AdminDashboard";
 import Settings from "./Components/Settings";
 import TermsOfService from "./others/TermsOfService.jsx";
@@ -34,209 +33,45 @@ function AppRoutes() {
 
   const handleSidebarToggle = () => setSidebarOpen((open) => !open);
 
+  const isProjectDetailsPage = location.pathname.startsWith("/launches/");
+
+  // The main content container will have a left margin ONLY IF the sidebar is open AND it's NOT the ProjectDetails page
+  const mainContentMargin = sidebarOpen && !isProjectDetailsPage ? 'lg:ml-60' : 'lg:ml-10';
+
   return (
     <div className="flex min-h-screen transition-colors duration-300">
       {!hideHeaderFooter && (
-        <Sidebar isOpen={sidebarOpen} />
+        <Sidebar isOpen={sidebarOpen} isProjectDetails={isProjectDetailsPage} />
       )}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:ml-60' : 'lg:ml-10'}`}>
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${mainContentMargin}`}>
         {!hideHeaderFooter && <Header onMenuClick={handleSidebarToggle} />}
         <main className="flex-grow pt-16" style={{ minHeight: "100%" }}>
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-              <Route
-                path="/admin"
-                element={
-                  <PageFade>
-                    <AdminDashboard />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/"
-                element={
-                  <PageFade>
-                    <DashBoard />
-                  </PageFade>
-                }
-              />
-
-              <Route
-                path="/UserRegister"
-                element={
-                  <PageFade>
-                    <UserRegister />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/submit"
-                element={
-                  <PageFade>
-                    <Register />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/launches/:slug"
-                element={
-                  <PageFade>
-                    <ProjectDetails />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <PageFade>
-                    <Settings />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/profile/:username"
-                element={
-                  <PageFade>
-                    <UserProfile />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/terms"
-                element={
-                  <PageFade>
-                    <TermsOfService />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/privacy"
-                element={
-                  <PageFade>
-                    <PrivacyPolicy />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/aboutus"
-                element={
-                  <PageFade>
-                    <Aboutus />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/suggestions"
-                element={
-                  <PageFade>
-                    <Suggestions />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/launchitguide"
-                element={
-                  <PageFade>
-                    <LaunchItGuide />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/upload-pitch"
-                element={
-                  <PageFade>
-                    <PitchUpload />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/coming-soon"
-                element={
-                  <PageFade>
-                    <ComingSoon />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/my-launches"
-                element={
-                  <PageFade>
-                    <MyLaunches />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/saved-projects"
-                element={
-                  <PageFade>
-                    <SavedProjects />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/upvoted-projects"
-                element={
-                  <PageFade>
-                    <UpvotedProjects />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/viewed-history"
-                element={
-                  <PageFade>
-                    <ComingSoon />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/launch-challenges"
-                element={
-                  <PageFade>
-                    <ComingSoon />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/my-comments"
-                element={
-                  <PageFade>
-                    <MyComments />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/downloads"
-                element={
-                  <PageFade>
-                    <ComingSoon />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/followers-following"
-                element={
-                  <PageFade>
-                    <FollowersFollowing />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/approved-pitches"
-                element={
-                  <PageFade>
-                    <ApprovedPitches />
-                  </PageFade>
-                }
-              />
-              <Route
-                path="/category/:category"
-                element={
-                  <PageFade>
-                    <CategoryProjects />
-                  </PageFade>
-                }
-              />
+              <Route path="/admin" element={<PageFade><AdminDashboard /></PageFade>} />
+              <Route path="/" element={<PageFade><DashBoard /></PageFade>} />
+              <Route path="/UserRegister" element={<PageFade><UserRegister /></PageFade>} />
+              <Route path="/submit" element={<PageFade><Register /></PageFade>} />
+              <Route path="/launches/:slug" element={<PageFade><ProjectDetails /></PageFade>} />
+              <Route path="/settings" element={<PageFade><Settings /></PageFade>} />
+              <Route path="/profile/:username" element={<PageFade><UserProfile /></PageFade>} />
+              <Route path="/terms" element={<PageFade><TermsOfService /></PageFade>} />
+              <Route path="/privacy" element={<PageFade><PrivacyPolicy /></PageFade>} />
+              <Route path="/aboutus" element={<PageFade><Aboutus /></PageFade>} />
+              <Route path="/suggestions" element={<PageFade><Suggestions /></PageFade>} />
+              <Route path="/launchitguide" element={<PageFade><LaunchItGuide /></PageFade>} />
+              <Route path="/upload-pitch" element={<PageFade><PitchUpload /></PageFade>} />
+              <Route path="/coming-soon" element={<PageFade><ComingSoon /></PageFade>} />
+              <Route path="/my-launches" element={<PageFade><MyLaunches /></PageFade>} />
+              <Route path="/saved-projects" element={<PageFade><SavedProjects /></PageFade>} />
+              <Route path="/upvoted-projects" element={<PageFade><UpvotedProjects /></PageFade>} />
+              <Route path="/viewed-history" element={<PageFade><ComingSoon /></PageFade>} />
+              <Route path="/launch-challenges" element={<PageFade><ComingSoon /></PageFade>} />
+              <Route path="/my-comments" element={<PageFade><MyComments /></PageFade>} />
+              <Route path="/downloads" element={<PageFade><ComingSoon /></PageFade>} />
+              <Route path="/followers-following" element={<PageFade><FollowersFollowing /></PageFade>} />
+              <Route path="/approved-pitches" element={<PageFade><ApprovedPitches /></PageFade>} />
+              <Route path="/category/:category" element={<PageFade><CategoryProjects /></PageFade>} />
             </Routes>
           </AnimatePresence>
         </main>

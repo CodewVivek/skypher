@@ -88,7 +88,7 @@ const UpvotedProjects = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 pt-16">
+            <div className="min-h-screen">
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="flex flex-col items-center space-y-4">
                         <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
@@ -118,7 +118,7 @@ const UpvotedProjects = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-16">
+        <div className="min-h-screen ">
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-8">

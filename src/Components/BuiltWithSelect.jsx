@@ -192,7 +192,7 @@ export default function BuiltWithSelect({ value, onChange }) {
           inputValue ? `No results for "${inputValue}"` : "No options"
         }
       />
-      <div className="mt-6">
+      <div className="mt-2">
         <div className="font-semibold mb-2 text-gray-500 text-base">
           Suggested
         </div>

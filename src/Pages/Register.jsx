@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Plus, X, Upload, User, Star } from 'lucide-react';
-import { useDropzone } from 'react-dropzone';
+import { Plus, X, Upload, User, Star, Rocket, Link as LinkIcon, Edit3, Image, Layout, Layers, Hash } from 'lucide-react';
 import Select from 'react-select';
 import { supabase } from '../supabaseClient';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -9,6 +8,28 @@ import { nanoid } from 'nanoid';
 import Snackbar from '@mui/material/Snackbar';
 import categoryOptions from '../Components/categoryOptions';
 import BuiltWithSelect from '../Components/BuiltWithSelect';
+
+// Custom styles for the react-select component to match the new UI
+const customSelectStyles = {
+    control: (provided, state) => ({
+        ...provided,
+        borderRadius: '0.5rem',
+        padding: '0.25rem',
+        backgroundColor: '#f9fafb', // Light gray background
+        borderColor: state.isFocused ? '#2563eb' : '#e5e7eb',
+        boxShadow: state.isFocused ? '0 0 0 1px #2563eb' : 'none',
+        '&:hover': { borderColor: '#d1d5db' },
+        fontSize: '0.875rem',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#1f2937' }),
+    placeholder: (provided) => ({ ...provided, color: '#9ca3af' }),
+    option: (provided, state) => ({
+        ...provided,
+        backgroundColor: state.isFocused ? '#eff6ff' : '#fff',
+        color: state.isFocused ? '#2563eb' : '#1f2937',
+        fontSize: '0.875rem',
+    }),
+};
 
 function getLinkType(url) {
     if (!url) return { label: 'Website', icon: '🌐' };
@@ -39,14 +60,9 @@ const Register = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [user, setUser] = useState(null);
-    const [isClearable, setIsClearable] = useState(true);
-    const [isSearchable, setIsSearchable] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [formError, setFormError] = useState('');
-    const [uploadError, setUploadError] = useState('');
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
     const [urlError, setUrlError] = useState('');
-    const [showAutoSave, setShowAutoSave] = useState(false);
-    const [showDraftSaved, setShowDraftSaved] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editingProjectId, setEditingProjectId] = useState(null);
     const [loadingProject, setLoadingProject] = useState(false);
@@ -56,7 +72,6 @@ const Register = () => {
     const [projectLoaded, setProjectLoaded] = useState(false);
     const [builtWith, setBuiltWith] = useState([]);
 
-    //validate wheather user entered url is url or not 
     const handleUrlBlur = (e) => {
         const { value } = e.target;
         if (value && !isValidUrl(value)) {
@@ -66,7 +81,6 @@ const Register = () => {
         }
     };
 
-    //links of launches (optional step)
     const [links, setLinks] = useState(['']);
     const addLink = () => setLinks([...links, '']);
     const updateLink = (index, value) => {
@@ -91,63 +105,8 @@ const Register = () => {
             ...formData,
             [name]: type === 'checkbox' ? checked : value,
         });
-        setFormError('');
     };
 
-    //media code
-    const [files, setFiles] = useState([]);
-    const MAX_FILE_SIZE = 5242880; // 5 MB in bytes
-    const MAX_FILES = 3;
-
-    function formatBytes(bytes) {
-        if (bytes < 1024) return `${bytes} bytes`;
-        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    }
-
-    // Utility to sanitize file names for Supabase Storage
-    function sanitizeFileName(name) {
-        // Replace all whitespace (including unicode) and special characters with underscores
-        return name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    }
-
-    const onDrop = useCallback((acceptedFiles) => {
-        setFiles(prevFiles => [...prevFiles, ...acceptedFiles]);
-        setUploadError('');
-    }, []);
-
-    const onDropRejected = (fileRejections) => {
-        let message = '';
-        fileRejections.forEach(rejection => {
-            rejection.errors.forEach(err => {
-                if (err.code === "file-too-large") {
-                    message = "Each file must be smaller than 5.0 MB.";
-                }
-                if (err.code === "too-many-files") {
-                    message = "You can only upload up to 3 files.";
-                }
-                if (err.code === "file-invalid-type") {
-                    message = "Invalid file type. Please upload images or PDFs only.";
-                }
-            });
-        });
-        setUploadError(message);
-    };
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        onDropRejected,
-        accept: {
-            'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
-            'application/pdf': ['.pdf']
-        },
-        maxSize: MAX_FILE_SIZE,
-        maxFiles: MAX_FILES
-    });
-    const removeFile = (index) => {
-        setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
-    };
-
-    // Add state for logo, thumbnail, and cover images
     const [logoFile, setLogoFile] = useState(null);
     const [thumbnailFile, setThumbnailFile] = useState(null);
     const [coverFiles, setCoverFiles] = useState([null, null, null, null]);
@@ -174,11 +133,9 @@ const Register = () => {
         setCoverFiles(prev => prev.map((f, i) => (i === idx ? null : f)));
     };
 
-    // Description word count state
     const [descriptionWordCount, setDescriptionWordCount] = useState(0);
     const DESCRIPTION_WORD_LIMIT = 260;
 
-    // Description input handler with word limit
     const handleDescriptionChange = (e) => {
         const value = e.target.value;
         const words = value.trim().split(/\s+/).filter(Boolean);
@@ -186,28 +143,24 @@ const Register = () => {
             setFormData({ ...formData, description: value });
             setDescriptionWordCount(words.length);
         } else {
-            // Only allow up to the word limit
             const limited = words.slice(0, DESCRIPTION_WORD_LIMIT).join(' ');
             setFormData({ ...formData, description: limited });
             setDescriptionWordCount(DESCRIPTION_WORD_LIMIT);
         }
     };
 
-    // Add taglineCharCount state
     const [taglineCharCount, setTaglineCharCount] = useState(0);
 
-    // Update tagline input onChange handler in Step 1:
     const handleTaglineChange = (e) => {
         setFormData({ ...formData, tagline: e.target.value.slice(0, 60) });
         setTaglineCharCount(e.target.value.length > 60 ? 60 : e.target.value.length);
     };
 
-    //supabase 
     useEffect(() => {
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser(); //get user from supabase
-            if (!user) { //if not signed up then make them to sign up
-                setFormError('Please sign in to submit a project');
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'warning' });
                 navigate('/UserRegister');
                 return;
             }
@@ -216,7 +169,6 @@ const Register = () => {
         checkUser();
     }, [navigate]);
 
-    // Load existing project data for editing
     useEffect(() => {
         const loadProjectForEditing = async () => {
             const editId = searchParams.get('edit');
@@ -233,49 +185,42 @@ const Register = () => {
                         .from('projects')
                         .select('*')
                         .eq('id', projectId)
-                        .eq('user_id', user.id) // Ensure user owns the project
+                        .eq('user_id', user.id)
                         .single();
 
                     if (error) {
                         console.error('Error loading project:', error);
-                        setFormError('Project not found or access denied.');
+                        setSnackbar({ open: true, message: 'Project not found or access denied.', severity: 'error' });
                         return;
                     }
 
                     if (project) {
                         setEditingLaunched(project.status !== 'draft');
-                        // Pre-fill form with existing data
                         setFormData({
                             name: project.name || '',
                             websiteUrl: project.website_url || '',
                             description: project.description || '',
                             tagline: project.tagline || '',
                         });
-                        // Set category if it exists
                         if (project.category_type) {
                             const categoryOption = categoryOptions.flatMap(group => group.options).find(option => option.value === project.category_type);
                             setSelectedCategory(categoryOption || null);
                         }
-                        // Set links if they exist
                         if (project.links && project.links.length > 0) {
                             setLinks(project.links);
                         } else {
                             setLinks(['']);
                         }
-                        // Always start on step 1 for editing, just like new project
-                        setStep(1);
-                        // Project has existing media and logo
-                        // Set existing media and logo URLs
+                        setBuiltWith(project.built_with?.map(tech => ({ value: tech, label: tech })) || []);
                         setExistingMediaUrls(project.media_urls || []);
                         setExistingLogoUrl(project.logo_url || '');
-                        // When loading a draft or edit, set logoFile, thumbnailFile, and coverFiles to URLs from the DB if available
                         setLogoFile(project.logo_url || null);
                         setThumbnailFile(project.thumbnail_url || null);
                         setCoverFiles(project.cover_urls || [null, null, null, null]);
                     }
                 } catch (error) {
                     console.error('Error loading project for editing:', error);
-                    setFormError('Failed to load project for editing.');
+                    setSnackbar({ open: true, message: 'Failed to load project for editing.', severity: 'error' });
                 } finally {
                     setLoadingProject(false);
                     setProjectLoaded(true);
@@ -285,9 +230,8 @@ const Register = () => {
         if (user && !projectLoaded) {
             loadProjectForEditing();
         }
-    }, [user, projectLoaded]);
+    }, [user, projectLoaded, searchParams]);
 
-    // Auto-save to localStorage
     useEffect(() => {
         if (!isEditing) {
             const savedDraft = localStorage.getItem('launch_draft');
@@ -297,78 +241,56 @@ const Register = () => {
                     setFormData(draft.formData || {});
                     setSelectedCategory(draft.selectedCategory || null);
                     setLinks(draft.links || ['']);
-                    setStep(draft.step || 1);
                 } catch { }
             }
         }
     }, [isEditing]);
 
     useEffect(() => {
-        // Save to localStorage on form change, but do not show Snackbar here
         const draft = {
             formData,
             selectedCategory,
             links,
-            step
         };
         localStorage.setItem('launch_draft', JSON.stringify(draft));
-    }, [formData, selectedCategory, links, step]);
+    }, [formData, selectedCategory, links]);
 
-    // Validation functions for submit only
-    const validateStep1 = () => {
-        if (!editingLaunched && (!formData.name || !formData.websiteUrl)) {
-            setFormError('Please fill in all required fields in Basic Info (Step 1).');
-            return false;
-        }
-        if (!formData.description || !formData.tagline || !selectedCategory) {
-            setFormError('Please fill in all required fields in Basic Info (Step 1).');
-            return false;
-        }
-        setFormError('');
-        return true;
-    };
-    const validateLogo = () => {
-        if (!logoFile && !existingLogoUrl) {
-            setFormError('Please upload a logo (Step 3).');
-            return false;
-        }
-        setFormError('');
-        return true;
-    };
-
-    // Utility: Check if form is empty (no required fields filled)
     const isFormEmpty = () => {
         return !formData.name && !formData.tagline && !formData.description && !formData.websiteUrl && !selectedCategory;
     };
 
-    //submission handle with media and all other form data
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setFormError('');
-        setUploadError('');
-        // Only validate on submit
-        const valid1 = validateStep1();
-        if (!valid1) return;
-        if (!user) {
-            setFormError('Please sign in to submit a project');
-            navigate('/UserRegister');
-            return;
-        }
+    const validateForm = () => {
         if (!formData.name || !formData.websiteUrl || !formData.tagline || !selectedCategory || !formData.description) {
-            setFormError('Please fill in all required fields in Main Info.');
-            return;
+            setSnackbar({ open: true, message: 'Please fill in all required fields.', severity: 'error' });
+            setStep(1);
+            return false;
         }
         if (!thumbnailFile) {
-            setFormError('Please upload a thumbnail image for the dashboard.');
-            return;
+            setSnackbar({ open: true, message: 'Please upload a thumbnail image for the dashboard.', severity: 'error' });
+            setStep(2);
+            return false;
         }
-        // Logo and cover images: at least one must be present
         const hasLogo = !!logoFile;
         const hasCover = coverFiles && coverFiles.some(f => !!f);
         if (!hasLogo && !hasCover) {
-            setFormError('Please upload at least a logo or one cover image.');
+            setSnackbar({ open: true, message: 'Please upload at least a logo or one cover image.', severity: 'error' });
+            setStep(2);
+            return false;
+        }
+        return true;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!validateForm()) return;
+
+        if (!user) {
+            setSnackbar({ open: true, message: 'Please sign in to submit a project', severity: 'error' });
+            navigate('/UserRegister');
             return;
         }
+
         const submissionData = {
             name: formData.name,
             website_url: formData.websiteUrl,
@@ -382,62 +304,41 @@ const Register = () => {
             updated_at: new Date().toISOString(),
             status: 'launched',
         };
-        // Generate unique slug
+
         const baseSlug = slugify(formData.name);
         const uniqueSlug = `${baseSlug}-${nanoid(6)}`;
         submissionData.slug = uniqueSlug;
-        //media into supabase bucket 
+
         try {
-            let fileUrls = [...existingMediaUrls]; // Start with existing media
-            if (files.length > 0) {
-                const uploadPromises = files.map(async (file, index) => {
-                    const uniqueTimestamp = Date.now() + index;
-                    const filePath = `${uniqueTimestamp}-${sanitizeFileName(file.name)}`;
-                    const { data, error } = await supabase.storage
-                        .from('startup-media')
-                        .upload(filePath, file);
-                    if (error) throw error;
-                    const { data: urlData } = supabase.storage.from('startup-media').getPublicUrl(filePath);
-                    return urlData.publicUrl;
-                });
-                const newFileUrls = await Promise.all(uploadPromises);
-                fileUrls = [...fileUrls, ...newFileUrls];
-            }
-            submissionData.media_urls = fileUrls;
-            // Logo upload
+            let fileUrls = [...existingMediaUrls];
             let logoUrl = existingLogoUrl;
+            let thumbnailUrl = typeof thumbnailFile === 'string' ? thumbnailFile : '';
+            let coverUrls = [];
+
             if (logoFile && typeof logoFile !== 'string') {
-                const logoPath = `${Date.now()}-logo-${sanitizeFileName(logoFile.name)}`;
-                const { data: logoData, error: logoErrorUpload } = await supabase.storage
-                    .from('startup-media')
-                    .upload(logoPath, logoFile);
+                const logoPath = `${Date.now()}-logo-${logoFile.name}`;
+                const { data: logoData, error: logoErrorUpload } = await supabase.storage.from('startup-media').upload(logoPath, logoFile);
                 if (logoErrorUpload) throw logoErrorUpload;
                 const { data: logoUrlData } = supabase.storage.from('startup-media').getPublicUrl(logoPath);
                 logoUrl = logoUrlData.publicUrl;
             }
             submissionData.logo_url = logoUrl;
-            // Thumbnail upload
-            let thumbnailUrl = typeof thumbnailFile === 'string' ? thumbnailFile : '';
+
             if (thumbnailFile && typeof thumbnailFile !== 'string') {
-                const thumbPath = `${Date.now()}-thumbnail-${sanitizeFileName(thumbnailFile.name)}`;
-                const { data: thumbData, error: thumbError } = await supabase.storage
-                    .from('startup-media')
-                    .upload(thumbPath, thumbnailFile);
+                const thumbPath = `${Date.now()}-thumbnail-${thumbnailFile.name}`;
+                const { data: thumbData, error: thumbError } = await supabase.storage.from('startup-media').upload(thumbPath, thumbnailFile);
                 if (thumbError) throw thumbError;
                 const { data: thumbUrlData } = supabase.storage.from('startup-media').getPublicUrl(thumbPath);
                 thumbnailUrl = thumbUrlData.publicUrl;
             }
             submissionData.thumbnail_url = thumbnailUrl;
-            // Cover images upload
-            let coverUrls = [];
+
             if (coverFiles && coverFiles.length > 0) {
                 for (let i = 0; i < coverFiles.length; i++) {
                     const file = coverFiles[i];
                     if (file && typeof file !== 'string') {
-                        const coverPath = `${Date.now()}-cover-${i}-${sanitizeFileName(file.name)}`;
-                        const { data: coverData, error: coverErrorUpload } = await supabase.storage
-                            .from('startup-media')
-                            .upload(coverPath, file);
+                        const coverPath = `${Date.now()}-cover-${i}-${file.name}`;
+                        const { data: coverData, error: coverErrorUpload } = await supabase.storage.from('startup-media').upload(coverPath, file);
                         if (coverErrorUpload) throw coverErrorUpload;
                         const { data: coverUrlData } = supabase.storage.from('startup-media').getPublicUrl(coverPath);
                         coverUrls.push(coverUrlData.publicUrl);
@@ -448,52 +349,39 @@ const Register = () => {
             }
             submissionData.cover_urls = coverUrls;
 
+            let finalSubmissionData;
             if (isEditing && editingProjectId) {
-                // Always update the existing project (draft or launched)
                 submissionData.status = 'launched';
-                const { data, error } = await supabase
-                    .from('projects')
-                    .update(submissionData)
-                    .eq('id', editingProjectId);
+                const { data, error } = await supabase.from('projects').update(submissionData).eq('id', editingProjectId).select().single();
                 if (error) throw error;
-                // Project updated successfully
-                navigate('/');
-                return;
+                finalSubmissionData = data;
             } else {
-                // Only for brand new projects
-                submissionData.status = 'launched';
-                const { data, error } = await supabase
-                    .from('projects')
-                    .insert([submissionData]);
+                const { data, error } = await supabase.from('projects').insert([submissionData]).select().single();
                 if (error) throw error;
+                finalSubmissionData = data;
             }
+            setSnackbar({ open: true, message: 'Launch submitted successfully!', severity: 'success' });
 
-            setFormData({
-                name: '',
-                websiteUrl: '',
-                description: '',
-                tagline: '',
-            });
+            setTimeout(() => {
+                navigate(`/launches/${finalSubmissionData.slug}`);
+            }, 1000);
+
+            setFormData({ name: '', websiteUrl: '', description: '', tagline: '' });
             setSelectedCategory(null);
             setLinks(['']);
-            setFiles([]);
             setLogoFile(null);
-            setStep(1);
-            setFormError('');
-            setUploadError('');
-            setIsEditing(false);
+            setThumbnailFile(null);
+            setCoverFiles([null, null, null, null]);
             setEditingProjectId(null);
-            navigate('/');
         } catch (error) {
             console.error('Error submitting form:', error);
-            setFormError('Failed to register startup. Please try again.');
+            setSnackbar({ open: true, message: 'Failed to register startup. Please try again.', severity: 'error' });
         }
     };
 
-    //ai generated content for submission
     const handleGenerateLaunchData = async () => {
         if (!formData.websiteUrl) {
-            setFormError("Please enter a website URL first.");
+            setSnackbar({ open: true, message: "Please enter a website URL first.", severity: 'warning' });
             return;
         }
         try {
@@ -517,38 +405,32 @@ const Register = () => {
                 description: gptData.description,
             }));
             if (gptData.links?.length) setLinks(gptData.links)
-
-            setFormError('');
+            setSnackbar({ open: true, message: "Launch data auto-generated!", severity: 'success' });
         }
         catch (error) {
             console.error("Auto Generate failed :", error);
-            setFormError("AI failed to extract startup info...");
+            setSnackbar({ open: true, message: "AI failed to extract startup info...", severity: 'error' });
         }
     }
 
-    // Save as Draft handler
     const handleSaveDraft = async () => {
-        setFormError('');
         if (!user) {
-            setFormError('Please sign in to save');
+            setSnackbar({ open: true, message: 'Please sign in to save', severity: 'warning' });
             navigate('/UserRegister');
             return;
         }
-        // Do not save if form is empty
         if (isFormEmpty()) {
-            setFormError('Cannot save an empty draft.');
+            setSnackbar({ open: true, message: 'Cannot save an empty draft.', severity: 'warning' });
             return;
         }
-        // Do not save as draft if editing a launched project
         if (isEditing && editingLaunched) {
-            setFormError('Cannot save launched project as draft.');
+            setSnackbar({ open: true, message: 'Cannot save launched project as draft.', severity: 'warning' });
             return;
         }
         if (!formData.name) {
-            setFormError('Please enter a project name before saving.');
+            setSnackbar({ open: true, message: 'Please enter a project name before saving.', severity: 'warning' });
             return;
         }
-        // Check for existing draft with same name and user
         let draftId = editingProjectId;
         if (!isEditing) {
             const { data: existingDraft } = await supabase
@@ -569,114 +451,29 @@ const Register = () => {
             description: formData.description || '',
             category_type: selectedCategory?.value || '',
             links: links.filter(link => link.trim() !== ''),
+            built_with: builtWith.map(item => item.value),
             created_at: new Date().toISOString(),
             user_id: user.id,
             status: 'draft',
             slug: slugify(formData.name) + '-' + nanoid(6),
             media_urls: [...existingMediaUrls],
+            logo_url: typeof logoFile === 'string' ? logoFile : null,
+            thumbnail_url: typeof thumbnailFile === 'string' ? thumbnailFile : null,
+            cover_urls: coverFiles.filter(f => typeof f === 'string'),
         };
-        // Saving draft
         try {
             if (draftId) {
-                // Update existing draft
                 await supabase.from('projects').update(draftData).eq('id', draftId);
             } else {
-                // Insert new draft
                 await supabase.from('projects').insert([draftData]);
             }
-            setShowDraftSaved(true);
+            setSnackbar({ open: true, message: 'Launch saved!', severity: 'success' });
         } catch (error) {
-            setFormError('Failed to save draft. Please try again.');
+            setSnackbar({ open: true, message: 'Failed to save draft. Please try again.', severity: 'error' });
             console.error('Supabase error:', error);
         }
     };
 
-    // In the Next button handler, update draft if editing, otherwise insert
-    const handleNext = async () => {
-        // Save current progress as draft before moving to next step
-        if (user && formData.name) {
-            if (isEditing && editingLaunched) {
-                setStep(step + 1);
-                return;
-            }
-            // Do not save if form is empty
-            if (isFormEmpty()) {
-                setStep(step + 1);
-                return;
-            }
-            try {
-                const draftData = {
-                    name: formData.name,
-                    website_url: formData.websiteUrl || '',
-                    tagline: formData.tagline || '',
-                    description: formData.description || '',
-                    category_type: selectedCategory?.value || '',
-                    links: links.filter(link => link.trim() !== ''),
-                    created_at: new Date().toISOString(),
-                    user_id: user.id,
-                    status: 'draft',
-                    updated_at: new Date().toISOString(),
-                    media_urls: [...existingMediaUrls],
-                };
-                let draftId = editingProjectId;
-                // If not editing, check for an existing draft with same name and user
-                if (!isEditing) {
-                    const { data: existingDraft, error: findError } = await supabase
-                        .from('projects')
-                        .select('id')
-                        .eq('user_id', user.id)
-                        .eq('name', formData.name)
-                        .eq('status', 'draft')
-                        .maybeSingle();
-                    if (findError) {
-                        console.error('Error checking for existing draft:', findError);
-                    }
-                    if (existingDraft && existingDraft.id) {
-                        draftId = existingDraft.id;
-                    }
-                }
-                if (isEditing && editingProjectId && !editingLaunched) {
-                    // Update existing draft
-                    const { error } = await supabase
-                        .from('projects')
-                        .update(draftData)
-                        .eq('id', editingProjectId);
-                    if (error) {
-                        console.error('Error updating draft:', error);
-                    } else {
-                        setShowDraftSaved(true);
-                    }
-                } else if (draftId) {
-                    // Update found draft
-                    const { error } = await supabase
-                        .from('projects')
-                        .update(draftData)
-                        .eq('id', draftId);
-                    if (error) {
-                        console.error('Error updating draft:', error);
-                    } else {
-                        setShowDraftSaved(true);
-                    }
-                } else {
-                    // Insert new draft
-                    draftData.slug = slugify(formData.name) + '-' + nanoid(6);
-                    const { error } = await supabase
-                        .from('projects')
-                        .insert([draftData]);
-                    if (error) {
-                        console.error('Error saving draft:', error);
-                    } else {
-                        setShowDraftSaved(true);
-                    }
-                }
-            } catch (error) {
-                console.error('Error saving draft:', error);
-            }
-        }
-        setStep(step + 1);
-    };
-
-    // Remove existing media/logo handlers
     const handleRemoveExistingMedia = (url) => {
         setExistingMediaUrls(existingMediaUrls.filter(u => u !== url));
     };
@@ -693,307 +490,428 @@ const Register = () => {
     }
 
     return (
-        <>
-            <div className="container-custom py-12">
-                <div className="max-w-2xl mx-auto mt-20">
-                    <div className="bg-gray-100 rounded-xl shadow-lg p-8">
-                        {isEditing && (
-                            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                                    {searchParams.get('draft') ? 'Continue Editing Draft' : 'Editing Project'}
-                                </h3>
-                                <p className="text-blue-600 text-sm">
-                                    {searchParams.get('draft')
-                                        ? 'Complete your draft and submit it to launch your project.'
-                                        : 'Make changes to your launched project.'}
-                                </p>
-                            </div>
-                        )}
-                        <Snackbar
-                            open={!!(formError || uploadError)}
-                            autoHideDuration={4000}
-                            onClose={() => { setFormError(''); setUploadError(''); }}
-                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                            sx={{ mt: '70px' }}
+        <div className="min-h-screen font-sans antialiased text-gray-800 pb-20">
+            <style>{`
+                .form-tab-panel {
+                    padding: 2rem;
+                    display: none;
+                    animation: fadeIn 0.5s ease-in-out;
+                }
+                .form-tab-panel.active {
+                    display: block;
+                }
+                .tab-button {
+                    padding: 0.75rem 1.5rem;
+                    border-bottom: 2px solid transparent;
+                    font-weight: 600;
+                    color: #6b7280;
+                    transition: all 0.2s ease;
+                }
+                .tab-button.active {
+                    color: #2563eb;
+                    border-bottom-color: #2563eb;
+                }
+                .tab-button:hover:not(.active) {
+                    color: #1f2937;
+                }
+                .form-field-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+                .form-label {
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    color: #1f2937;
+                }
+                .form-input, .form-textarea, .react-select__control {
+                    width: 100%;
+                    padding: 0.75rem 1rem;
+                    border-radius: 0.5rem;
+                    border: 1px solid #d1d5db;
+                    background-color: #f9fafb;
+                    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+                }
+                .form-input:focus, .form-textarea:focus, .react-select__control--is-focused {
+                    outline: none;
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+                }
+                .file-input-label {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    height: 100%;
+                    background-color: #f3f4f6;
+                    border: 2px dashed #d1d5db;
+                    border-radius: 0.5rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                .file-input-label:hover {
+                    background-color: #e5e7eb;
+                }
+                .form-actions-bar {
+                    border-top: 1px solid #e5e7eb;
+                    padding: 10px 2px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 1rem;
+                    border-radius: 0 0 1rem 1rem;
+                    
+                }
+                .btn-primary {
+                    background-color: #2563eb;
+                    color: white;
+                    font-weight: 600;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 0.5rem;
+                    transition: background-color 0.2s ease;
+                }
+                .btn-primary:hover {
+                    background-color: #1e40af;
+                }
+                .btn-tertiary {
+                    background-color: #f59e0b;
+                    color: white;
+                    font-weight: 600;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 0.5rem;
+                    transition: background-color 0.2s ease;
+                }
+                .btn-tertiary:hover {
+                    background-color: #d97706;
+                }
+                .btn-secondary {
+                    background-color: #f3f4f6;
+                    color: #1f2937;
+                    font-weight: 600;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 0.5rem;
+                    transition: background-color 0.2s ease;
+                }
+                .btn-secondary:hover {
+                    background-color: #e5e7eb;
+                }
+                .btn-text-icon {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    color: #2563eb;
+                    font-weight: 500;
+                    font-size: 0.875rem;
+                }
+                .text-error {
+                    color: #ef4444;
+                    font-size: 0.875rem;
+                    margin-top: 0.25rem;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @media (max-width: 768px) {
+                    .form-actions-bar {
+                        padding: 1rem;
+                    }
+                }
+            `}</style>
+            <div className="max-w-4xl mx-auto px-4 lg:px-0">
+                <header className="text-center py-8">
+                    <h1 className="text-3xl font-bold mb-2">Submit Your Launch</h1>
+                    <p className="text-gray-500 mt-2">
+                        Get your product in front of the right audience. Be seen, gain traction, and grow with confidence!
+                    </p>
+                </header>
+                <div className="form-container">
+                    {/* Tabs for Navigation */}
+                    <nav className="flex justify-center border-b border-gray-200 px-2 pt-1">
+                        <button
+                            type="button"
+                            onClick={() => setStep(1)}
+                            className={`tab-button ${step === 1 ? 'active' : ''}`}
                         >
-                            <Alert
-                                onClose={() => { setFormError(''); setUploadError(''); }}
-                                severity="warning"
-                                sx={{ width: '100%' }}
-                            >
-                                {formError || uploadError}
-                            </Alert>
-                        </Snackbar>
-                        <Snackbar
-                            open={showAutoSave}
-                            autoHideDuration={1200}
-                            onClose={() => setShowAutoSave(false)}
-                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                            sx={{ mt: '70px' }}>
-                            <Alert severity="info" sx={{ width: '100%' }}>Progress auto-saved locally</Alert>
-                        </Snackbar>
+                            Basic Info
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setStep(2)}
+                            className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
+                                ${step === 2 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Media
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setStep(3)}
+                            className={`px-6 py-3 -mb-px border-b-2 text-sm font-semibold transition-colors duration-200
+                                ${step === 3 ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        >
+                            Details
+                        </button>
+                    </nav>
 
-                        <Snackbar
-                            open={showDraftSaved}
-                            autoHideDuration={3000}
-                            onClose={() => setShowDraftSaved(false)}
-                            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                            sx={{ mt: '70px' }}>
-                            <Alert severity="success" sx={{ width: '100%' }}>
-                                Launch saved!
-                            </Alert>
-                        </Snackbar>
-                        <div className="mb-8">
-                            <div className="flex justify-between items-center">
-                                {[1, 2, 3].map((stepNumber) => (
-                                    <div key={stepNumber} className="flex flex-col items-center">
-                                        <div
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center border-2 
-                      ${step >= stepNumber ? 'border-blue-900 bg-blue-50 text-blue-900' : 'border-gray-300 text-gray-400'}`}
-                                        >
-                                            {stepNumber}
-                                        </div>
-                                        <span className={`mt-2 text-sm ${step >= stepNumber ? 'text-blue-900' : 'text-gray-400'}`}>
-                                            {stepNumber === 1 ? 'Basic Info' : stepNumber === 2 ? 'Details' : 'Media'}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="relative mt-4">
-                                <div className="absolute top-0 left-0 h-1 bg-blue-900" style={{ width: `${((step - 1) / 3) * 100}%` }} />
-                                <div className="h-1 bg-gray-200 w-full" />
-                            </div>
-                        </div>
+                    <form onSubmit={handleSubmit}>
+                        {/* Step-specific content */}
                         {step === 1 && (
-                            <>
-                                <h3 className="text-lg font-semibold mb-6">Tell us more about this launch</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Startup Name */}
-                                    <div>
-                                        <label className="block font-medium mb-1">Launch Name</label>
-                                        <input
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleInputChange}
-                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                            maxLength={30}
-                                        />
+                            <div className="form-tab-panel active">
+                                <div className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="form-field-group">
+                                            <label className="form-label" htmlFor="name">Name of the launch</label>
+                                            <input
+                                                id="name"
+                                                name="name"
+                                                value={formData.name}
+                                                onChange={handleInputChange}
+                                                className="form-input"
+                                                maxLength={30}
+                                                disabled={editingLaunched}
+                                                placeholder='e.g LaunchIT'
+                                            />
+                                            <div className="text-xs text-gray-400 text-right mt-1">{formData.name.length} / 30</div>
+                                        </div>
+                                        <div className="form-field-group">
+                                            <label className="form-label" htmlFor="websiteUrl">Website URL</label>
+                                            <input
+                                                id="websiteUrl"
+                                                name="websiteUrl"
+                                                value={formData.websiteUrl}
+                                                onChange={handleInputChange}
+                                                onBlur={handleUrlBlur}
+                                                className={`form-input ${urlError ? 'border-red-500' : ''}`}
+                                                placeholder="https://yourproject.com"
+                                                disabled={editingLaunched}
+                                            />
+                                            {urlError && <p className="text-red-500 text-sm mt-1">{urlError}</p>}
+                                            <button
+                                                type="button"
+                                                onClick={handleGenerateLaunchData}
+                                                className="btn-text-icon"
+                                            >
+                                                <Rocket className="w-4 h-4" />
+                                                Auto-generate from URL
+                                            </button>
+                                        </div>
+                                        <div className="form-field-group">
+                                            <label className="form-label" htmlFor="tagline">Tagline</label>
+                                            <input
+                                                id="tagline"
+                                                name="tagline"
+                                                value={formData.tagline}
+                                                onChange={handleTaglineChange}
+                                                className="form-input"
+                                                maxLength={60}
+                                                placeholder="catchy tagline of what the launch does."
+                                            />
+                                            <div className="text-xs text-gray-400 text-right mt-1">{taglineCharCount} / 60</div>
+                                        </div>
+                                        <div className="form-field-group">
+                                            <label className="form-label" htmlFor="category">Category(ies)</label>
+                                            <Select
+                                                options={categoryOptions}
+                                                isClearable={true}
+                                                isSearchable={true}
+                                                value={selectedCategory}
+                                                onChange={setSelectedCategory}
+                                                styles={customSelectStyles}
+                                                placeholder="Select a category"
+                                            />
+                                        </div>
+                                        <div className="form-field-group md:col-span-2">
+                                            <label className="form-label" htmlFor="description">Description</label>
+                                            <textarea
+                                                id="description"
+                                                name="description"
+                                                value={formData.description}
+                                                onChange={handleDescriptionChange}
+                                                rows={4}
+                                                className="form-input"
+                                                placeholder="Describe your launch in detail. What problem does it solve? What makes it unique?"
+                                            />
+                                            <div className="text-xs text-gray-400 text-right mt-1">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
+                                        </div>
                                     </div>
-                                    {/* Website URL */}
-                                    <div>
-                                        <label className="block font-medium mb-1">Website URL</label>
-                                        <input
-                                            name="websiteUrl"
-                                            value={formData.websiteUrl}
-                                            onChange={handleInputChange}
-                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                            placeholder="https://yourproject.com"
-                                        />
-                                    </div>
-                                    {/* Tagline */}
-                                    <div>
-                                        <label className="block font-medium mb-1">Tagline</label>
-                                        <input
-                                            name="tagline"
-                                            value={formData.tagline}
-                                            onChange={handleTaglineChange}
-                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                            maxLength={60}
-                                        />
-                                        <div className="text-xs text-gray-400 text-right">{taglineCharCount} / 60</div>
-                                    </div>
-                                    {/* Category(ies) */}
-                                    <div>
-                                        <label className="block font-semibold mb-1">Category(ies)</label>
-                                        <Select
-                                            options={categoryOptions}
-                                            isClearable={isClearable}
-                                            isSearchable={isSearchable}
-                                            value={selectedCategory}
-                                            onChange={setSelectedCategory}
-                                            className="max-w-md"
-                                        />
-                                    </div>
-                                    {/* Description */}
-                                    <div className="md:col-span-2">
-                                        <label className="block font-semibold mb-1 mt-6">Description</label>
-                                        <textarea
-                                            name="description"
-                                            value={formData.description}
-                                            onChange={handleDescriptionChange}
-                                            rows={4}
-                                            className="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                            placeholder="Describe your launch"
-                                        />
-                                        <div className="text-xs text-gray-400 text-right">{descriptionWordCount} / {DESCRIPTION_WORD_LIMIT}</div>
-                                    </div>
-
                                 </div>
-                            </>
+                            </div>
                         )}
                         {step === 2 && (
-                            <div className="space-y-8">
-                                {/* Logo */}
-                                <div>
-                                    <label className="block font-semibold mb-2">Logo</label>
-                                    <div className="flex items-center">
-                                        {logoFile && (
-                                            <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 border">
-                                                <img
-                                                    src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)}
-                                                    alt="Logo"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <button
-                                                    onClick={removeLogo}
-                                                    className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
-                                                >✕</button>
-                                            </div>
-                                        )}
-                                        {!logoFile && (
-                                            <label className="w-24 h-24 flex items-center justify-center rounded-xl border-2 border-dashed bg-gray-50 cursor-pointer">
-                                                <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
-                                                <span className="text-2xl text-gray-400">+</span>
-                                            </label>
-                                        )}
-                                        <div className="ml-6 text-sm text-gray-500">
-                                            Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Thumbnail */}
-                                <div>
-                                    <label className="block font-semibold mb-2">Thumbnail (Dashboard)</label>
-                                    <div className="flex items-center">
-                                        {thumbnailFile && (
-                                            <div className="relative w-40 h-28 rounded-lg overflow-hidden bg-gray-100 border">
-                                                <img
-                                                    src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)}
-                                                    alt="Thumbnail"
-                                                    className="w-full h-full object-cover"
-                                                />
-                                                <button
-                                                    onClick={removeThumbnail}
-                                                    className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
-                                                >✕</button>
-                                            </div>
-                                        )}
-                                        {!thumbnailFile && (
-                                            <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 cursor-pointer">
-                                                <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
-                                                <span className="text-2xl text-gray-400">+</span>
-                                            </label>
-                                        )}
-                                        <div className="ml-6 text-sm text-gray-500">
-                                            Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Cover Images */}
-                                <div>
-                                    <label className="block font-semibold mb-2">Cover image(s)</label>
-                                    <div className="flex gap-4">
-                                        {[0, 1, 2, 3].map(idx => (
-                                            coverFiles[idx] ? (
-                                                <div key={idx} className="relative w-32 h-20 rounded-lg overflow-hidden bg-gray-100 border">
-                                                    <img
-                                                        src={typeof coverFiles[idx] === 'string' ? coverFiles[idx] : URL.createObjectURL(coverFiles[idx])}
-                                                        alt={`Cover ${idx + 1}`}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                    <button
-                                                        onClick={() => removeCover(idx)}
-                                                        className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
-                                                    >✕</button>
-                                                </div>
-                                            ) : (
-                                                <label key={idx} className="w-32 h-20 flex items-center justify-center rounded-lg border-2 border-dashed bg-gray-50 cursor-pointer">
-                                                    <input type="file" accept="image/*" onChange={e => handleCoverChange(e, idx)} className="hidden" />
-                                                    <span className="text-2xl text-gray-400">+</span>
+                            <div className="form-tab-panel active">
+                                <div className="space-y-8">
+                                    <h3 className="text-2xl font-bold mb-6">Media</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="form-label">Logo</label>
+                                            <div className="flex items-center gap-6 mt-2">
+                                                <label className="w-24 h-24 flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
+                                                    <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+                                                    {logoFile ? (
+                                                        <img src={typeof logoFile === 'string' ? logoFile : URL.createObjectURL(logoFile)} alt="Logo Preview" className="w-full h-full object-cover rounded-2xl" />
+                                                    ) : (
+                                                        <Plus className="w-6 h-6 text-gray-400" />
+                                                    )}
                                                 </label>
-                                            )
-                                        ))}
-                                    </div>
-                                    <div className="text-sm text-gray-500 mt-2">
-                                        Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
+                                                <div className="text-sm text-gray-500">
+                                                    Recommended: 240x240px | JPG, PNG, GIF. Max 2MB
+                                                    {logoFile && <button type="button" onClick={removeLogo} className="block mt-2 text-red-600 hover:text-red-800">Remove</button>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="form-label">Thumbnail (Dashboard)</label>
+                                            <div className="flex items-center gap-6 mt-2">
+                                                <label className="w-40 h-28 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
+                                                    <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
+                                                    {thumbnailFile ? (
+                                                        <img src={typeof thumbnailFile === 'string' ? thumbnailFile : URL.createObjectURL(thumbnailFile)} alt="Thumbnail Preview" className="w-full h-full object-cover rounded-lg" />
+                                                    ) : (
+                                                        <Plus className="w-6 h-6 text-gray-400" />
+                                                    )}
+                                                </label>
+                                                <div className="text-sm text-gray-500">
+                                                    Recommended: 500x500px or 600x400px. Max 2MB.<br />This will be shown in the dashboard.
+                                                    {thumbnailFile && <button type="button" onClick={removeThumbnail} className="block mt-2 text-red-600 hover:text-red-800">Remove</button>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="form-label">Cover image(s)</label>
+                                            <div className="flex flex-wrap gap-4 mt-2">
+                                                {coverFiles.map((file, idx) => (
+                                                    <div key={idx} className="relative">
+                                                        <label className="w-32 h-20 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
+                                                            <input type="file" accept="image/*" onChange={e => handleCoverChange(e, idx)} className="hidden" />
+                                                            {file ? (
+                                                                <img src={typeof file === 'string' ? file : URL.createObjectURL(file)} alt={`Cover ${idx + 1}`} className="w-full h-full object-cover rounded-lg" />
+                                                            ) : (
+                                                                <Plus className="w-6 h-6 text-gray-400" />
+                                                            )}
+                                                        </label>
+                                                        {file && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => { e.preventDefault(); removeCover(idx); }}
+                                                                className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow hover:bg-gray-100"
+                                                            >
+                                                                <X className="w-3 h-3 text-red-600" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="text-sm text-gray-500 mt-2">
+                                                Recommended: 1270x760px+ • Up to 4 images • Max 5MB each
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         )}
                         {step === 3 && (
-                            <div className="space-y-8">
-                                {/* Links */}
-                                <div>
-                                    <label className="block font-semibold mb-2">Links</label>
-                                    {links.map((link, index) => {
-                                        const { label, icon } = getLinkType(link);
-                                        return (
-                                            <div key={index} className="flex items-center space-x-2 mb-2">
-                                                <span className="min-w-[90px] flex items-center gap-1 text-gray-500">
-                                                    <span>{icon}</span>
-                                                    <span>{label}</span>
-                                                </span>
-                                                <input type="url" value={link} onChange={e => updateLink(index, e.target.value)} placeholder={`Enter ${label} URL`} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg" />
-                                                {links.length > 1 && (
-                                                    <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600"><X className="w-5 h-5" /></button>
-                                                )}
+                            <div className="form-tab-panel active">
+                                <div className="space-y-6">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="form-label">Links</label>
+                                            <div className="space-y-4 mt-2">
+                                                {links.map((link, index) => {
+                                                    const { label, icon } = getLinkType(link);
+                                                    return (
+                                                        <div key={index} className="flex items-center gap-4">
+                                                            <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-xl">
+                                                                {icon}
+                                                            </span>
+                                                            <input
+                                                                type="url"
+                                                                value={link}
+                                                                onChange={e => updateLink(index, e.target.value)}
+                                                                placeholder={`Enter ${label} URL`}
+                                                                className="form-input flex-1"
+                                                            />
+                                                            {links.length > 1 && (
+                                                                <button type="button" onClick={() => removeLink(index)} className="p-2 text-red-600 hover:bg-gray-100 rounded-full">
+                                                                    <X className="w-5 h-5" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                                <button
+                                                    type="button"
+                                                    onClick={addLink}
+                                                    className="btn-text-icon"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                    <span>Add another link</span>
+                                                </button>
                                             </div>
-                                        );
-                                    })}
-                                    <button type="button" onClick={addLink} className="flex items-center text-blue-900 mt-1"><Plus className="w-5 h-5 mr-1" />Add another link</button>
-                                </div>
-                                {/* Built With (optional) */}
-                                <div>
-                                    <BuiltWithSelect value={builtWith} onChange={setBuiltWith} />
-                                </div>
-
-                                <div className="flex justify-between mt-8">
-                                    <button type="button"
-                                        onClick={() => setStep(2)}
-                                        className="px-6 py-3 bg-gray-100 rounded-lg font-semibold">
-                                        Previous
-                                    </button>
-                                    <button type="button"
-                                        onClick={handleSubmit}
-                                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold ml-auto">
-                                        Submit
-                                    </button>
+                                        </div>
+                                        <div>
+                                            <BuiltWithSelect value={builtWith} onChange={setBuiltWith} styles={customSelectStyles} className="mt-2" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
-                        {step < 3 && (
-                            <div className="flex justify-between mt-8 pt-4 border-t">
-                                {step > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setStep(step - 1)}
-                                        className="px-6 py-3 bg-gray-100 rounded-lg"
-                                    >
-                                        Previous
-                                    </button>
-                                )}
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={handleSaveDraft}
-                                        className="px-6 py-3 bg-yellow-500 text-white rounded-lg"
-                                    >
-                                        Save
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleNext}
-                                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                            </div>
+                    </form>
+                    <div className="form-actions-bar">
+                        {step > 1 && (
+                            <button
+                                type="button"
+                                onClick={() => setStep(step - 1)}
+                                className="btn-secondary"
+                            >
+                                Previous
+                            </button>
                         )}
+                        <div className="ml-auto flex gap-4">
+                            <button
+                                type="button"
+                                onClick={handleSaveDraft}
+                                className="btn-tertiary"
+                            >
+                                Save as Draft
+                            </button>
+                            {step < 3 ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setStep(step + 1)}
+                                    className="btn-primary"
+                                >
+                                    Next
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleSubmit}
+                                    className="btn-primary"
+                                >
+                                    Submit Launch
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </>
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                sx={{ mt: '70px' }}
+            >
+                <Alert
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+        </div>
     );
 };
 
